@@ -7,6 +7,7 @@ import { CategoryNav } from "@/components/menu/CategoryNav";
 import { DailyFixMenuBanner } from "@/components/menu/DailyFixMenuBanner";
 import { ProductCardGrid } from "@/components/menu/ProductCardGrid";
 import { ProductDetailModal } from "@/components/menu/ProductDetailModal";
+import { BottomFloatingNav } from "@/components/menu/BottomFloatingNav";
 import { Footer } from "@/components/menu/Footer";
 import { useMenu } from "@/context/MenuContext";
 import { Language, Product, ThemeMode } from "@/types/menu";
@@ -28,7 +29,7 @@ export default function Home() {
 
   const activeDayFixMenu = getCurrentDayFixMenu();
 
-  // Sync theme class on <html> element
+  // Sync theme class on <html> element (Always force dark for dark food UI experience)
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
@@ -101,8 +102,8 @@ export default function Home() {
   }, [searchQuery, mockCategories]);
 
   return (
-    <div className="min-h-screen bg-background text-content-primary flex flex-col transition-colors duration-300">
-      {/* Venue Header */}
+    <div className="min-h-screen bg-[#111111] text-[#F5F5F5] flex flex-col transition-colors duration-300 pb-20">
+      {/* Venue Header (Dark Premium Food UI Style) */}
       <Header
         venue={mockVenueSettings}
         lang={lang}
@@ -111,7 +112,7 @@ export default function Home() {
         onThemeToggle={handleThemeToggle}
       />
 
-      {/* Daily Fix Menu Banner (00:01 - 23:59 Automated Schedule) */}
+      {/* Daily Fix Menu Banner (Hero Card) */}
       {!searchQuery && activeDayFixMenu && (
         <DailyFixMenuBanner fixMenu={activeDayFixMenu} lang={lang} />
       )}
@@ -123,7 +124,7 @@ export default function Home() {
         lang={lang}
       />
 
-      {/* Horizontal Category Nav */}
+      {/* Horizontal Category Nav (Meal Category) */}
       <CategoryNav
         categories={mockCategories}
         activeCategoryId={activeCategoryId}
@@ -132,7 +133,7 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-md w-full mx-auto px-4 pt-4 pb-8 space-y-8">
+      <main className="flex-1 max-w-md w-full mx-auto px-4 pt-4 pb-8 space-y-12">
         {filteredProducts.length === 0 ? (
           /* Empty Search State */
           <div className="py-16 text-center space-y-3">
@@ -147,7 +148,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          /* Category Sections & 2-Column Grid Product Feed */
+          /* Category Sections & 2-Column Overlapping Circular Product Grid */
           mockCategories.map((cat) => {
             const productsInCat = productsByCategory.get(cat.id) || [];
             if (productsInCat.length === 0) return null;
@@ -169,8 +170,8 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* 2-Column Half Card Grid with Circular Image */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-1">
+                {/* 2-Column Half Card Grid with Overlapping Circular Plate Images */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-4">
                   {productsInCat.map((product) => (
                     <ProductCardGrid
                       key={product.id}
@@ -188,6 +189,14 @@ export default function Home() {
 
       {/* Footer */}
       <Footer venue={mockVenueSettings} lang={lang} />
+
+      {/* Bottom Floating Navigation Bar */}
+      <BottomFloatingNav
+        lang={lang}
+        onSearchClick={() => {
+          window.scrollTo({ top: 120, behavior: "smooth" });
+        }}
+      />
 
       {/* Product Detail Modal */}
       <ProductDetailModal

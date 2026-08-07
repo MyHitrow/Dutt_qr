@@ -12,25 +12,25 @@
   --color-text-primary: #211E26;
   --color-text-secondary: #68616F;
   --color-text-muted: #958E9E;
-  --color-purple: #7C3AED;
-  --color-purple-dark: #6D28D9;
-  --color-purple-light: #A78BFA;
+  --color-purple: #A66CFF;
+  --color-purple-dark: #302341;
+  --color-purple-light: #C7A8FF;
   --color-border: rgba(45, 35, 55, 0.10);
 }
 
 .dark {
-  /* Dark Theme Defaults (Antrasit / Quiet Luxury) */
-  --color-bg: #19181D;
-  --color-bg-secondary: #211F26;
-  --color-surface: #211F26;
-  --color-card: #29262F;
-  --color-elevated: #302C37;
-  --color-text-primary: #F8F6FA;
-  --color-text-secondary: #B8B2C0;
-  --color-text-muted: #85808C;
-  --color-purple: #8B5CF6;
-  --color-purple-dark: #6D3FD1;
-  --color-purple-light: #A78BFA;
+  /* Dark Premium Food UI Palette */
+  --color-bg: #111111;
+  --color-bg-secondary: #18181A;
+  --color-surface: #1C1C1E;
+  --color-card: #1C1C1E;
+  --color-elevated: #222224;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #8E8E93;
+  --color-text-muted: #636366;
+  --color-purple: #A66CFF;
+  --color-purple-dark: #302341;
+  --color-purple-light: #C7A8FF;
   --color-border: rgba(255, 255, 255, 0.08);
 }
 
@@ -40,6 +40,11 @@ body {
   font-family: var(--font-manrope), sans-serif;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Overlapping Plate Shadow & Glow */
+.plate-shadow {
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.8), 0 0 20px 0 rgba(166, 108, 255, 0.15);
 }
 
 /* Custom Utilities for Purple Corner Accent */
@@ -54,7 +59,7 @@ body {
   right: 0;
   width: 24px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--color-purple));
+  background: linear-gradient(90deg, transparent, #A66CFF);
   border-top-right-radius: 4px;
 }
 
@@ -65,7 +70,7 @@ body {
   right: 0;
   width: 2px;
   height: 24px;
-  background: linear-gradient(180deg, var(--color-purple), transparent);
+  background: linear-gradient(180deg, #A66CFF, transparent);
   border-top-right-radius: 4px;
 }
 
