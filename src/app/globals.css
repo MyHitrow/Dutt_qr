@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme Defaults */
+  --color-bg: #F8F7FA;
+  --color-bg-secondary: #F0EDF4;
+  --color-surface: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-elevated: #F4F1F8;
+  --color-text-primary: #211E26;
+  --color-text-secondary: #68616F;
+  --color-text-muted: #958E9E;
+  --color-purple: #7C3AED;
+  --color-purple-dark: #6D28D9;
+  --color-purple-light: #A78BFA;
+  --color-border: rgba(45, 35, 55, 0.10);
+}
+
+.dark {
+  /* Dark Theme Defaults (Antrasit / Quiet Luxury) */
+  --color-bg: #19181D;
+  --color-bg-secondary: #211F26;
+  --color-surface: #211F26;
+  --color-card: #29262F;
+  --color-elevated: #302C37;
+  --color-text-primary: #F8F6FA;
+  --color-text-secondary: #B8B2C0;
+  --color-text-muted: #85808C;
+  --color-purple: #8B5CF6;
+  --color-purple-dark: #6D3FD1;
+  --color-purple-light: #A78BFA;
+  --color-border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-manrope), sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Utilities for Purple Corner Accent */
+.purple-corner-tr {
+  position: relative;
+}
+
+.purple-corner-tr::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-purple));
+  border-top-right-radius: 4px;
+}
+
+.purple-corner-tr::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--color-purple), transparent);
+  border-top-right-radius: 4px;
+}
+
+/* Hide Scrollbars for clean horizontal categories */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
