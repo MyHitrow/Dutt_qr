@@ -1,4 +1,4 @@
-import { Category, Product, VenueSettings } from "@/types/menu";
+import { Category, Product, VenueSettings, DailyFixMenu } from "@/types/menu";
 
 export const mockVenueSettings: VenueSettings = {
   name: "Dutt Meyhane",
@@ -15,6 +15,79 @@ export const mockVenueSettings: VenueSettings = {
   },
 };
 
+export const mockDailyFixMenus: DailyFixMenu[] = [
+  {
+    dayOfWeek: 1, // Pazartesi
+    dayName: { tr: "Pazartesi", en: "Monday" },
+    title: { tr: "Sendromsuz Pazartesi Fix Menü", en: "No-Blues Monday Fix Menu" },
+    subtitle: { tr: "4 Çeşit Soğuk Meze + Ara Sıcak + Ana Yemek + 2 Kadeh İçecek", en: "4 Cold Mezes + Starter + Main + 2 Glasses Drink" },
+    price: 1250,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 2, // Salı
+    dayName: { tr: "Salı", en: "Tuesday" },
+    title: { tr: "Kadınlar Matinesi Özel Fix Menü", en: "Ladies Night Special Fix Menu" },
+    subtitle: { tr: "Sınırsız Meze Büfesi + Canlı Müzik + Tatlı & Meyve İkramı", en: "Unlimited Meze + Live Music + Dessert & Fruit Compliments" },
+    price: 1450,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 3, // Çarşamba
+    dayName: { tr: "Çarşamba", en: "Wednesday" },
+    title: { tr: "Ege Lezzetleri & Akustik Gece", en: "Aegean Flavors & Acoustic Night" },
+    subtitle: { tr: "Zeytinyağlı Mezeler + Ege Otu Mücveri + Deniz Mahsulleri", en: "Aegean Olive Oil Mezes + Seafood Special" },
+    price: 1350,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 4, // Perşembe
+    dayName: { tr: "Perşembe", en: "Thursday" },
+    title: { tr: "Hafta Ortası Meyhane Keyfi", en: "Midweek Tavern Feast" },
+    subtitle: { tr: "Şefin Özel Seçimleri + Sıcak Meze Tabağı + Izgara Balık", en: "Chef Special Selection + Warm Meze Plate + Grilled Fish" },
+    price: 1400,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 5, // Cuma
+    dayName: { tr: "Cuma", en: "Friday" },
+    title: { tr: "Cuma Fasıl & Gala Fix Menü", en: "Friday Classical Fasıl Gala Menu" },
+    subtitle: { tr: "Canlı Klasik Fasıl + 6 Çeşit Meze + Ara Sıcaklar + Ana Yemek", en: "Live Fasıl Music + 6 Mezes + Starters + Main Course" },
+    price: 1850,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 6, // Cumartesi
+    dayName: { tr: "Cumartesi", en: "Saturday" },
+    title: { tr: "Cumartesi Yeni Nesil Eğlence Fix Menü", en: "Saturday Modern Tavern Gala Menu" },
+    subtitle: { tr: "DJ Performansı + Premium Zengin Menü + Meyve & Şampanya", en: "Live DJ Performance + Premium Full Course Menu" },
+    price: 1950,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 0, // Pazar
+    dayName: { tr: "Pazar", en: "Sunday" },
+    title: { tr: "Pazar Rakı & Dem Akşamı", en: "Sunday Relaxing Raki Evening" },
+    subtitle: { tr: "Ağır Ağır Demlenen Soğuk Mezeler + Özel Demleme Rakı Menüsü", en: "Slow Meze Dining + Premium Raki Experience" },
+    price: 1300,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+];
+
 export const mockCategories: Category[] = [
   { id: "cat-1", slug: "soguk-mezeler", name: { tr: "Soğuk Mezeler", en: "Cold Mezes" }, sortOrder: 1, isActive: true },
   { id: "cat-2", slug: "sicak-mezeler", name: { tr: "Sıcak Mezeler", en: "Warm Mezes" }, sortOrder: 2, isActive: true },
@@ -28,7 +101,6 @@ export const mockCategories: Category[] = [
 ];
 
 export const mockProducts: Product[] = [
-  // Soğuk Mezeler (Fotoğraflı)
   {
     id: "prod-101",
     categoryId: "cat-1",
@@ -89,8 +161,6 @@ export const mockProducts: Product[] = [
     sortOrder: 3,
     dietary: { isVegan: true, isVegetarian: true, isGlutenFree: true }
   },
-
-  // Ara Sıcaklar (Fotoğraflı)
   {
     id: "prod-201",
     categoryId: "cat-3",
@@ -131,8 +201,6 @@ export const mockProducts: Product[] = [
       en: "Slowly marinated and wood-fire grilled."
     }
   },
-
-  // Rakılar (Fotoğrafsız - Premium Tipografik Kart)
   {
     id: "prod-301",
     categoryId: "cat-7",
@@ -166,20 +234,5 @@ export const mockProducts: Product[] = [
     isAvailable: true,
     isActive: true,
     sortOrder: 2
-  },
-  {
-    id: "prod-303",
-    categoryId: "cat-7",
-    name: { tr: "Tekirdağ No. 10 (70 cl)", en: "Tekirdag No. 10 (70 cl)" },
-    description: {
-      tr: "10 numaralı özel bakır imbikte tek seferde üretilen mahsul.",
-      en: "Handcrafted in single batch copper still No. 10."
-    },
-    price: 3400,
-    currency: "₺",
-    hasImage: false,
-    isAvailable: true,
-    isActive: true,
-    sortOrder: 3
   }
 ];

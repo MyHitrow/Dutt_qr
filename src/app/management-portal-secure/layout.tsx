@@ -12,6 +12,7 @@ import {
   ExternalLink,
   LogOut,
   QrCode,
+  Calendar,
 } from "lucide-react";
 import { useMenu } from "@/context/MenuContext";
 import { QRCodeModal } from "@/components/admin/QRCodeModal";
@@ -58,6 +59,11 @@ export default function AdminLayout({
       name: "Genel Bakış",
       href: "/management-portal-secure",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Günlük Fix Menü",
+      href: "/management-portal-secure/fix-menus",
+      icon: Calendar,
     },
     {
       name: "Ürünler",

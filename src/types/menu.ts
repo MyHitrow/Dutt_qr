@@ -60,6 +60,26 @@ export interface Category {
   iconName?: string;
 }
 
+export interface DailyFixMenu {
+  dayOfWeek: number; // 0: Pazar, 1: Pazartesi, 2: Salı, 3: Çarşamba, 4: Perşembe, 5: Cuma, 6: Cumartesi
+  dayName: {
+    tr: string;
+    en: string;
+  };
+  title: {
+    tr: string;
+    en: string;
+  };
+  subtitle: {
+    tr: string;
+    en: string;
+  };
+  price: number;
+  currency: string;
+  imageUrl?: string;
+  isActive: boolean;
+}
+
 export interface VenueSettings {
   name: string;
   slogan: {

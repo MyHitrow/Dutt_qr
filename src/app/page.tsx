@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/menu/Header";
 import { SearchBar } from "@/components/menu/SearchBar";
 import { CategoryNav } from "@/components/menu/CategoryNav";
-import { ProductCardWithImage } from "@/components/menu/ProductCardWithImage";
-import { ProductCardNoImage } from "@/components/menu/ProductCardNoImage";
+import { DailyFixMenuBanner } from "@/components/menu/DailyFixMenuBanner";
+import { ProductCardGrid } from "@/components/menu/ProductCardGrid";
 import { ProductDetailModal } from "@/components/menu/ProductDetailModal";
 import { Footer } from "@/components/menu/Footer";
 import { useMenu } from "@/context/MenuContext";
@@ -13,12 +13,20 @@ import { Language, Product, ThemeMode } from "@/types/menu";
 import { SearchX } from "lucide-react";
 
 export default function Home() {
-  const { venue: mockVenueSettings, categories: mockCategories, products: mockProducts } = useMenu();
+  const {
+    venue: mockVenueSettings,
+    categories: mockCategories,
+    products: mockProducts,
+    getCurrentDayFixMenu,
+  } = useMenu();
+
   const [lang, setLang] = useState<Language>("tr");
   const [theme, setTheme] = useState<ThemeMode>("dark");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState(mockCategories[0]?.id || "");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const activeDayFixMenu = getCurrentDayFixMenu();
 
   // Sync theme class on <html> element
   useEffect(() => {
@@ -43,7 +51,7 @@ export default function Home() {
         p.name[lang].toLowerCase().includes(query) ||
         p.description[lang].toLowerCase().includes(query)
     );
-  }, [searchQuery, lang]);
+  }, [searchQuery, lang, mockProducts]);
 
   // Group products by category
   const productsByCategory = useMemo(() => {
@@ -55,14 +63,14 @@ export default function Home() {
       map.set(prod.categoryId, list);
     });
     return map;
-  }, [filteredProducts]);
+  }, [filteredProducts, mockCategories]);
 
   // Scroll to section when category tab is clicked
   const handleSelectCategory = (catId: string) => {
     setActiveCategoryId(catId);
     const element = document.getElementById(`category-section-${catId}`);
     if (element) {
-      const yOffset = -110; // offset for sticky header & search & category nav
+      const yOffset = -110;
       const y =
         element.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: "smooth" });
@@ -71,7 +79,7 @@ export default function Home() {
 
   // Scroll spy to update active category tab on manual scroll
   useEffect(() => {
-    if (searchQuery) return; // Disable scroll spy during search
+    if (searchQuery) return;
 
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 140;
@@ -90,7 +98,7 @@ export default function Home() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [searchQuery]);
+  }, [searchQuery, mockCategories]);
 
   return (
     <div className="min-h-screen bg-background text-content-primary flex flex-col transition-colors duration-300">
@@ -102,6 +110,11 @@ export default function Home() {
         onLanguageChange={setLang}
         onThemeToggle={handleThemeToggle}
       />
+
+      {/* Daily Fix Menu Banner (00:01 - 23:59 Automated Schedule) */}
+      {!searchQuery && activeDayFixMenu && (
+        <DailyFixMenuBanner fixMenu={activeDayFixMenu} lang={lang} />
+      )}
 
       {/* Search Bar */}
       <SearchBar
@@ -134,7 +147,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          /* Category Sections & Product Feed */
+          /* Category Sections & 2-Column Grid Product Feed */
           mockCategories.map((cat) => {
             const productsInCat = productsByCategory.get(cat.id) || [];
             if (productsInCat.length === 0) return null;
@@ -143,7 +156,7 @@ export default function Home() {
               <section
                 key={cat.id}
                 id={`category-section-${cat.id}`}
-                className="scroll-mt-32 space-y-3"
+                className="scroll-mt-32 space-y-4"
               >
                 {/* Category Section Title Header */}
                 <div className="flex items-center gap-2 pt-2 pb-1 border-b border-menuBorder/60">
@@ -156,25 +169,16 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* Product Cards Grid / List */}
-                <div className="grid grid-cols-1 gap-3 pt-1">
-                  {productsInCat.map((product) =>
-                    product.hasImage ? (
-                      <ProductCardWithImage
-                        key={product.id}
-                        product={product}
-                        lang={lang}
-                        onSelectProduct={setSelectedProduct}
-                      />
-                    ) : (
-                      <ProductCardNoImage
-                        key={product.id}
-                        product={product}
-                        lang={lang}
-                        onSelectProduct={setSelectedProduct}
-                      />
-                    )
-                  )}
+                {/* 2-Column Half Card Grid with Circular Image */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-1">
+                  {productsInCat.map((product) => (
+                    <ProductCardGrid
+                      key={product.id}
+                      product={product}
+                      lang={lang}
+                      onSelectProduct={setSelectedProduct}
+                    />
+                  ))}
                 </div>
               </section>
             );
