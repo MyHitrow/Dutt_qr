@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { Star, Clock, Plus, Sparkles } from "lucide-react";
+import { Star, Clock, Sparkles, Info } from "lucide-react";
 import { Product, Language } from "@/types/menu";
 import { DietaryBadge } from "./DietaryBadge";
 
@@ -18,17 +18,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
   return (
     <article
       onClick={() => onOpen(product)}
-      className={`relative bg-[#1D1D1F] rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border border-white/[0.04] shadow-card active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-55" : ""}`}
+      className={`relative bg-[#1D1D1F] rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border border-white/[0.04] shadow-card active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-50" : ""}`}
     >
-      {/* ── Overlapping circular plate photo (DUT signature) ── */}
-      <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-[88px] h-[88px] rounded-full border-4 border-[#101011] overflow-hidden bg-[#222224] shadow-plate z-10 flex-shrink-0 transition-transform duration-300 ${!isSoldOut ? "group-hover:scale-105" : ""}`}>
+      {/* ── DUT Signature: overlapping circular plate ── */}
+      <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-[88px] h-[88px] rounded-full border-4 border-[#101011] overflow-hidden bg-[#222224] shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-10 flex-shrink-0 transition-transform duration-300 ${!isSoldOut ? "group-hover:scale-105" : ""}`}>
         {product.hasImage && product.imageUrl && !imgErr
           ? <Image src={product.imageUrl} alt={product.name[lang]} fill sizes="88px" className="object-cover" onError={() => setImgErr(true)} />
-          : <div className="w-full h-full flex items-center justify-center bg-[#252527]"><Sparkles className="w-6 h-6 text-[#A66CFF]/50" /></div>
+          : <div className="w-full h-full flex items-center justify-center bg-[#252527]"><Sparkles className="w-5 h-5 text-[#A66CFF]/40" /></div>
         }
-        {/* Sold out overlay on plate */}
+        {/* Sold out plate overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-[#101011]/70 flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#101011]/75 flex items-center justify-center">
             <span className="text-[9px] font-bold text-[#68686E] uppercase tracking-wider text-center leading-tight px-1">
               {lang === "tr" ? "Tükendi" : "Sold Out"}
             </span>
@@ -36,7 +36,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         )}
       </div>
 
-      {/* Dietary badges row */}
+      {/* Dietary badges */}
       <div className="flex flex-wrap gap-1 mb-2 min-h-[18px]">
         {product.dietary?.isChefRecommended && <DietaryBadge type="chef" lang={lang} />}
         {product.dietary?.isNew && <DietaryBadge type="new" lang={lang} />}
@@ -50,7 +50,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         {product.name[lang]}
       </h3>
 
-      {/* Rating row */}
+      {/* Rating */}
       {product.rating && (
         <div className="flex items-center gap-1 mb-2">
           <Star className="w-3 h-3 fill-[#A66CFF] text-[#A66CFF]" />
@@ -59,10 +59,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         </div>
       )}
 
-      {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Footer */}
+      {/* Footer: price + prep time */}
       <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between mt-2">
         <div>
           <span className="font-bold text-sm text-[#A66CFF]">{product.price} {product.currency}</span>
@@ -73,21 +72,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
             </div>
           )}
         </div>
-
-        {/* Add button */}
-        {!isSoldOut && (
-          <div
-            onClick={e => { e.stopPropagation(); onOpen(product); }}
-            className="w-7 h-7 rounded-full bg-[#A66CFF] flex items-center justify-center shadow-purple-glow active:scale-90 transition-transform"
-          >
-            <Plus className="w-4 h-4 text-[#101011]" strokeWidth={2.5} />
-          </div>
-        )}
-        {isSoldOut && (
-          <span className="text-[10px] font-semibold text-[#68686E] px-2 py-1 rounded-lg bg-[#222224] border border-white/5">
-            {lang === "tr" ? "Tükendi" : "Sold Out"}
-          </span>
-        )}
+        {/* Info icon instead of add button */}
+        <div className="w-7 h-7 rounded-full bg-[#222224] border border-white/[0.06] flex items-center justify-center text-[#68686E] group-hover:text-[#A66CFF] group-hover:border-[#A66CFF]/30 transition-all">
+          <Info className="w-3.5 h-3.5" />
+        </div>
       </div>
     </article>
   );
