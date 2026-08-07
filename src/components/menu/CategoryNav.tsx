@@ -1,8 +1,6 @@
 "use client";
-
 import React, { useRef, useEffect } from "react";
 import { Category, Language } from "@/types/menu";
-import { Utensils, Coffee, Wine, IceCream, Pizza } from "lucide-react";
 
 interface CategoryNavProps {
   categories: Category[];
@@ -12,65 +10,46 @@ interface CategoryNavProps {
 }
 
 export const CategoryNav: React.FC<CategoryNavProps> = ({
-  categories,
-  activeCategoryId,
-  onSelectCategory,
-  lang,
+  categories, activeCategoryId, onSelectCategory, lang,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll category tab into view when active category changes
   useEffect(() => {
-    if (!containerRef.current) return;
-    const activeElement = containerRef.current.querySelector(
-      `[data-category-id="${activeCategoryId}"]`
-    ) as HTMLElement;
-
-    if (activeElement) {
-      const container = containerRef.current;
-      const scrollLeft =
-        activeElement.offsetLeft -
-        container.offsetWidth / 2 +
-        activeElement.offsetWidth / 2;
-      container.scrollTo({ left: scrollLeft, behavior: "smooth" });
+    const el = scrollRef.current?.querySelector(`[data-cat="${activeCategoryId}"]`) as HTMLElement;
+    if (el && scrollRef.current) {
+      const c = scrollRef.current;
+      c.scrollTo({ left: el.offsetLeft - c.offsetWidth / 2 + el.offsetWidth / 2, behavior: "smooth" });
     }
   }, [activeCategoryId]);
 
   return (
-    <nav className="w-full bg-background/95 backdrop-blur-md sticky top-[53px] z-20 transition-colors py-2">
-      <div className="max-w-md mx-auto px-4 mb-2 flex items-center justify-between">
-        <h3 className="font-semibold text-sm sm:text-base text-content-primary">
-          {lang === "tr" ? "Kategoriler" : "Meal Category"}
-        </h3>
-        <span className="text-xs text-content-secondary font-medium font-mono">
-          ({categories.length})
-        </span>
-      </div>
-
+    <div className="sticky top-0 z-20 bg-[#101011]/95 backdrop-blur-md border-b border-white/[0.04]">
       <div
-        ref={containerRef}
-        className="max-w-md mx-auto flex items-center gap-2.5 px-4 pb-2 overflow-x-auto no-scrollbar scroll-smooth"
+        ref={scrollRef}
+        className="flex gap-2 px-4 py-2.5 overflow-x-auto no-scrollbar"
       >
         {categories.map((cat) => {
-          const isActive = cat.id === activeCategoryId;
-
+          const active = cat.id === activeCategoryId;
           return (
             <button
               key={cat.id}
-              data-category-id={cat.id}
+              data-cat={cat.id}
               onClick={() => onSelectCategory(cat.id)}
-              className={`whitespace-nowrap px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all relative flex items-center gap-2 active:scale-95 border ${
-                isActive
-                  ? "bg-brand-purple text-[#111111] border-brand-purple shadow-lg shadow-brand-purple/25 font-bold scale-[1.02]"
-                  : "bg-surface border-menuBorder text-content-secondary hover:text-content-primary hover:border-menuBorder/80"
-              }`}
+              className={`
+                flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
+                transition-all duration-200 active:scale-95 whitespace-nowrap
+                ${active
+                  ? "bg-[#302341] border border-[#A66CFF]/30 text-[#C7A8FF]"
+                  : "bg-[#1D1D1F] border border-white/[0.06] text-[#68686E] hover:text-[#96969D]"
+                }
+              `}
             >
-              <Utensils className={`w-3.5 h-3.5 ${isActive ? "text-[#111111]" : "text-brand-purple"}`} />
+              {cat.emoji && <span className="text-sm leading-none">{cat.emoji}</span>}
               <span>{cat.name[lang]}</span>
             </button>
           );
         })}
       </div>
-    </nav>
+    </div>
   );
 };

@@ -1,213 +1,360 @@
-import { Category, Product, VenueSettings, DailyFixMenu } from "@/types/menu";
+import {
+  Category,
+  Product,
+  VenueSettings,
+  Allergen,
+  DailyFixMenu,
+  ActiveFilters,
+} from "@/types/menu";
 
+/* ─── Venue ─── */
 export const mockVenueSettings: VenueSettings = {
-  name: "Dutt Meyhane",
-  slogan: {
-    tr: "Yeni Nesil Meyhane & Gastronomi",
-    en: "Modern Tavern & Fine Gastronomy",
-  },
+  name: "DUT Kitchen",
+  tableNumber: "12",
+  slogan: { tr: "Yeni Nesil Meyhane & Gastronomi", en: "Modern Tavern & Fine Gastronomy" },
+  isOpen: true,
+  closingTime: "23:30",
   defaultTheme: "dark",
   defaultLanguage: "tr",
   currencySymbol: "₺",
   serviceNotice: {
-    tr: "Detaylı içerik, pişirme tercihleri ve alerjen bilgisi için lütfen servis ekibimize danışınız.",
-    en: "For detailed ingredients, cooking preferences, and allergen info, please consult our service team.",
+    tr: "Ürünlerimiz ortak mutfak alanlarında hazırlanmaktadır. Alerjen bilgisi için servis ekibimize danışınız.",
+    en: "Products may be prepared in shared kitchen environments. Consult our team for allergen info.",
   },
+  orderMode: "direct",
+  serviceFeePercent: 10,
 };
 
-export const mockDailyFixMenus: DailyFixMenu[] = [
-  {
-    dayOfWeek: 1, // Pazartesi
-    dayName: { tr: "Pazartesi", en: "Monday" },
-    title: { tr: "Sendromsuz Pazartesi Fix Menü", en: "No-Blues Monday Fix Menu" },
-    subtitle: { tr: "4 Çeşit Soğuk Meze + Ara Sıcak + Ana Yemek + 2 Kadeh İçecek", en: "4 Cold Mezes + Starter + Main + 2 Glasses Drink" },
-    price: 1250,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
-  {
-    dayOfWeek: 2, // Salı
-    dayName: { tr: "Salı", en: "Tuesday" },
-    title: { tr: "Kadınlar Matinesi Özel Fix Menü", en: "Ladies Night Special Fix Menu" },
-    subtitle: { tr: "Sınırsız Meze Büfesi + Canlı Müzik + Tatlı & Meyve İkramı", en: "Unlimited Meze + Live Music + Dessert & Fruit Compliments" },
-    price: 1450,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
-  {
-    dayOfWeek: 3, // Çarşamba
-    dayName: { tr: "Çarşamba", en: "Wednesday" },
-    title: { tr: "Ege Lezzetleri & Akustik Gece", en: "Aegean Flavors & Acoustic Night" },
-    subtitle: { tr: "Zeytinyağlı Mezeler + Ege Otu Mücveri + Deniz Mahsulleri", en: "Aegean Olive Oil Mezes + Seafood Special" },
-    price: 1350,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
-  {
-    dayOfWeek: 4, // Perşembe
-    dayName: { tr: "Perşembe", en: "Thursday" },
-    title: { tr: "Hafta Ortası Meyhane Keyfi", en: "Midweek Tavern Feast" },
-    subtitle: { tr: "Şefin Özel Seçimleri + Sıcak Meze Tabağı + Izgara Balık", en: "Chef Special Selection + Warm Meze Plate + Grilled Fish" },
-    price: 1400,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
-  {
-    dayOfWeek: 5, // Cuma
-    dayName: { tr: "Cuma", en: "Friday" },
-    title: { tr: "Cuma Fasıl & Gala Fix Menü", en: "Friday Classical Fasıl Gala Menu" },
-    subtitle: { tr: "Canlı Klasik Fasıl + 6 Çeşit Meze + Ara Sıcaklar + Ana Yemek", en: "Live Fasıl Music + 6 Mezes + Starters + Main Course" },
-    price: 1850,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
-  {
-    dayOfWeek: 6, // Cumartesi
-    dayName: { tr: "Cumartesi", en: "Saturday" },
-    title: { tr: "Cumartesi Yeni Nesil Eğlence Fix Menü", en: "Saturday Modern Tavern Gala Menu" },
-    subtitle: { tr: "DJ Performansı + Premium Zengin Menü + Meyve & Şampanya", en: "Live DJ Performance + Premium Full Course Menu" },
-    price: 1950,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
-  {
-    dayOfWeek: 0, // Pazar
-    dayName: { tr: "Pazar", en: "Sunday" },
-    title: { tr: "Pazar Rakı & Dem Akşamı", en: "Sunday Relaxing Raki Evening" },
-    subtitle: { tr: "Ağır Ağır Demlenen Soğuk Mezeler + Özel Demleme Rakı Menüsü", en: "Slow Meze Dining + Premium Raki Experience" },
-    price: 1300,
-    currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
-    isActive: true,
-  },
+/* ─── Allergens List ─── */
+export const mockAllergensList: Allergen[] = [
+  { id: "alg-gluten",    code: "GLUTEN",    name: { tr: "Gluten",              en: "Gluten"     } },
+  { id: "alg-dairy",     code: "DAIRY",     name: { tr: "Süt / Süt Ürünleri", en: "Dairy"      } },
+  { id: "alg-egg",       code: "EGG",       name: { tr: "Yumurta",            en: "Egg"         } },
+  { id: "alg-shellfish", code: "SHELLFISH", name: { tr: "Kabuklu Deniz Ürünleri", en: "Shellfish" } },
+  { id: "alg-nuts",      code: "NUTS",      name: { tr: "Kuruyemiş / Fıstık", en: "Nuts"        } },
+  { id: "alg-sesame",    code: "SESAME",    name: { tr: "Susam",              en: "Sesame"      } },
+  { id: "alg-fish",      code: "FISH",      name: { tr: "Balık",              en: "Fish"        } },
 ];
 
+/* ─── Categories ─── */
 export const mockCategories: Category[] = [
-  { id: "cat-1", slug: "soguk-mezeler", name: { tr: "Soğuk Mezeler", en: "Cold Mezes" }, sortOrder: 1, isActive: true },
-  { id: "cat-2", slug: "sicak-mezeler", name: { tr: "Sıcak Mezeler", en: "Warm Mezes" }, sortOrder: 2, isActive: true },
-  { id: "cat-3", slug: "ara-sicaklar", name: { tr: "Ara Sıcaklar", en: "Warm Starters" }, sortOrder: 3, isActive: true },
-  { id: "cat-4", slug: "deniz-urunleri", name: { tr: "Deniz Ürünleri", en: "Seafood Main" }, sortOrder: 4, isActive: true },
-  { id: "cat-5", slug: "ana-yemekler", name: { tr: "Ana Yemekler", en: "Main Courses" }, sortOrder: 5, isActive: true },
-  { id: "cat-6", slug: "tatlilar", name: { tr: "Tatlılar", en: "Desserts" }, sortOrder: 6, isActive: true },
-  { id: "cat-7", slug: "rakilar", name: { tr: "Rakılar", en: "Raki Selection" }, sortOrder: 7, isActive: true },
-  { id: "cat-8", slug: "saraplar", name: { tr: "Şaraplar", en: "Wines" }, sortOrder: 8, isActive: true },
-  { id: "cat-9", slug: "alkolsuz", name: { tr: "Alkolsüz", en: "Non-Alcoholic" }, sortOrder: 9, isActive: true },
+  { id: "cat-popular",   slug: "popular",     name: { tr: "Popüler",        en: "Popular"     }, sortOrder: 0, isActive: true, emoji: "🔥" },
+  { id: "cat-starter",   slug: "starters",    name: { tr: "Başlangıçlar",   en: "Starters"    }, sortOrder: 1, isActive: true, emoji: "🥗" },
+  { id: "cat-meze-cold", slug: "soguk-meze",  name: { tr: "Soğuk Mezeler",  en: "Cold Mezes"  }, sortOrder: 2, isActive: true, emoji: "🫙" },
+  { id: "cat-meze-hot",  slug: "sicak-meze",  name: { tr: "Sıcak Mezeler",  en: "Hot Mezes"   }, sortOrder: 3, isActive: true, emoji: "🍲" },
+  { id: "cat-main",      slug: "ana-yemek",   name: { tr: "Ana Yemekler",   en: "Main Course" }, sortOrder: 4, isActive: true, emoji: "🍽️" },
+  { id: "cat-seafood",   slug: "deniz",       name: { tr: "Deniz Ürünleri", en: "Seafood"     }, sortOrder: 5, isActive: true, emoji: "🦐" },
+  { id: "cat-dessert",   slug: "tatli",       name: { tr: "Tatlılar",       en: "Desserts"    }, sortOrder: 6, isActive: true, emoji: "🍮" },
+  { id: "cat-raki",      slug: "raki",        name: { tr: "Rakılar",        en: "Raki"        }, sortOrder: 7, isActive: true, emoji: "🥃" },
+  { id: "cat-wine",      slug: "sarap",       name: { tr: "Şaraplar",       en: "Wines"       }, sortOrder: 8, isActive: true, emoji: "🍷" },
+  { id: "cat-drinks",    slug: "alkolsuz",    name: { tr: "Alkolsüz",       en: "Non-Alcoholic" }, sortOrder: 9, isActive: true, emoji: "🧃" },
 ];
 
+/* ─── Products ─── */
 export const mockProducts: Product[] = [
+  /* ── Popular ── */
   {
     id: "prod-101",
-    categoryId: "cat-1",
-    name: { tr: "Atom & Süzme Yoğurt", en: "Atom & Strained Yogurt" },
+    categoryId: "cat-popular",
+    name: { tr: "Tereyağında Karides", en: "Garlic Butter Shrimp" },
     description: {
-      tr: "Kurutulmuş acı Arnavut biberi, tereyağında kızdırılmış mor sarımsak ve süzme yoğurt.",
-      en: "Dried spicy Albanian pepper, garlic clarified butter and rich strained yogurt."
+      tr: "Sarımsak tereyağında sote körfez karidesi, pul biber, taze kekik. Özel sos ile servis edilir.",
+      en: "Gulf shrimp sautéed in garlic butter, red pepper flakes, fresh thyme. Served with special sauce.",
     },
-    price: 240,
+    price: 490,
     currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=800&q=85",
     hasImage: true,
     isAvailable: true,
     isActive: true,
     sortOrder: 1,
-    dietary: { isVegetarian: true, spicyLevel: 2 },
-    allergens: [{ id: "alg-1", code: "MILK", name: { tr: "Süt ve Süt Ürünleri", en: "Milk & Dairy" } }],
-    chefNote: {
-      tr: "Biberlerimiz Hatay'dan özel olarak temin edilmektedir.",
-      en: "Peppers are specially sourced from Hatay."
-    }
+    prepTime: "12–15 dak",
+    rating: 4.9,
+    reviewCount: 247,
+    dietary: { isChefRecommended: true, isPopular: true, spicyLevel: 1 },
+    allergens: [
+      { id: "alg-shellfish", code: "SHELLFISH", name: { tr: "Kabuklu Deniz Ürünleri", en: "Shellfish" } },
+      { id: "alg-dairy", code: "DAIRY", name: { tr: "Süt / Süt Ürünleri", en: "Dairy" } },
+    ],
+    customizations: [
+      {
+        id: "cust-spicy",
+        type: "radio",
+        label: { tr: "Acı Seviyesi", en: "Spice Level" },
+        required: false,
+        choices: [
+          { id: "mild",    label: { tr: "Az Acı",     en: "Mild"   }, isDefault: true },
+          { id: "medium",  label: { tr: "Orta Acı",   en: "Medium" } },
+          { id: "hot",     label: { tr: "Çok Acı",    en: "Hot"    } },
+        ],
+      },
+      {
+        id: "cust-extras",
+        type: "checkbox",
+        label: { tr: "Ekstralar", en: "Extras" },
+        choices: [
+          { id: "ext-extra-shrimp", label: { tr: "Ekstra Karides", en: "Extra Shrimp" }, priceDelta: 90 },
+          { id: "ext-parmesan",     label: { tr: "Parmesan",        en: "Parmesan"     }, priceDelta: 35 },
+          { id: "ext-chili",        label: { tr: "Chili Flakes",    en: "Chili Flakes" }, priceDelta: 0  },
+        ],
+      },
+    ],
+    chefNote: { tr: "Körfez karidesi günlük taze olarak gelmektedir.", en: "Gulf shrimp arrives fresh daily." },
   },
   {
     id: "prod-102",
-    categoryId: "cat-1",
-    name: { tr: "Girit Ezmesi", en: "Cretan Cheese Paste" },
+    categoryId: "cat-popular",
+    name: { tr: "Ahtapot Izgara", en: "Grilled Octopus" },
     description: {
-      tr: "Ezine peyniri, lor peyniri, antep fıstığı, taze fesleğen ve sızma zeytinyağı.",
-      en: "Aged Ezine cheese, curd cheese, pistachio, fresh basil and extra virgin olive oil."
+      tr: "Köz patlıcan püresi üzerinde ızgara Ege ahtapotu, nar ekşili zeytinyağı sosu ve taze otlar.",
+      en: "Grilled Aegean octopus over smoked eggplant purée, pomegranate reduction and fresh herbs.",
     },
-    price: 260,
+    price: 680,
     currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1535400255456-984241443b29?auto=format&fit=crop&w=800&q=85",
     hasImage: true,
     isAvailable: true,
     isActive: true,
     sortOrder: 2,
-    dietary: { isVegetarian: true, isGlutenFree: true },
+    prepTime: "20–25 dak",
+    rating: 4.8,
+    reviewCount: 189,
+    dietary: { isChefRecommended: true, isPopular: true, isGlutenFree: true },
     allergens: [
-      { id: "alg-1", code: "MILK", name: { tr: "Süt ve Süt Ürünleri", en: "Milk & Dairy" } },
-      { id: "alg-2", code: "NUTS", name: { tr: "Kuruyemiş", en: "Nuts" } }
-    ]
+      { id: "alg-shellfish", code: "SHELLFISH", name: { tr: "Kabuklu Deniz Ürünleri", en: "Shellfish" } },
+    ],
+    chefNote: { tr: "Odun ateşinde ağır ağır pişirilmektedir.", en: "Slow-cooked over wood fire." },
   },
   {
     id: "prod-103",
-    categoryId: "cat-1",
-    name: { tr: "Avokadolu Fava", en: "Fava Bean Puree with Avocado" },
+    categoryId: "cat-popular",
+    name: { tr: "Truffle Tavuk", en: "Truffle Chicken" },
     description: {
-      tr: "Ege baklası, olgun avokado dilimleri, dereotu, dereotu yağı ve karamelize kırmızı soğan.",
-      en: "Broad bean puree, ripe avocado, fresh dill, dill oil and caramelized red onion."
+      tr: "Izgara tavuk göğsü, trüf kreması, parmesan ve rosto patates üzerinde servis.",
+      en: "Grilled chicken breast, truffle cream sauce, parmesan, served on roasted potatoes.",
     },
-    price: 270,
+    price: 480,
     currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=85",
     hasImage: true,
     isAvailable: true,
     isActive: true,
     sortOrder: 3,
-    dietary: { isVegan: true, isVegetarian: true, isGlutenFree: true }
+    prepTime: "20–25 dak",
+    rating: 4.7,
+    reviewCount: 156,
+    dietary: { isNew: true, isChefRecommended: true },
+    allergens: [
+      { id: "alg-dairy", code: "DAIRY", name: { tr: "Süt / Süt Ürünleri", en: "Dairy" } },
+      { id: "alg-gluten", code: "GLUTEN", name: { tr: "Gluten", en: "Gluten" } },
+    ],
+    customizations: [
+      {
+        id: "cust-starch",
+        type: "radio",
+        label: { tr: "Garnitür", en: "Side Dish" },
+        required: true,
+        choices: [
+          { id: "potato",  label: { tr: "Rosto Patates",   en: "Roasted Potatoes" }, isDefault: true },
+          { id: "salad",   label: { tr: "Mevsim Salata",   en: "Season Salad"     } },
+          { id: "rice",    label: { tr: "Pilav",           en: "Rice"             } },
+        ],
+      },
+    ],
   },
+  /* ── Cold Mezes ── */
   {
     id: "prod-201",
-    categoryId: "cat-3",
-    name: { tr: "Tereyağında Karides", en: "Shrimp in Butter & Garlic" },
+    categoryId: "cat-meze-cold",
+    name: { tr: "Atom & Süzme Yoğurt", en: "Atom & Strained Yogurt" },
     description: {
-      tr: "Körfez karidesi, sarımsak, pul biber, taze kekik ve sızma tereyağı.",
-      en: "Gulf shrimp, garlic, red pepper flakes, fresh thyme and clarified butter."
+      tr: "Kurutulmuş Arnavut biberi, tereyağında sarımsak ve süzme yoğurt.",
+      en: "Dried Albanian pepper, garlic in clarified butter and rich strained yogurt.",
     },
-    price: 490,
+    price: 240,
     currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=85",
     hasImage: true,
     isAvailable: true,
     isActive: true,
     sortOrder: 1,
-    allergens: [
-      { id: "alg-3", code: "SHELLFISH", name: { tr: "Kabuklu Deniz Ürünleri", en: "Shellfish" } },
-      { id: "alg-1", code: "MILK", name: { tr: "Süt ve Süt Ürünleri", en: "Milk & Dairy" } }
-    ]
+    prepTime: "5 dak",
+    dietary: { isVegetarian: true, spicyLevel: 2 },
+    allergens: [{ id: "alg-dairy", code: "DAIRY", name: { tr: "Süt / Süt Ürünleri", en: "Dairy" } }],
   },
   {
     id: "prod-202",
-    categoryId: "cat-3",
-    name: { tr: "Ahtapot Izgara", en: "Grilled Octopus" },
+    categoryId: "cat-meze-cold",
+    name: { tr: "Girit Ezmesi", en: "Cretan Cheese Paste" },
     description: {
-      tr: "Köz patlıcan yatağında ızgara ızgara Ege ahtapotu, nar ekşili zeytinyağı sos.",
-      en: "Grilled Aegean octopus served over smoked eggplant puree with pomegranate reduction."
+      tr: "Ezine peyniri, lor, antep fıstığı, taze fesleğen ve sızma zeytinyağı.",
+      en: "Ezine cheese, curd cheese, pistachio, fresh basil and extra virgin olive oil.",
     },
-    price: 680,
+    price: 260,
     currency: "₺",
-    imageUrl: "https://images.unsplash.com/photo-1535400255456-984241443b29?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=85",
     hasImage: true,
     isAvailable: true,
     isActive: true,
     sortOrder: 2,
-    chefNote: {
-      tr: "Odun ateşinde ağır ağır marine edilerek pişirilmektedir.",
-      en: "Slowly marinated and wood-fire grilled."
-    }
+    prepTime: "5 dak",
+    dietary: { isVegetarian: true, isGlutenFree: true, isPopular: true },
+    allergens: [
+      { id: "alg-dairy", code: "DAIRY", name: { tr: "Süt / Süt Ürünleri", en: "Dairy" } },
+      { id: "alg-nuts",  code: "NUTS",  name: { tr: "Kuruyemiş / Fıstık", en: "Nuts"  } },
+    ],
   },
   {
+    id: "prod-203",
+    categoryId: "cat-meze-cold",
+    name: { tr: "Avokadolu Fava", en: "Fava Bean Purée with Avocado" },
+    description: {
+      tr: "Ege baklası, olgun avokado, dereotu ve karamelize kırmızı soğan.",
+      en: "Broad bean purée, ripe avocado, fresh dill and caramelized red onion.",
+    },
+    price: 270,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=85",
+    hasImage: true,
+    isAvailable: false, // SOLD OUT
+    isActive: true,
+    sortOrder: 3,
+    prepTime: "5 dak",
+    dietary: { isVegan: true, isVegetarian: true, isGlutenFree: true },
+  },
+  /* ── Hot Mezes ── */
+  {
     id: "prod-301",
-    categoryId: "cat-7",
-    name: { tr: "Yeni Rakı Giz (50 cl)", en: "Yeni Raki Giz (50 cl)" },
+    categoryId: "cat-meze-hot",
+    name: { tr: "Mantar Sote", en: "Sautéed Wild Mushrooms" },
+    description: {
+      tr: "Orman mantarı karışımı, tereyağı, sarımsak, kekik ve taze maydanoz.",
+      en: "Mixed wild mushrooms, butter, garlic, thyme and fresh parsley.",
+    },
+    price: 310,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=85",
+    hasImage: true,
+    isAvailable: true,
+    isActive: true,
+    sortOrder: 1,
+    prepTime: "10–12 dak",
+    dietary: { isVegetarian: true, isVegan: true, isGlutenFree: true, isPopular: true },
+    allergens: [],
+  },
+  {
+    id: "prod-302",
+    categoryId: "cat-meze-hot",
+    name: { tr: "Peynir Mantı", en: "Cheese Filled Dumplings" },
+    description: {
+      tr: "El açması hamur, lor ve tulum peyniri harcı, yoğurt ve tereyağlı sos.",
+      en: "Hand-rolled dough filled with curd and aged cheese, yogurt and brown butter sauce.",
+    },
+    price: 340,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=85",
+    hasImage: true,
+    isAvailable: true,
+    isActive: true,
+    sortOrder: 2,
+    prepTime: "15 dak",
+    dietary: { isVegetarian: true },
+    allergens: [
+      { id: "alg-gluten", code: "GLUTEN", name: { tr: "Gluten", en: "Gluten" } },
+      { id: "alg-dairy",  code: "DAIRY",  name: { tr: "Süt / Süt Ürünleri", en: "Dairy" } },
+      { id: "alg-egg",    code: "EGG",    name: { tr: "Yumurta", en: "Egg" } },
+    ],
+  },
+  /* ── Main Course ── */
+  {
+    id: "prod-401",
+    categoryId: "cat-main",
+    name: { tr: "Dana Antrikot", en: "Beef Ribeye" },
+    description: {
+      tr: "300g Dry-aged dana antrikot, izgara sebze, chimichurri sosu ve rosto domates.",
+      en: "300g dry-aged beef ribeye, grilled vegetables, chimichurri sauce and roasted tomato.",
+    },
+    price: 1280,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=85",
+    hasImage: true,
+    isAvailable: true,
+    isActive: true,
+    sortOrder: 1,
+    prepTime: "25–30 dak",
+    rating: 4.9,
+    dietary: { isChefRecommended: true, isGlutenFree: true },
+    allergens: [],
+    customizations: [
+      {
+        id: "cust-doneness",
+        type: "radio",
+        label: { tr: "Pişirme Derecesi", en: "Doneness" },
+        required: true,
+        choices: [
+          { id: "rare",       label: { tr: "Az Pişmiş",     en: "Rare"        } },
+          { id: "medium-rare", label: { tr: "Orta Az",      en: "Medium Rare" }, isDefault: true },
+          { id: "medium",     label: { tr: "Orta",          en: "Medium"      } },
+          { id: "well-done",  label: { tr: "İyi Pişmiş",    en: "Well Done"   } },
+        ],
+      },
+    ],
+    chefNote: { tr: "45 gün dry-age işlemiyle olgunlaştırılmaktadır.", en: "45-day dry-aged for peak tenderness." },
+  },
+  /* ── Seafood ── */
+  {
+    id: "prod-501",
+    categoryId: "cat-seafood",
+    name: { tr: "Levrek Izgara", en: "Grilled Sea Bass" },
+    description: {
+      tr: "Taze Ege levreği, sızma zeytinyağı, kapari, limon ve taze otlar üzerinde.",
+      en: "Fresh Aegean sea bass, extra virgin olive oil, capers, lemon and fresh herbs.",
+    },
+    price: 760,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=85",
+    hasImage: true,
+    isAvailable: true,
+    isActive: true,
+    sortOrder: 1,
+    prepTime: "20 dak",
+    rating: 4.8,
+    dietary: { isGlutenFree: true, isChefRecommended: true },
+    allergens: [
+      { id: "alg-fish", code: "FISH", name: { tr: "Balık", en: "Fish" } },
+    ],
+  },
+  /* ── Desserts ── */
+  {
+    id: "prod-601",
+    categoryId: "cat-dessert",
+    name: { tr: "Kazandibi", en: "Caramelized Milk Pudding" },
+    description: {
+      tr: "Geleneksel Osmanlı tatlısı. Karamelize süt peltesi, mastic aroması ve fıstık kıyması.",
+      en: "Traditional Ottoman dessert. Caramelized milk jelly with mastic aroma and pistachios.",
+    },
+    price: 220,
+    currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=85",
+    hasImage: true,
+    isAvailable: true,
+    isActive: true,
+    sortOrder: 1,
+    prepTime: "Hazır",
+    dietary: { isVegetarian: true },
+    allergens: [
+      { id: "alg-dairy", code: "DAIRY", name: { tr: "Süt / Süt Ürünleri", en: "Dairy" } },
+      { id: "alg-nuts",  code: "NUTS",  name: { tr: "Kuruyemiş / Fıstık", en: "Nuts"  } },
+    ],
+  },
+  /* ── Raki ── */
+  {
+    id: "prod-701",
+    categoryId: "cat-raki",
+    name: { tr: "Yeni Rakı Giz — 50cl", en: "Yeni Raki Giz — 50cl" },
     description: {
       tr: "Meşe fıçılarda dinlendirilmiş özel seri yaş üzüm rakısı.",
-      en: "Special oak-barreled fresh grape raki."
+      en: "Special oak-barreled fresh grape raki.",
     },
     price: 2400,
     currency: "₺",
@@ -215,24 +362,96 @@ export const mockProducts: Product[] = [
     isAvailable: true,
     isActive: true,
     sortOrder: 1,
-    servingSuggestion: {
-      tr: "Karaf ve taze buz ile servis edilir.",
-      en: "Served with carafe and fresh ice."
-    }
+    servingSuggestion: { tr: "Soğuk su ve buz ile servis edilir.", en: "Served with cold water and ice." },
   },
   {
-    id: "prod-302",
-    categoryId: "cat-7",
-    name: { tr: "Beylerbeyi Göbek (70 cl)", en: "Beylerbeyi Gobek (70 cl)" },
-    description: {
-      tr: "%100 yaş üzüm ve 3 kez distile edilmiş üst segment göbek rakısı.",
-      en: "100% fresh grape, triple distilled premium Turkish raki."
-    },
-    price: 3100,
+    id: "prod-702",
+    categoryId: "cat-raki",
+    name: { tr: "Efe — Kıl Bardak Tek", en: "Efe — Single Glass" },
+    description: { tr: "Ege'nin köklü rakı markası. Tek servis.", en: "Iconic Aegean raki brand. Single serve." },
+    price: 320,
     currency: "₺",
     hasImage: false,
     isAvailable: true,
     isActive: true,
-    sortOrder: 2
-  }
+    sortOrder: 2,
+  },
 ];
+
+/* ─── Daily Fix Menus ─── */
+export const mockDailyFixMenus: DailyFixMenu[] = [
+  {
+    dayOfWeek: 1,
+    dayName: { tr: "Pazartesi", en: "Monday" },
+    title: { tr: "Sendromsuz Pazartesi Fix Menü", en: "No-Blues Monday Fix Menu" },
+    subtitle: { tr: "4 Çeşit Soğuk Meze + Ara Sıcak + Ana Yemek + 2 Kadeh", en: "4 Cold Mezes + Starter + Main + 2 Glasses" },
+    price: 1250, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 2,
+    dayName: { tr: "Salı", en: "Tuesday" },
+    title: { tr: "Kadınlar Matinesi Özel Fix Menü", en: "Ladies Night Special Menu" },
+    subtitle: { tr: "Sınırsız Meze Büfesi + Canlı Müzik + Tatlı İkramı", en: "Unlimited Meze Buffet + Live Music + Dessert" },
+    price: 1450, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 3,
+    dayName: { tr: "Çarşamba", en: "Wednesday" },
+    title: { tr: "Ege Lezzetleri Akustik Gece", en: "Aegean Flavors Acoustic Night" },
+    subtitle: { tr: "Zeytinyağlı Mezeler + Deniz Mahsulleri Tabağı", en: "Olive Oil Mezes + Seafood Plate" },
+    price: 1350, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 4,
+    dayName: { tr: "Perşembe", en: "Thursday" },
+    title: { tr: "Hafta Ortası Meyhane Keyfi", en: "Midweek Tavern Feast" },
+    subtitle: { tr: "Şefin Seçimleri + Sıcak Meze Tabağı + Izgara", en: "Chef Specials + Warm Meze + Grill" },
+    price: 1400, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 5,
+    dayName: { tr: "Cuma", en: "Friday" },
+    title: { tr: "Cuma Fasıl & Gala Fix Menü", en: "Friday Classical Fasıl Gala Menu" },
+    subtitle: { tr: "Canlı Fasıl + 6 Çeşit Meze + Ara Sıcaklar + Ana Yemek", en: "Live Fasıl + 6 Mezes + Starters + Main" },
+    price: 1850, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 6,
+    dayName: { tr: "Cumartesi", en: "Saturday" },
+    title: { tr: "Cumartesi Yeni Nesil Gala", en: "Saturday Modern Gala Menu" },
+    subtitle: { tr: "DJ Performansı + Premium Zengin Menü + Şampanya", en: "Live DJ + Premium Full Course + Champagne" },
+    price: 1950, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+  {
+    dayOfWeek: 0,
+    dayName: { tr: "Pazar", en: "Sunday" },
+    title: { tr: "Pazar Rakı & Dem Akşamı", en: "Sunday Raki Evening" },
+    subtitle: { tr: "Ağır Ağır Soğuk Mezeler + Özel Rakı Menüsü", en: "Slow Meze Dining + Premium Raki Experience" },
+    price: 1300, currency: "₺",
+    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+    isActive: true,
+  },
+];
+
+/* ─── Default Filters ─── */
+export const defaultFilters: ActiveFilters = {
+  vegetarian: false,
+  vegan: false,
+  glutenFree: false,
+  spicy: false,
+  chefRecommended: false,
+  popular: false,
+  allergens: [],
+};

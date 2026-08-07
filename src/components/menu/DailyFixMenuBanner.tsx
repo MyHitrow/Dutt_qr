@@ -1,62 +1,54 @@
 "use client";
-
 import React from "react";
 import Image from "next/image";
 import { DailyFixMenu, Language } from "@/types/menu";
-import { Clock, Sparkles, Calendar, Utensils } from "lucide-react";
+import { Clock, Utensils } from "lucide-react";
 
 interface DailyFixMenuBannerProps {
   fixMenu: DailyFixMenu;
   lang: Language;
 }
 
-export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({
-  fixMenu,
-  lang,
-}) => {
+const t = (obj: { tr: string; en: string }, lang: Language): string =>
+  obj[lang as "tr" | "en"] ?? obj.en;
+
+export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ fixMenu, lang }) => {
   return (
     <div className="w-full px-4 pt-2 pb-3">
-      <div className="max-w-md mx-auto relative rounded-3xl bg-[#1C1C1E] border border-menuBorder p-5 overflow-hidden shadow-card group transition-all">
-        {/* Soft Purple Subtle Background Glow */}
-        <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-purple/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-md mx-auto relative rounded-[20px] bg-[#1D1D1F] border border-white/[0.06] p-4 overflow-hidden shadow-card group transition-all">
+        {/* Glow */}
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#A66CFF]/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative flex items-center justify-between gap-4">
-          {/* Text Content Details */}
           <div className="flex-1 space-y-2 min-w-0">
-            <span className="text-[11px] font-medium tracking-wide text-content-secondary block">
-              {fixMenu.dayName[lang]} {lang === "tr" ? "Günün Öne Çıkan Fix Menüsü" : "Today's Featured Menu"}
+            <span className="text-[11px] font-medium tracking-wide text-[#96969D] block">
+              {t(fixMenu.dayName, lang)} — {lang === "tr" ? "Günün Fix Menüsü" : "Today's Special Menu"}
             </span>
-
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-content-primary leading-tight group-hover:text-brand-purple transition-colors">
-              {fixMenu.title[lang]}
+            <h2 className="text-[#F7F7F8] text-lg font-bold leading-tight group-hover:text-[#C7A8FF] transition-colors">
+              {t(fixMenu.title, lang)}
             </h2>
-
-            <p className="text-xs text-content-secondary font-light line-clamp-2 leading-relaxed">
-              {fixMenu.subtitle[lang]}
+            <p className="text-[#68686E] text-xs line-clamp-2 leading-relaxed">
+              {t(fixMenu.subtitle, lang)}
             </p>
-
-            {/* Minimal Icon Badges (Matching reference UI) */}
-            <div className="pt-2 flex items-center gap-3">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-purpleDark/50 border border-brand-purple/20 text-brand-purple text-xs font-semibold">
-                <Clock className="w-3.5 h-3.5" />
-                <span>00:01 - 23:59</span>
+            <div className="pt-1 flex items-center gap-2">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#302341]/50 border border-[#A66CFF]/20 text-[#A66CFF] text-[11px] font-semibold">
+                <Clock className="w-3 h-3" />
+                <span>00:01 – 23:59</span>
               </div>
-
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-purpleDark/50 border border-brand-purple/20 text-brand-purple text-xs font-mono font-bold">
-                <Utensils className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#302341]/50 border border-[#A66CFF]/20 text-[#A66CFF] text-[11px] font-mono font-bold">
+                <Utensils className="w-3 h-3" />
                 <span>{fixMenu.price} {fixMenu.currency}</span>
               </div>
             </div>
           </div>
 
-          {/* Right Banner Food Photo */}
           {fixMenu.imageUrl && (
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 border border-menuBorder shadow-xl">
+            <div className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 border border-white/[0.06] shadow-xl">
               <Image
                 src={fixMenu.imageUrl}
-                alt={fixMenu.title[lang]}
+                alt={t(fixMenu.title, lang)}
                 fill
-                sizes="128px"
+                sizes="112px"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>

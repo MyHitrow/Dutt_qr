@@ -1,195 +1,227 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { Category, Product, VenueSettings, Allergen, DailyFixMenu } from "@/types/menu";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
-  mockVenueSettings,
-  mockCategories,
-  mockProducts,
-  mockDailyFixMenus,
+  Category, Product, VenueSettings, Allergen, DailyFixMenu,
+  CartItem, CartCustomization, Order, OrderStatus, ActiveFilters, Language,
+} from "@/types/menu";
+import {
+  mockVenueSettings, mockCategories, mockProducts, mockDailyFixMenus,
+  mockAllergensList, defaultFilters,
 } from "@/data/mockMenuData";
-import { createClient } from "@/lib/supabase/client";
 
 interface MenuContextType {
+  /* ─ Data ─ */
   venue: VenueSettings;
   categories: Category[];
   products: Product[];
   allergens: Allergen[];
   dailyFixMenus: DailyFixMenu[];
+  lang: Language;
+  setLang: (l: Language) => void;
+
+  /* ─ Fix Menu ─ */
   getCurrentDayFixMenu: () => DailyFixMenu | undefined;
   updateDailyFixMenu: (dayOfWeek: number, data: Partial<DailyFixMenu>) => void;
-  updateVenue: (venue: Partial<VenueSettings>) => void;
-  addProduct: (product: Omit<Product, "id">) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
+  updateVenue: (v: Partial<VenueSettings>) => void;
+  addProduct: (p: Omit<Product, "id">) => void;
+  updateProduct: (id: string, p: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   toggleProductAvailability: (id: string) => void;
-  addCategory: (category: Omit<Category, "id">) => void;
-  updateCategory: (id: string, category: Partial<Category>) => void;
+  addCategory: (c: Omit<Category, "id">) => void;
+  updateCategory: (id: string, c: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+
+  /* ─ Filters ─ */
+  filters: ActiveFilters;
+  setFilters: (f: ActiveFilters) => void;
+  filteredProducts: Product[];
+  activeFilterCount: number;
+
+  /* ─ Cart ─ */
+  cartItems: CartItem[];
+  cartCount: number;
+  cartSubtotal: number;
+  cartTotal: number;
+  serviceFee: number;
+  addToCart: (product: Product, qty: number, customizations: CartCustomization[], note?: string) => void;
+  updateCartItemQty: (cartId: string, qty: number) => void;
+  removeFromCart: (cartId: string) => void;
+  clearCart: () => void;
+
+  /* ─ Order ─ */
+  currentOrder: Order | null;
+  submitOrder: () => void;
+  updateOrderStatus: (status: OrderStatus) => void;
+  clearOrder: () => void;
 }
 
-const mockAllergensList: Allergen[] = [
-  { id: "alg-1", code: "MILK", name: { tr: "Süt ve Süt Ürünleri", en: "Milk & Dairy" } },
-  { id: "alg-2", code: "NUTS", name: { tr: "Kuruyemiş / Fıstık", en: "Nuts / Pistachio" } },
-  { id: "alg-3", code: "SHELLFISH", name: { tr: "Kabuklu Deniz Ürünleri", en: "Shellfish" } },
-  { id: "alg-4", code: "GLUTEN", name: { tr: "Gluten / Buğday", en: "Gluten / Wheat" } },
-  { id: "alg-5", code: "EGG", name: { tr: "Yumurta", en: "Egg" } },
-  { id: "alg-6", code: "FISH", name: { tr: "Balık", en: "Fish" } },
-  { id: "alg-7", code: "SESAME", name: { tr: "Susam", en: "Sesame" } },
-];
-
-const LOCAL_STORAGE_KEY_VENUE = "dutt_qr_venue";
-const LOCAL_STORAGE_KEY_CATEGORIES = "dutt_qr_categories";
-const LOCAL_STORAGE_KEY_PRODUCTS = "dutt_qr_products";
-const LOCAL_STORAGE_KEY_FIX_MENUS = "dutt_qr_fix_menus";
+const LS = {
+  VENUE: "dut_venue",
+  CATEGORIES: "dut_categories",
+  PRODUCTS: "dut_products",
+  FIX_MENUS: "dut_fix_menus",
+  CART: "dut_cart",
+  LANG: "dut_lang",
+};
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
 
-export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [venue, setVenue] = useState<VenueSettings>(mockVenueSettings);
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [allergens] = useState<Allergen[]>(mockAllergensList);
   const [dailyFixMenus, setDailyFixMenus] = useState<DailyFixMenu[]>(mockDailyFixMenus);
+  const [filters, setFilters] = useState<ActiveFilters>(defaultFilters);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+  const [lang, setLangState] = useState<Language>("tr");
 
-  const supabase = createClient();
-
-  // Load from localStorage or Supabase on mount
+  /* ── Load from localStorage ── */
   useEffect(() => {
     try {
-      const savedVenue = localStorage.getItem(LOCAL_STORAGE_KEY_VENUE);
-      const savedCategories = localStorage.getItem(LOCAL_STORAGE_KEY_CATEGORIES);
-      const savedProducts = localStorage.getItem(LOCAL_STORAGE_KEY_PRODUCTS);
-      const savedFixMenus = localStorage.getItem(LOCAL_STORAGE_KEY_FIX_MENUS);
-
-      if (savedVenue) setVenue(JSON.parse(savedVenue));
-      if (savedCategories) setCategories(JSON.parse(savedCategories));
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
-      if (savedFixMenus) setDailyFixMenus(JSON.parse(savedFixMenus));
-    } catch (err) {
-      console.warn("Could not parse local storage fallback", err);
-    }
+      const sv = localStorage.getItem(LS.VENUE);
+      const sc = localStorage.getItem(LS.CATEGORIES);
+      const sp = localStorage.getItem(LS.PRODUCTS);
+      const sfm = localStorage.getItem(LS.FIX_MENUS);
+      const sCart = localStorage.getItem(LS.CART);
+      const sLang = localStorage.getItem(LS.LANG);
+      if (sv)    setVenue(JSON.parse(sv));
+      if (sc)    setCategories(JSON.parse(sc));
+      if (sp)    setProducts(JSON.parse(sp));
+      if (sfm)   setDailyFixMenus(JSON.parse(sfm));
+      if (sCart) setCartItems(JSON.parse(sCart));
+      if (sLang) setLangState(sLang as Language);
+    } catch { /* ignore */ }
   }, []);
 
-  // Compute active Fix Menu for current day of week (00:01 to 23:59)
+  /* ── Persist helpers ── */
+  const persistVenue = (v: VenueSettings) => { setVenue(v); localStorage.setItem(LS.VENUE, JSON.stringify(v)); };
+  const persistCategories = (c: Category[]) => { setCategories(c); localStorage.setItem(LS.CATEGORIES, JSON.stringify(c)); };
+  const persistProducts = (p: Product[]) => { setProducts(p); localStorage.setItem(LS.PRODUCTS, JSON.stringify(p)); };
+  const persistFixMenus = (fm: DailyFixMenu[]) => { setDailyFixMenus(fm); localStorage.setItem(LS.FIX_MENUS, JSON.stringify(fm)); };
+  const persistCart = (items: CartItem[]) => { setCartItems(items); localStorage.setItem(LS.CART, JSON.stringify(items)); };
+
+  const setLang = (l: Language) => { setLangState(l); localStorage.setItem(LS.LANG, l); };
+
+  /* ── Fix Menu ── */
   const getCurrentDayFixMenu = () => {
-    const currentDayOfWeek = new Date().getDay(); // 0: Pazar, 1: Pazartesi, 2: Salı, etc.
-    const todayFixMenu = dailyFixMenus.find((m) => m.dayOfWeek === currentDayOfWeek);
-    if (todayFixMenu && todayFixMenu.isActive) {
-      return todayFixMenu;
-    }
-    return undefined;
+    const day = new Date().getDay();
+    return dailyFixMenus.find(m => m.dayOfWeek === day && m.isActive);
   };
+  const updateDailyFixMenu = (day: number, data: Partial<DailyFixMenu>) =>
+    persistFixMenus(dailyFixMenus.map(m => m.dayOfWeek === day ? { ...m, ...data } : m));
 
-  const persistFixMenus = (updated: DailyFixMenu[]) => {
-    setDailyFixMenus(updated);
-    localStorage.setItem(LOCAL_STORAGE_KEY_FIX_MENUS, JSON.stringify(updated));
-  };
-
-  const updateDailyFixMenu = (dayOfWeek: number, data: Partial<DailyFixMenu>) => {
-    const updated = dailyFixMenus.map((item) =>
-      item.dayOfWeek === dayOfWeek ? { ...item, ...data } : item
-    );
-    persistFixMenus(updated);
-  };
-
-  const persistVenue = (updated: VenueSettings) => {
-    setVenue(updated);
-    localStorage.setItem(LOCAL_STORAGE_KEY_VENUE, JSON.stringify(updated));
-  };
-
-  const persistCategories = (updated: Category[]) => {
-    setCategories(updated);
-    localStorage.setItem(LOCAL_STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
-  };
-
-  const persistProducts = (updated: Product[]) => {
-    setProducts(updated);
-    localStorage.setItem(LOCAL_STORAGE_KEY_PRODUCTS, JSON.stringify(updated));
-  };
-
-  const updateVenue = (updated: Partial<VenueSettings>) => {
-    const next = { ...venue, ...updated };
-    persistVenue(next);
-  };
-
-  const addProduct = (newProd: Omit<Product, "id">) => {
-    const created: Product = {
-      ...newProd,
-      id: `prod-${Date.now()}`,
-    };
-    const next = [created, ...products];
-    persistProducts(next);
-  };
-
-  const updateProduct = (id: string, updated: Partial<Product>) => {
-    const next = products.map((p) => (p.id === id ? { ...p, ...updated } : p));
-    persistProducts(next);
-  };
-
-  const deleteProduct = (id: string) => {
-    const next = products.filter((p) => p.id !== id);
-    persistProducts(next);
-  };
-
+  /* ── Venue / Product / Category CRUD ── */
+  const updateVenue = (v: Partial<VenueSettings>) => persistVenue({ ...venue, ...v });
+  const addProduct = (p: Omit<Product, "id">) => persistProducts([{ ...p, id: `prod-${Date.now()}` }, ...products]);
+  const updateProduct = (id: string, p: Partial<Product>) => persistProducts(products.map(x => x.id === id ? { ...x, ...p } : x));
+  const deleteProduct = (id: string) => persistProducts(products.filter(x => x.id !== id));
   const toggleProductAvailability = (id: string) => {
-    const target = products.find((p) => p.id === id);
-    if (target) {
-      updateProduct(id, { isAvailable: !target.isAvailable });
+    const t = products.find(x => x.id === id);
+    if (t) updateProduct(id, { isAvailable: !t.isAvailable });
+  };
+  const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}` }]);
+  const updateCategory = (id: string, c: Partial<Category>) => persistCategories(categories.map(x => x.id === id ? { ...x, ...c } : x));
+  const deleteCategory = (id: string) => { persistCategories(categories.filter(x => x.id !== id)); persistProducts(products.filter(x => x.categoryId !== id)); };
+
+  /* ── Filtered products (with diet/allergen filters) ── */
+  const filteredProducts = products.filter(p => {
+    if (!p.isActive) return false;
+    if (filters.vegetarian && !p.dietary?.isVegetarian && !p.dietary?.isVegan) return false;
+    if (filters.vegan && !p.dietary?.isVegan) return false;
+    if (filters.glutenFree && !p.dietary?.isGlutenFree) return false;
+    if (filters.spicy && !(p.dietary?.spicyLevel && p.dietary.spicyLevel > 0)) return false;
+    if (filters.chefRecommended && !p.dietary?.isChefRecommended) return false;
+    if (filters.popular && !p.dietary?.isPopular) return false;
+    if (filters.allergens.length > 0) {
+      const productAllergenCodes = p.allergens?.map(a => a.code) ?? [];
+      if (filters.allergens.some(code => productAllergenCodes.includes(code))) return false;
     }
+    return true;
+  });
+
+  const activeFilterCount = Object.values(filters).reduce((acc, v) => {
+    if (Array.isArray(v)) return acc + v.length;
+    return acc + (v ? 1 : 0);
+  }, 0);
+
+  /* ── Cart ── */
+  const calcLineTotal = (product: Product, qty: number, customizations: CartCustomization[]) => {
+    const extras = customizations.reduce((s, c) => s + c.priceDelta, 0);
+    return (product.price + extras) * qty;
   };
 
-  const addCategory = (newCat: Omit<Category, "id">) => {
-    const created: Category = {
-      ...newCat,
-      id: `cat-${Date.now()}`,
+  const addToCart = (product: Product, qty: number, customizations: CartCustomization[], note?: string) => {
+    const lineTotal = calcLineTotal(product, qty, customizations);
+    const newItem: CartItem = {
+      cartId: `cart-${Date.now()}`,
+      product,
+      quantity: qty,
+      customizations,
+      specialNote: note,
+      lineTotal,
     };
-    const next = [...categories, created];
-    persistCategories(next);
+    persistCart([...cartItems, newItem]);
   };
 
-  const updateCategory = (id: string, updated: Partial<Category>) => {
-    const next = categories.map((c) => (c.id === id ? { ...c, ...updated } : c));
-    persistCategories(next);
+  const updateCartItemQty = (cartId: string, qty: number) => {
+    if (qty <= 0) { removeFromCart(cartId); return; }
+    persistCart(cartItems.map(i => i.cartId === cartId
+      ? { ...i, quantity: qty, lineTotal: calcLineTotal(i.product, qty, i.customizations) }
+      : i
+    ));
   };
 
-  const deleteCategory = (id: string) => {
-    const next = categories.filter((c) => c.id !== id);
-    persistCategories(next);
-    setProducts((prev) => prev.filter((p) => p.categoryId !== id));
+  const removeFromCart = (cartId: string) => persistCart(cartItems.filter(i => i.cartId !== cartId));
+  const clearCart = () => persistCart([]);
+
+  const cartCount    = cartItems.reduce((s, i) => s + i.quantity, 0);
+  const cartSubtotal = cartItems.reduce((s, i) => s + i.lineTotal, 0);
+  const serviceFee   = Math.round(cartSubtotal * ((venue.serviceFeePercent ?? 0) / 100));
+  const cartTotal    = cartSubtotal + serviceFee;
+
+  /* ── Order ── */
+  const submitOrder = () => {
+    const order: Order = {
+      id: `A${String(Math.floor(Math.random() * 900) + 100)}`,
+      tableNumber: venue.tableNumber ?? "1",
+      items: [...cartItems],
+      status: "received",
+      subtotal: cartSubtotal,
+      serviceFee,
+      total: cartTotal,
+      estimatedTime: "20–25 dak",
+      createdAt: new Date(),
+    };
+    setCurrentOrder(order);
+    clearCart();
   };
+
+  const updateOrderStatus = (status: OrderStatus) => {
+    if (currentOrder) setCurrentOrder({ ...currentOrder, status });
+  };
+
+  const clearOrder = () => setCurrentOrder(null);
 
   return (
-    <MenuContext.Provider
-      value={{
-        venue,
-        categories,
-        products,
-        allergens,
-        dailyFixMenus,
-        getCurrentDayFixMenu,
-        updateDailyFixMenu,
-        updateVenue,
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        toggleProductAvailability,
-        addCategory,
-        updateCategory,
-        deleteCategory,
-      }}
-    >
+    <MenuContext.Provider value={{
+      venue, categories, products, allergens: mockAllergensList, dailyFixMenus, lang, setLang,
+      getCurrentDayFixMenu, updateDailyFixMenu, updateVenue,
+      addProduct, updateProduct, deleteProduct, toggleProductAvailability,
+      addCategory, updateCategory, deleteCategory,
+      filters, setFilters, filteredProducts, activeFilterCount,
+      cartItems, cartCount, cartSubtotal, cartTotal, serviceFee,
+      addToCart, updateCartItemQty, removeFromCart, clearCart,
+      currentOrder, submitOrder, updateOrderStatus, clearOrder,
+    }}>
       {children}
     </MenuContext.Provider>
   );
 };
 
 export const useMenu = () => {
-  const context = useContext(MenuContext);
-  if (!context) {
-    throw new Error("useMenu must be used within a MenuProvider");
-  }
-  return context;
+  const ctx = useContext(MenuContext);
+  if (!ctx) throw new Error("useMenu must be used within MenuProvider");
+  return ctx;
 };

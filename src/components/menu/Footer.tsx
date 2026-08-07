@@ -16,7 +16,7 @@ export const Footer: React.FC<FooterProps> = ({ venue, lang }) => {
           {venue.name}
         </h3>
         <p className="text-xs text-content-muted font-light px-4">
-          {venue.serviceNotice[lang]}
+          {venue.serviceNotice[lang as "tr" | "en"] ?? venue.serviceNotice.en}
         </p>
         <div className="pt-4 text-[11px] text-content-muted/70 font-mono">
           © {new Date().getFullYear()} {venue.name} — Quiet Luxury Digital Menu

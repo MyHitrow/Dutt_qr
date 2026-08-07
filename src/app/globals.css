@@ -2,83 +2,142 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── DUT Design System ─── */
 :root {
-  /* Light Theme Defaults */
-  --color-bg: #F8F7FA;
-  --color-bg-secondary: #F0EDF4;
-  --color-surface: #FFFFFF;
-  --color-card: #FFFFFF;
-  --color-elevated: #F4F1F8;
-  --color-text-primary: #211E26;
-  --color-text-secondary: #68616F;
-  --color-text-muted: #958E9E;
-  --color-purple: #A66CFF;
-  --color-purple-dark: #302341;
-  --color-purple-light: #C7A8FF;
-  --color-border: rgba(45, 35, 55, 0.10);
+  --dut-bg:          #101011;
+  --dut-bg2:         #151516;
+  --dut-card:        #1D1D1F;
+  --dut-elevated:    #222224;
+  --dut-purple:      #A66CFF;
+  --dut-purple-lt:   #C7A8FF;
+  --dut-purple-dk:   #302341;
+  --dut-text:        #F7F7F8;
+  --dut-text2:       #96969D;
+  --dut-text3:       #68686E;
+  --dut-divider:     rgba(255,255,255,0.06);
+  --dut-success:     #63D391;
+  --dut-warning:     #F0B45A;
+  --dut-danger:      #FF6B6B;
 }
 
-.dark {
-  /* Dark Premium Food UI Palette */
-  --color-bg: #111111;
-  --color-bg-secondary: #18181A;
-  --color-surface: #1C1C1E;
-  --color-card: #1C1C1E;
-  --color-elevated: #222224;
-  --color-text-primary: #F5F5F5;
-  --color-text-secondary: #8E8E93;
-  --color-text-muted: #636366;
-  --color-purple: #A66CFF;
-  --color-purple-dark: #302341;
-  --color-purple-light: #C7A8FF;
-  --color-border: rgba(255, 255, 255, 0.08);
-}
+/* ─── Base Styles ─── */
+html { background-color: var(--dut-bg); }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
-  font-family: var(--font-manrope), sans-serif;
+  background-color: var(--dut-bg);
+  color: var(--dut-text);
+  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom Overlapping Plate Shadow & Glow */
-.plate-shadow {
-  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.8), 0 0 20px 0 rgba(166, 108, 255, 0.15);
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ─── No Scrollbar utility ─── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── DUT Plate Overlap Signature ─── */
+.dut-plate-shadow {
+  filter: drop-shadow(0 16px 32px rgba(0,0,0,0.85)) drop-shadow(0 0 20px rgba(166,108,255,0.1));
 }
 
-/* Custom Utilities for Purple Corner Accent */
-.purple-corner-tr {
-  position: relative;
+/* ─── Shimmer Skeleton ─── */
+.dut-skeleton {
+  background: linear-gradient(
+    90deg,
+    #1D1D1F 0%,
+    #252527 40%,
+    #1D1D1F 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
 }
 
-.purple-corner-tr::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 24px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #A66CFF);
-  border-top-right-radius: 4px;
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
 }
 
-.purple-corner-tr::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2px;
-  height: 24px;
-  background: linear-gradient(180deg, #A66CFF, transparent);
-  border-top-right-radius: 4px;
+/* ─── Bottom Sheet Slide Up ─── */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
-/* Hide Scrollbars for clean horizontal categories */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+@keyframes scaleIn {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
 }
+
+@keyframes springPop {
+  0%   { transform: scale(0.9);  }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1);    }
+}
+
+.animate-slide-up   { animation: slideUp  0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+.animate-fade-in    { animation: fadeIn   0.2s  ease-out; }
+.animate-scale-in   { animation: scaleIn  0.18s ease-out; }
+.animate-spring-pop { animation: springPop 0.3s ease-out; }
+
+/* ─── DUT Purple Glow ─── */
+.dut-glow {
+  box-shadow: 0 0 24px -4px rgba(166,108,255,0.35);
+}
+
+/* ─── Gradient Text ─── */
+.dut-gradient-text {
+  background: linear-gradient(135deg, #A66CFF 0%, #C7A8FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Bottom Sheet Backdrop ─── */
+.dut-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ─── DUT Card Base ─── */
+.dut-card {
+  background: var(--dut-card);
+  border: 1px solid var(--dut-divider);
+  border-radius: 20px;
+}
+
+/* ─── Handle bar for bottom sheets ─── */
+.dut-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+/* ─── Category pill active ─── */
+.cat-pill-active {
+  background: rgba(166, 108, 255, 0.15);
+  border: 1px solid rgba(166, 108, 255, 0.35);
+  color: #C7A8FF;
+}
+
+.cat-pill-inactive {
+  background: var(--dut-card);
+  border: 1px solid var(--dut-divider);
+  color: var(--dut-text3);
+}
+
+/* ─── Safe Area Padding ─── */
+.pb-safe { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.pt-safe { padding-top:    max(0px,  env(safe-area-inset-top)); }
