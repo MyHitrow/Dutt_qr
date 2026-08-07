@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { X, Clock, ShieldAlert, ChefHat, Info, Star } from "lucide-react";
+import { X, Clock, ShieldAlert, ChefHat, Info, Star, Flame } from "lucide-react";
 import { Product, Language, VenueSettings } from "@/types/menu";
 import { DietaryBadge } from "./DietaryBadge";
 
@@ -83,6 +83,36 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
           {/* Description */}
           <p className="text-[#96969D] text-sm leading-relaxed">{product.description[lang]}</p>
+
+          {/* Key specs: Calories & Prep time highlight */}
+          <div className="flex items-center gap-3">
+            {product.calories && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#F0B45A]/10 border border-[#F0B45A]/25">
+                <Flame className="w-4 h-4 text-[#F0B45A]" />
+                <div>
+                  <span className="text-[10px] text-[#F0B45A]/80 uppercase tracking-wider font-semibold block leading-none">
+                    {lang === "tr" ? "Kalori" : "Calories"}
+                  </span>
+                  <span className="text-xs font-bold text-[#F0B45A] font-mono leading-tight mt-0.5 block">
+                    {product.calories} kcal
+                  </span>
+                </div>
+              </div>
+            )}
+            {product.prepTime && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1D1D1F] border border-white/[0.06]">
+                <Clock className="w-4 h-4 text-[#A66CFF]" />
+                <div>
+                  <span className="text-[10px] text-[#68686E] uppercase tracking-wider font-semibold block leading-none">
+                    {lang === "tr" ? "Hazırlanma" : "Prep Time"}
+                  </span>
+                  <span className="text-xs font-semibold text-[#F7F7F8] leading-tight mt-0.5 block">
+                    {product.prepTime}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Dietary badges */}
           <div className="flex flex-wrap gap-2">

@@ -50,6 +50,7 @@ export interface Product {
   isActive: boolean;
   sortOrder: number;
   prepTime?: string; // "15–20 min"
+  calories?: number; // kcal
   rating?: number; // 4.8
   reviewCount?: number;
   dietary?: DietaryInfo;

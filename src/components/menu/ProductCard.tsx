@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { Star, Clock, Sparkles, Info } from "lucide-react";
+import { Star, Clock, Sparkles, Info, Flame } from "lucide-react";
 import { Product, Language } from "@/types/menu";
 import { DietaryBadge } from "./DietaryBadge";
 
@@ -50,14 +50,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         {product.name[lang]}
       </h3>
 
-      {/* Rating */}
-      {product.rating && (
-        <div className="flex items-center gap-1 mb-2">
-          <Star className="w-3 h-3 fill-[#A66CFF] text-[#A66CFF]" />
-          <span className="text-[11px] text-[#96969D]">{product.rating}</span>
-          {product.reviewCount && <span className="text-[10px] text-[#68686E]">({product.reviewCount})</span>}
-        </div>
-      )}
+      {/* Rating & Calories row */}
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        {product.rating && (
+          <div className="flex items-center gap-0.5">
+            <Star className="w-3 h-3 fill-[#A66CFF] text-[#A66CFF]" />
+            <span className="text-[11px] text-[#96969D]">{product.rating}</span>
+          </div>
+        )}
+        {product.calories && (
+          <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#F0B45A]/10 border border-[#F0B45A]/20">
+            <Flame className="w-3 h-3 text-[#F0B45A]" />
+            <span className="text-[10px] font-semibold text-[#F0B45A] font-mono">{product.calories} kcal</span>
+          </div>
+        )}
+      </div>
 
       <div className="flex-1" />
 
@@ -72,7 +79,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
             </div>
           )}
         </div>
-        {/* Info icon instead of add button */}
+        {/* Info icon */}
         <div className="w-7 h-7 rounded-full bg-[#222224] border border-white/[0.06] flex items-center justify-center text-[#68686E] group-hover:text-[#A66CFF] group-hover:border-[#A66CFF]/30 transition-all">
           <Info className="w-3.5 h-3.5" />
         </div>
