@@ -2,7 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { DailyFixMenu, Language } from "@/types/menu";
-import { Clock, Calendar, Sparkles } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 
 interface DailyFixMenuBannerProps {
   fixMenu: DailyFixMenu;
@@ -43,7 +43,7 @@ export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ fixMenu,
         </div>
       </div>
 
-      {/* Hero Banner Card */}
+      {/* Hero Banner Card — 16:9 Aspect Ratio (Zero Pixel Loss) */}
       <div
         className="relative w-full rounded-[24px] overflow-hidden shadow-card group transition-transform active:scale-[0.99] border"
         style={{
@@ -51,45 +51,45 @@ export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ fixMenu,
           borderColor: "var(--dut-divider)",
         }}
       >
-        {/* Full Image Banner */}
+        {/* Full Graphic Image Banner (Aspect Ratio 16:9) */}
         {fixMenu.imageUrl ? (
-          <div className="relative w-full h-48 sm:h-56">
+          <div className="relative w-full aspect-[16/9]">
             <Image
               src={fixMenu.imageUrl}
               alt={t(fixMenu.title, lang)}
               fill
               sizes="(max-width: 640px) 100vw, 512px"
               priority
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
             />
-            {/* Gradient Overlay for Text Readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            {/* Subtle Gradient Overlay at bottom for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
             {/* Content Overlaid on Banner Image */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-1.5">
+            <div className="absolute bottom-0 left-0 right-0 p-3.5 sm:p-4 space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-[#A66CFF] text-[#101011]">
                   {t(fixMenu.dayName, lang)} {lang === "tr" ? "Özel Menü" : "Special Menu"}
                 </span>
-                <div className="flex items-center gap-1 text-[10px] font-mono text-white/80 bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                <div className="flex items-center gap-1 text-[10px] font-mono text-white/80 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-sm">
                   <Clock className="w-3 h-3 text-[#A66CFF]" />
                   <span>00:01 – 23:59</span>
                 </div>
               </div>
 
-              <h3 className="text-white text-lg font-extrabold leading-tight shadow-sm">
+              <h3 className="text-white text-base sm:text-lg font-extrabold leading-tight shadow-sm">
                 {t(fixMenu.title, lang)}
               </h3>
 
               {fixMenu.subtitle && (
-                <p className="text-white/80 text-xs line-clamp-2 font-light leading-relaxed">
+                <p className="text-white/85 text-xs line-clamp-1 font-light leading-relaxed">
                   {t(fixMenu.subtitle, lang)}
                 </p>
               )}
 
               {fixMenu.price > 0 && (
-                <div className="pt-1 flex items-center justify-between">
-                  <span className="text-white font-extrabold font-mono text-base bg-[#A66CFF]/30 px-3 py-1 rounded-xl backdrop-blur-md border border-[#A66CFF]/40">
+                <div className="pt-0.5 flex items-center justify-between">
+                  <span className="text-white font-extrabold font-mono text-sm sm:text-base bg-[#A66CFF]/30 px-2.5 py-0.5 rounded-xl backdrop-blur-md border border-[#A66CFF]/40">
                     {fixMenu.price} {fixMenu.currency}
                   </span>
                 </div>
