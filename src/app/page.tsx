@@ -4,7 +4,7 @@ import { useMenu } from "@/context/MenuContext";
 import { Product } from "@/types/menu";
 
 import { DutHeader }               from "@/components/menu/DutHeader";
-import { HeroChefCard }            from "@/components/menu/HeroChefCard";
+import { DailyFixMenuBanner }     from "@/components/menu/DailyFixMenuBanner";
 import { CategoryNav }             from "@/components/menu/CategoryNav";
 import { PopularCarousel }         from "@/components/menu/PopularCarousel";
 import { ProductCard }             from "@/components/menu/ProductCard";
@@ -18,13 +18,15 @@ import { SlidersHorizontal } from "lucide-react";
 type ActiveSheet = null | "language" | "filter" | "search";
 
 export default function Home() {
-  const { venue, categories, filteredProducts, activeFilterCount, lang, theme } = useMenu();
+  const { venue, categories, filteredProducts, activeFilterCount, lang, theme, getCurrentDayFixMenu } = useMenu();
 
   const [isLoading, setIsLoading]       = useState(true);
   const [activeSheet, setActiveSheet]   = useState<ActiveSheet>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   // null = tüm kategoriler, string = sadece o kategori
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+
+  const todayFixMenu = getCurrentDayFixMenu();
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 700);
@@ -60,12 +62,6 @@ export default function Home() {
     [filteredProducts]
   );
 
-  // Chef's choice hero
-  const chefProduct = useMemo(() =>
-    filteredProducts.find(p => p.dietary?.isChefRecommended && p.hasImage && p.isAvailable),
-    [filteredProducts]
-  );
-
   const open  = (sheet: ActiveSheet) => setActiveSheet(sheet);
   const close = () => setActiveSheet(null);
 
@@ -74,14 +70,6 @@ export default function Home() {
     setActiveCategoryId(catId);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
-
-  // Scroll spy — sadece "tümü" modunda
-  useEffect(() => {
-    if (activeCategoryId) return; // Tek kategori modunda scroll spy olmaz
-    const handleScroll = () => {};
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeCategoryId]);
 
   // Aktif kategorinin bilgisi
   const activeCategory = activeCategoryId
@@ -110,9 +98,9 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Hero — sadece "tümü" modunda */}
-            {!activeCategoryId && chefProduct && (
-              <HeroChefCard product={chefProduct} lang={lang} onOpen={p => setSelectedProduct(p)} />
+            {/* Günün Özel Konsept / Banner Görseli (Salı vb. otomatik gününe göre değişir) */}
+            {!activeCategoryId && todayFixMenu && todayFixMenu.isActive && (
+              <DailyFixMenuBanner fixMenu={todayFixMenu} lang={lang} />
             )}
 
             {/* Sticky Category Nav */}
