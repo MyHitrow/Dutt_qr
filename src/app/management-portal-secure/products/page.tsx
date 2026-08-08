@@ -203,7 +203,14 @@ export default function AdminProductsPage() {
                 {/* Thumbnail */}
                 {prod.hasImage && prod.imageUrl ? (
                   <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative">
-                    <Image src={prod.imageUrl} alt={prod.name.tr} fill sizes="56px" className="object-cover" />
+                    <Image
+                      src={prod.imageUrl}
+                      alt={prod.name.tr}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                      unoptimized={prod.imageUrl.startsWith("data:") || prod.imageUrl.startsWith("blob:")}
+                    />
                   </div>
                 ) : (
                   <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--dut-elevated)" }}>
@@ -425,7 +432,14 @@ export default function AdminProductsPage() {
                     {uploadPreview && (
                       <div className="mt-2 flex items-center gap-2">
                         <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                          <Image src={uploadPreview} alt="preview" fill sizes="48px" className="object-cover" />
+                          <Image
+                            src={uploadPreview}
+                            alt="preview"
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                            unoptimized={uploadPreview.startsWith("data:") || uploadPreview.startsWith("blob:")}
+                          />
                         </div>
                         <div className="flex-1">
                           <p className="text-xs font-semibold" style={{ color: "var(--dut-success)" }}>✓ Görsel yüklendi ve optimize edildi</p>

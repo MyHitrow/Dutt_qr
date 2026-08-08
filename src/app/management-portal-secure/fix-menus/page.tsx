@@ -164,7 +164,14 @@ export default function AdminFixMenusPage() {
               {/* Banner Image Preview */}
               {menu.imageUrl ? (
                 <div className="relative w-full h-32 rounded-2xl overflow-hidden shadow-md border" style={{ borderColor: "var(--dut-divider)" }}>
-                  <Image src={menu.imageUrl} alt={menu.title.tr} fill sizes="400px" className="object-cover" />
+                  <Image
+                    src={menu.imageUrl}
+                    alt={menu.title.tr}
+                    fill
+                    sizes="400px"
+                    className="object-cover"
+                    unoptimized={menu.imageUrl.startsWith("data:") || menu.imageUrl.startsWith("blob:")}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-2 left-3 right-3">
                     <span className="text-[10px] uppercase font-bold text-[#A66CFF] block">Banner Görseli</span>
@@ -281,7 +288,14 @@ export default function AdminFixMenusPage() {
                     {formData.imageUrl && (
                       <div className="mt-3 flex items-center gap-3 p-2.5 rounded-xl border" style={{ background: "var(--dut-bg)", borderColor: "var(--dut-divider)" }}>
                         <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                          <Image src={formData.imageUrl} alt="preview" fill sizes="64px" className="object-cover" />
+                          <Image
+                            src={formData.imageUrl}
+                            alt="preview"
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                            unoptimized={formData.imageUrl.startsWith("data:") || formData.imageUrl.startsWith("blob:")}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold" style={{ color: "var(--dut-success)" }}>✓ Yüklendi ve Optimize Edildi</p>

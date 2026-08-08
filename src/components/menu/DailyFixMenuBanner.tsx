@@ -61,6 +61,7 @@ export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ fixMenu,
               sizes="(max-width: 640px) 100vw, 512px"
               priority
               className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+              unoptimized={fixMenu.imageUrl.startsWith("data:") || fixMenu.imageUrl.startsWith("blob:")}
             />
           </div>
         ) : (

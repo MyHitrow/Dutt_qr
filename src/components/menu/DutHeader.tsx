@@ -37,6 +37,7 @@ export const DutHeader: React.FC<DutHeaderProps> = ({ venue, lang, onSearchOpen,
               fill
               sizes="40px"
               className="object-contain p-1"
+              unoptimized={activeLogo.startsWith("data:") || activeLogo.startsWith("blob:")}
             />
           </div>
         ) : (

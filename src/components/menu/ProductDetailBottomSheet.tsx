@@ -55,7 +55,15 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
         {/* Food photo */}
         {product.imageUrl && (
           <div className="relative w-full h-52 flex-shrink-0">
-            <Image src={product.imageUrl} alt={product.name[lang]} fill sizes="100vw" priority className="object-cover" />
+            <Image
+              src={product.imageUrl}
+              alt={product.name[lang]}
+              fill
+              sizes="100vw"
+              priority
+              className="object-cover"
+              unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--dut-bg2)] via-transparent to-transparent" />
           </div>
         )}

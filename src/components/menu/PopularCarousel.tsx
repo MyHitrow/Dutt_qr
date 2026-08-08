@@ -49,6 +49,7 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
                   fill
                   sizes="176px"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}>

@@ -34,7 +34,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         }}
       >
         {product.hasImage && product.imageUrl && !imgErr
-          ? <Image src={product.imageUrl} alt={product.name[lang]} fill sizes="88px" className="object-cover" onError={() => setImgErr(true)} />
+          ? <Image
+              src={product.imageUrl}
+              alt={product.name[lang]}
+              fill
+              sizes="88px"
+              className="object-cover"
+              unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+              onError={() => setImgErr(true)}
+            />
           : <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}><Sparkles className="w-5 h-5 opacity-40" style={{ color: "var(--dut-purple)" }} /></div>
         }
         {/* Sold out plate overlay */}

@@ -176,7 +176,14 @@ export default function AdminSettingsPage() {
               {formData.logoDarkUrl ? (
                 <div className="flex items-center gap-3 p-2 rounded-xl bg-[#1C1C1E] border border-white/10">
                   <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-black/40 flex items-center justify-center p-1 border border-white/5">
-                    <Image src={formData.logoDarkUrl} alt="Dark Logo" fill sizes="48px" className="object-contain p-1" />
+                    <Image
+                      src={formData.logoDarkUrl}
+                      alt="Dark Logo"
+                      fill
+                      sizes="48px"
+                      className="object-contain p-1"
+                      unoptimized={formData.logoDarkUrl.startsWith("data:") || formData.logoDarkUrl.startsWith("blob:")}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-semibold text-emerald-400 block">✓ Dark Logo Yüklendi</span>
@@ -229,7 +236,14 @@ export default function AdminSettingsPage() {
               {formData.logoLightUrl ? (
                 <div className="flex items-center gap-3 p-2 rounded-xl bg-white border border-black/10">
                   <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center p-1 border border-black/5">
-                    <Image src={formData.logoLightUrl} alt="Light Logo" fill sizes="48px" className="object-contain p-1" />
+                    <Image
+                      src={formData.logoLightUrl}
+                      alt="Light Logo"
+                      fill
+                      sizes="48px"
+                      className="object-contain p-1"
+                      unoptimized={formData.logoLightUrl.startsWith("data:") || formData.logoLightUrl.startsWith("blob:")}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-semibold text-emerald-600 block">✓ Light Logo Yüklendi</span>
