@@ -18,45 +18,49 @@ import { SlidersHorizontal } from "lucide-react";
 type ActiveSheet = null | "language" | "filter" | "search";
 
 export default function Home() {
-  const {
-    venue, categories, filteredProducts, activeFilterCount, lang, getCurrentDayFixMenu,
-  } = useMenu();
+  const { venue, categories, filteredProducts, activeFilterCount, lang, theme } = useMenu();
 
   const [isLoading, setIsLoading]       = useState(true);
   const [activeSheet, setActiveSheet]   = useState<ActiveSheet>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [activeCategoryId, setActiveCategoryId] = useState(categories[0]?.id ?? "");
+  // null = tüm kategoriler, string = sadece o kategori
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
-  // Simulate brief loading
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 700);
     return () => clearTimeout(t);
   }, []);
 
-  // Force dark mode
+  // Tema class'ını html elemanına uygula
   useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
+    document.documentElement.className = theme;
+  }, [theme]);
 
-  // Group products by category
+  // Seçili kategoriye göre ürünleri filtrele
+  const displayedProducts = useMemo(() => {
+    if (!activeCategoryId) return filteredProducts;
+    return filteredProducts.filter(p => p.categoryId === activeCategoryId);
+  }, [filteredProducts, activeCategoryId]);
+
+  // Seçili kategori veya tüm kategorilerin ürünleri (kategori bölümleri için)
   const productsByCategory = useMemo(() => {
     const map = new Map<string, Product[]>();
     categories.forEach(c => map.set(c.id, []));
-    filteredProducts.forEach(p => {
+    displayedProducts.forEach(p => {
       const list = map.get(p.categoryId) ?? [];
       list.push(p);
       map.set(p.categoryId, list);
     });
     return map;
-  }, [filteredProducts, categories]);
+  }, [displayedProducts, categories]);
 
-  // Popular / chef recommended products for carousel
+  // Popüler ürünler (sadece tüm kategoriler modunda gösterilecek)
   const popularProducts = useMemo(() =>
     filteredProducts.filter(p => p.dietary?.isPopular || p.dietary?.isChefRecommended).slice(0, 6),
     [filteredProducts]
   );
 
-  // Chef's choice hero product
+  // Chef's choice hero
   const chefProduct = useMemo(() =>
     filteredProducts.find(p => p.dietary?.isChefRecommended && p.hasImage && p.isAvailable),
     [filteredProducts]
@@ -65,36 +69,30 @@ export default function Home() {
   const open  = (sheet: ActiveSheet) => setActiveSheet(sheet);
   const close = () => setActiveSheet(null);
 
-  const handleCategorySelect = useCallback((catId: string) => {
+  // Kategoriye tıklama — null seçince tümünü göster
+  const handleCategorySelect = useCallback((catId: string | null) => {
     setActiveCategoryId(catId);
-    const el = document.getElementById(`cat-section-${catId}`);
-    if (el) {
-      const y = el.getBoundingClientRect().top + window.scrollY - 90;
-      window.scrollTo({ top: y, behavior: "smooth" });
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Scroll spy — update active category tab as user scrolls
+  // Scroll spy — sadece "tümü" modunda
   useEffect(() => {
-    const handleScroll = () => {
-      const pos = window.scrollY + 120;
-      for (const cat of categories) {
-        const el = document.getElementById(`cat-section-${cat.id}`);
-        if (el && pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight) {
-          setActiveCategoryId(cat.id);
-          break;
-        }
-      }
-    };
+    if (activeCategoryId) return; // Tek kategori modunda scroll spy olmaz
+    const handleScroll = () => {};
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [categories]);
+  }, [activeCategoryId]);
+
+  // Aktif kategorinin bilgisi
+  const activeCategory = activeCategoryId
+    ? categories.find(c => c.id === activeCategoryId)
+    : null;
 
   return (
     <>
-      <div className="min-h-screen bg-[#101011] text-[#F7F7F8] pb-10">
+      <div className="min-h-screen pb-10 transition-colors" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
 
-        {/* Header — venue name, table, status, language, search */}
+        {/* Header */}
         <DutHeader
           venue={venue}
           lang={lang}
@@ -102,7 +100,6 @@ export default function Home() {
           onLangOpen={() => open("language")}
         />
 
-        {/* Loading skeleton */}
         {isLoading ? (
           <div className="space-y-0">
             <SkeletonHero />
@@ -113,13 +110,9 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Chef's Choice Hero Card */}
-            {chefProduct && (
-              <HeroChefCard
-                product={chefProduct}
-                lang={lang}
-                onOpen={p => setSelectedProduct(p)}
-              />
+            {/* Hero — sadece "tümü" modunda */}
+            {!activeCategoryId && chefProduct && (
+              <HeroChefCard product={chefProduct} lang={lang} onOpen={p => setSelectedProduct(p)} />
             )}
 
             {/* Sticky Category Nav */}
@@ -130,101 +123,140 @@ export default function Home() {
               lang={lang}
             />
 
-            {/* Filter button row */}
-            <div className="flex items-center gap-2 px-4 py-2.5">
+            {/* Filtre butonu */}
+            <div className="flex items-center gap-2 px-4 py-2.5 max-w-lg mx-auto">
               <button
                 onClick={() => open("filter")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                  activeFilterCount > 0
-                    ? "bg-[#302341] border-[#A66CFF]/35 text-[#C7A8FF]"
-                    : "bg-[#1D1D1F] border-white/[0.06] text-[#68686E] hover:text-[#96969D]"
-                }`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
+                style={{
+                  background: activeFilterCount > 0 ? "rgba(166,108,255,0.15)" : "var(--dut-card)",
+                  borderColor: activeFilterCount > 0 ? "rgba(166,108,255,0.35)" : "var(--dut-divider)",
+                  color: activeFilterCount > 0 ? "var(--dut-purple-lt)" : "var(--dut-text3)",
+                }}
               >
                 <SlidersHorizontal className="w-3 h-3" />
                 {lang === "tr" ? "Filtrele" : "Filter"}
                 {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 bg-[#A66CFF] rounded-full text-[9px] font-bold text-[#101011] flex items-center justify-center">
+                  <span className="w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center" style={{ background: "var(--dut-purple)" }}>
                     {activeFilterCount}
                   </span>
                 )}
               </button>
+
+              {/* Aktif kategori chip + temizle */}
+              {activeCategory && (
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ml-1"
+                  style={{ background: "rgba(166,108,255,0.15)", color: "var(--dut-purple-lt)", border: "1px solid rgba(166,108,255,0.3)" }}
+                >
+                  {activeCategory.emoji && <span>{activeCategory.emoji}</span>}
+                  <span>{activeCategory.name[lang]}</span>
+                  <button
+                    onClick={() => handleCategorySelect(null)}
+                    className="ml-0.5 opacity-70 hover:opacity-100 transition-opacity"
+                    aria-label="Clear filter"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Popular / Chef's picks carousel */}
-            {popularProducts.length > 0 && (
-              <PopularCarousel
-                products={popularProducts}
-                lang={lang}
-                onOpen={p => setSelectedProduct(p)}
-              />
+            {/* Popular carousel — sadece "tümü" modunda */}
+            {!activeCategoryId && popularProducts.length > 0 && (
+              <PopularCarousel products={popularProducts} lang={lang} onOpen={p => setSelectedProduct(p)} />
             )}
 
-            {/* Main menu sections — 2-column grid */}
+            {/* Ürün grid'i */}
             <main className="max-w-lg mx-auto px-4 space-y-10 pt-2 pb-8">
-              {categories.map(cat => {
-                const products = productsByCategory.get(cat.id) ?? [];
-                if (products.length === 0) return null;
-
-                return (
-                  <section key={cat.id} id={`cat-section-${cat.id}`} className="scroll-mt-28">
-                    {/* Category header */}
-                    <div className="mb-5">
-                      <div className="flex items-center gap-2">
-                        {cat.emoji && <span className="text-xl">{cat.emoji}</span>}
-                        <h2 className="text-[#F7F7F8] text-xl font-bold">{cat.name[lang]}</h2>
-                        <span className="text-xs text-[#68686E] font-mono ml-auto">({products.length})</span>
+              {activeCategoryId ? (
+                // Tek kategori modu — sadece o kategorinin ürünleri
+                <>
+                  {activeCategory && (
+                    <div className="mb-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        {activeCategory.emoji && <span className="text-xl">{activeCategory.emoji}</span>}
+                        <h2 className="text-xl font-bold" style={{ color: "var(--dut-text)" }}>
+                          {activeCategory.name[lang]}
+                        </h2>
+                        <span className="text-xs font-mono ml-auto" style={{ color: "var(--dut-text3)" }}>
+                          ({displayedProducts.length})
+                        </span>
                       </div>
-                      <div className="h-px bg-white/[0.06] mt-3" />
+                      <div className="h-px" style={{ background: "var(--dut-divider)" }} />
                     </div>
-
-                    {/* 2-col grid */}
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      {products.map(product => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          lang={lang}
-                          onOpen={p => setSelectedProduct(p)}
-                        />
-                      ))}
+                  )}
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    {displayedProducts.map(product => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        lang={lang}
+                        onOpen={p => setSelectedProduct(p)}
+                      />
+                    ))}
+                  </div>
+                  {displayedProducts.length === 0 && (
+                    <div className="text-center py-12">
+                      <p className="text-sm" style={{ color: "var(--dut-text3)" }}>
+                        {lang === "tr" ? "Bu kategoride ürün bulunamadı." : "No products in this category."}
+                      </p>
                     </div>
-                  </section>
-                );
-              })}
+                  )}
+                </>
+              ) : (
+                // Tümü modu — tüm kategoriler bölümler halinde
+                categories.map(cat => {
+                  const products = productsByCategory.get(cat.id) ?? [];
+                  if (products.length === 0) return null;
+                  return (
+                    <section key={cat.id} id={`cat-section-${cat.id}`} className="scroll-mt-28">
+                      <div className="mb-5">
+                        <div className="flex items-center gap-2">
+                          {cat.emoji && <span className="text-xl">{cat.emoji}</span>}
+                          <h2 className="text-xl font-bold" style={{ color: "var(--dut-text)" }}>{cat.name[lang]}</h2>
+                          <span className="text-xs font-mono ml-auto" style={{ color: "var(--dut-text3)" }}>({products.length})</span>
+                        </div>
+                        <div className="h-px mt-3" style={{ background: "var(--dut-divider)" }} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        {products.map(product => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            lang={lang}
+                            onOpen={p => setSelectedProduct(p)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })
+              )}
             </main>
 
             {/* Footer */}
             <div className="px-4 pb-8 text-center space-y-1">
-              <p className="text-[11px] text-[#68686E] leading-relaxed">
-                {venue.serviceNotice[lang as "tr" | "en"] ?? venue.serviceNotice.tr}
+              <p className="text-[11px] leading-relaxed" style={{ color: "var(--dut-text3)" }}>
+                {venue.serviceNotice[lang] ?? venue.serviceNotice.tr}
               </p>
-              <p className="text-[10px] text-[#68686E]/40 font-mono">DUT QR Menu · {venue.name}</p>
+              <p className="text-[10px] font-mono" style={{ color: "var(--dut-text3)", opacity: 0.5 }}>DUT QR Menu · {venue.name}</p>
             </div>
           </>
         )}
       </div>
 
-      {/* Product detail bottom sheet — info only, no cart */}
+      {/* Modals */}
       <ProductDetailBottomSheet
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
         lang={lang}
         venue={venue}
       />
-
-      {/* Language selector */}
       {activeSheet === "language" && <LanguageSelector onClose={close} />}
-
-      {/* Allergen & diet filter */}
       {activeSheet === "filter" && <AllergenFilter lang={lang} onClose={close} />}
-
-      {/* Search overlay */}
       {activeSheet === "search" && (
-        <SearchOverlay
-          lang={lang}
-          onClose={close}
-          onProductOpen={p => setSelectedProduct(p)}
-        />
+        <SearchOverlay lang={lang} onClose={close} onProductOpen={p => setSelectedProduct(p)} />
       )}
     </>
   );

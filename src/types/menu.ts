@@ -1,5 +1,5 @@
 export type ThemeMode = "dark" | "light";
-export type Language = "tr" | "en" | "de" | "ar";
+export type Language = "tr" | "en";
 export type OrderStatus = "received" | "preparing" | "ready";
 
 /* ─── Allergen ─── */

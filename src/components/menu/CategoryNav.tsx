@@ -1,11 +1,11 @@
 "use client";
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { Category, Language } from "@/types/menu";
 
 interface CategoryNavProps {
   categories: Category[];
-  activeCategoryId: string;
-  onSelectCategory: (id: string) => void;
+  activeCategoryId: string | null; // null = tümü
+  onSelectCategory: (id: string | null) => void;
   lang: Language;
 }
 
@@ -14,20 +14,40 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const el = scrollRef.current?.querySelector(`[data-cat="${activeCategoryId}"]`) as HTMLElement;
-    if (el && scrollRef.current) {
-      const c = scrollRef.current;
-      c.scrollTo({ left: el.offsetLeft - c.offsetWidth / 2 + el.offsetWidth / 2, behavior: "smooth" });
-    }
-  }, [activeCategoryId]);
+  const pill = (isActive: boolean) => ({
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "7px 14px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    fontWeight: 600,
+    transition: "all 0.18s",
+    whiteSpace: "nowrap" as const,
+    cursor: "pointer",
+    background: isActive ? "rgba(166,108,255,0.15)" : "var(--dut-card)",
+    border: isActive ? "1px solid rgba(166,108,255,0.35)" : "1px solid var(--dut-divider)",
+    color: isActive ? "var(--dut-purple-lt)" : "var(--dut-text3)",
+  });
 
   return (
-    <div className="sticky top-0 z-20 bg-[#101011]/95 backdrop-blur-md border-b border-white/[0.04]">
-      <div
-        ref={scrollRef}
-        className="flex gap-2 px-4 py-2.5 overflow-x-auto no-scrollbar"
-      >
+    <div
+      className="sticky top-0 z-20 backdrop-blur-md border-b transition-colors"
+      style={{ background: "color-mix(in srgb, var(--dut-bg) 92%, transparent)", borderColor: "var(--dut-divider)" }}
+    >
+      <div ref={scrollRef} className="flex gap-2 px-4 py-2.5 overflow-x-auto no-scrollbar max-w-lg mx-auto">
+        {/* Tümü pill */}
+        <button
+          data-cat="all"
+          onClick={() => onSelectCategory(null)}
+          style={pill(activeCategoryId === null)}
+          className="active:scale-95"
+        >
+          <span className="text-sm leading-none">🍽️</span>
+          <span>{lang === "tr" ? "Tümü" : "All"}</span>
+        </button>
+
         {categories.map((cat) => {
           const active = cat.id === activeCategoryId;
           return (
@@ -35,14 +55,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
               key={cat.id}
               data-cat={cat.id}
               onClick={() => onSelectCategory(cat.id)}
-              className={`
-                flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold
-                transition-all duration-200 active:scale-95 whitespace-nowrap
-                ${active
-                  ? "bg-[#302341] border border-[#A66CFF]/30 text-[#C7A8FF]"
-                  : "bg-[#1D1D1F] border border-white/[0.06] text-[#68686E] hover:text-[#96969D]"
-                }
-              `}
+              style={pill(active)}
+              className="active:scale-95"
             >
               {cat.emoji && <span className="text-sm leading-none">{cat.emoji}</span>}
               <span>{cat.name[lang]}</span>

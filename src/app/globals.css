@@ -2,8 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── DUT Design System ─── */
-:root {
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* ─── DUT Design System — Dark Mode (Default) ─── */
+:root,
+html.dark {
   --dut-bg:          #101011;
   --dut-bg2:         #151516;
   --dut-card:        #1D1D1F;
@@ -18,41 +21,69 @@
   --dut-success:     #63D391;
   --dut-warning:     #F0B45A;
   --dut-danger:      #FF6B6B;
+  --dut-skeleton-a:  #1D1D1F;
+  --dut-skeleton-b:  #252527;
+}
+
+/* ─── Light Mode ─── */
+html.light {
+  --dut-bg:          #F6F5F3;
+  --dut-bg2:         #EFEDE9;
+  --dut-card:        #FFFFFF;
+  --dut-elevated:    #F9F8F6;
+  --dut-purple:      #8B50E8;
+  --dut-purple-lt:   #A66CFF;
+  --dut-purple-dk:   #EDE5FA;
+  --dut-text:        #0F0F10;
+  --dut-text2:       #5A5A62;
+  --dut-text3:       #8B8B96;
+  --dut-divider:     rgba(0,0,0,0.07);
+  --dut-success:     #2BAE6E;
+  --dut-warning:     #D4890A;
+  --dut-danger:      #D93B3B;
+  --dut-skeleton-a:  #E8E6E2;
+  --dut-skeleton-b:  #F0EDE8;
 }
 
 /* ─── Base Styles ─── */
-html { background-color: var(--dut-bg); }
+html {
+  background-color: var(--dut-bg);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
 
 body {
   background-color: var(--dut-bg);
   color: var(--dut-text);
-  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
+
+/* ─── Tailwind CSS var() bridge ─── */
+.bg-dut-bg       { background-color: var(--dut-bg); }
+.bg-dut-card     { background-color: var(--dut-card); }
+.bg-dut-elevated { background-color: var(--dut-elevated); }
+.text-dut        { color: var(--dut-text); }
+.text-dut2       { color: var(--dut-text2); }
+.text-dut3       { color: var(--dut-text3); }
+.border-dut      { border-color: var(--dut-divider); }
 
 /* ─── Custom Scrollbar ─── */
 ::-webkit-scrollbar { width: 0; height: 0; }
-
-/* ─── No Scrollbar utility ─── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─── DUT Plate Overlap Signature ─── */
 .dut-plate-shadow {
-  filter: drop-shadow(0 16px 32px rgba(0,0,0,0.85)) drop-shadow(0 0 20px rgba(166,108,255,0.1));
+  filter: drop-shadow(0 16px 32px rgba(0,0,0,0.6)) drop-shadow(0 0 20px rgba(166,108,255,0.1));
 }
 
 /* ─── Shimmer Skeleton ─── */
 .dut-skeleton {
-  background: linear-gradient(
-    90deg,
-    #1D1D1F 0%,
-    #252527 40%,
-    #1D1D1F 80%
-  );
+  background: linear-gradient(90deg, var(--dut-skeleton-a) 0%, var(--dut-skeleton-b) 40%, var(--dut-skeleton-a) 80%);
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
@@ -104,9 +135,13 @@ body {
 
 /* ─── Bottom Sheet Backdrop ─── */
 .dut-backdrop {
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html.light .dut-backdrop {
+  background: rgba(0, 0, 0, 0.45);
 }
 
 /* ─── DUT Card Base ─── */
@@ -114,28 +149,50 @@ body {
   background: var(--dut-card);
   border: 1px solid var(--dut-divider);
   border-radius: 20px;
+  transition: background-color 0.25s ease;
 }
 
 /* ─── Handle bar for bottom sheets ─── */
 .dut-handle {
   width: 36px;
   height: 4px;
-  background: rgba(255,255,255,0.15);
+  background: var(--dut-divider);
   border-radius: 2px;
   margin: 0 auto 20px;
 }
 
-/* ─── Category pill active ─── */
+html.light .dut-handle {
+  background: rgba(0,0,0,0.12);
+}
+
+/* ─── Category pill ─── */
 .cat-pill-active {
   background: rgba(166, 108, 255, 0.15);
   border: 1px solid rgba(166, 108, 255, 0.35);
-  color: #C7A8FF;
+  color: var(--dut-purple-lt);
 }
 
 .cat-pill-inactive {
   background: var(--dut-card);
   border: 1px solid var(--dut-divider);
   color: var(--dut-text3);
+}
+
+/* ─── Admin panel inputs ─── */
+.admin-input {
+  background: var(--dut-bg);
+  border: 1px solid var(--dut-divider);
+  color: var(--dut-text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.admin-input:focus {
+  border-color: var(--dut-purple);
 }
 
 /* ─── Safe Area Padding ─── */

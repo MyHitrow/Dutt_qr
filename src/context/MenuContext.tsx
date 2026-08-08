@@ -19,6 +19,8 @@ interface MenuContextType {
   dailyFixMenus: DailyFixMenu[];
   lang: Language;
   setLang: (l: Language) => void;
+  theme: "dark" | "light";
+  toggleTheme: () => void;
 
   /* ─ Fix Menu ─ */
   getCurrentDayFixMenu: () => DailyFixMenu | undefined;
@@ -63,6 +65,7 @@ const LS = {
   FIX_MENUS: "dut_fix_menus",
   CART: "dut_cart",
   LANG: "dut_lang",
+  THEME: "dut_theme",
 };
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -76,6 +79,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [lang, setLangState] = useState<Language>("tr");
+  const [theme, setThemeState] = useState<"dark" | "light">("dark");
 
   /* ── Load from localStorage ── */
   useEffect(() => {
@@ -86,14 +90,25 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sfm = localStorage.getItem(LS.FIX_MENUS);
       const sCart = localStorage.getItem(LS.CART);
       const sLang = localStorage.getItem(LS.LANG);
+      const sTheme = localStorage.getItem(LS.THEME);
       if (sv)    setVenue(JSON.parse(sv));
       if (sc)    setCategories(JSON.parse(sc));
       if (sp)    setProducts(JSON.parse(sp));
       if (sfm)   setDailyFixMenus(JSON.parse(sfm));
       if (sCart) setCartItems(JSON.parse(sCart));
       if (sLang) setLangState(sLang as Language);
+      const t = (sTheme as "dark" | "light") || "dark";
+      setThemeState(t);
+      document.documentElement.className = t;
     } catch { /* ignore */ }
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setThemeState(next);
+    localStorage.setItem(LS.THEME, next);
+    document.documentElement.className = next;
+  };
 
   /* ── Persist helpers ── */
   const persistVenue = (v: VenueSettings) => { setVenue(v); localStorage.setItem(LS.VENUE, JSON.stringify(v)); };
@@ -207,6 +222,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <MenuContext.Provider value={{
       venue, categories, products, allergens: mockAllergensList, dailyFixMenus, lang, setLang,
+      theme, toggleTheme,
       getCurrentDayFixMenu, updateDailyFixMenu, updateVenue,
       addProduct, updateProduct, deleteProduct, toggleProductAvailability,
       addCategory, updateCategory, deleteCategory,
