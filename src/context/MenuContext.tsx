@@ -84,7 +84,18 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lang, setLangState] = useState<Language>("tr");
   const [theme, setThemeState] = useState<"dark" | "light">("dark");
 
-  /* ── Load from localStorage ── */
+  /* ── Server Sync Helper ── */
+  const syncToServer = async (v = venue, c = categories, p = products, fm = dailyFixMenus) => {
+    try {
+      await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ venue: v, categories: c, products: p, dailyFixMenus: fm }),
+      });
+    } catch {}
+  };
+
+  /* ── Load from localStorage + Server Sync ── */
   useEffect(() => {
     try {
       const sv = localStorage.getItem(LS.VENUE);
@@ -104,6 +115,20 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setThemeState(t);
       document.documentElement.className = t;
     } catch { /* ignore */ }
+
+    // Fetch server sync for cross-device consistency (Desktop Admin -> Mobile Menu)
+    fetch("/api/sync")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data) {
+          const d = json.data;
+          if (d.venue) { setVenue(d.venue); localStorage.setItem(LS.VENUE, JSON.stringify(d.venue)); }
+          if (d.categories) { setCategories(d.categories); localStorage.setItem(LS.CATEGORIES, JSON.stringify(d.categories)); }
+          if (d.products) { setProducts(d.products); localStorage.setItem(LS.PRODUCTS, JSON.stringify(d.products)); }
+          if (d.dailyFixMenus) { setDailyFixMenus(d.dailyFixMenus); localStorage.setItem(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus)); }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const toggleTheme = () => {
@@ -114,10 +139,26 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /* ── Persist helpers ── */
-  const persistVenue = (v: VenueSettings) => { setVenue(v); localStorage.setItem(LS.VENUE, JSON.stringify(v)); };
-  const persistCategories = (c: Category[]) => { setCategories(c); localStorage.setItem(LS.CATEGORIES, JSON.stringify(c)); };
-  const persistProducts = (p: Product[]) => { setProducts(p); localStorage.setItem(LS.PRODUCTS, JSON.stringify(p)); };
-  const persistFixMenus = (fm: DailyFixMenu[]) => { setDailyFixMenus(fm); localStorage.setItem(LS.FIX_MENUS, JSON.stringify(fm)); };
+  const persistVenue = (v: VenueSettings) => {
+    setVenue(v);
+    localStorage.setItem(LS.VENUE, JSON.stringify(v));
+    syncToServer(v, categories, products, dailyFixMenus);
+  };
+  const persistCategories = (c: Category[]) => {
+    setCategories(c);
+    localStorage.setItem(LS.CATEGORIES, JSON.stringify(c));
+    syncToServer(venue, c, products, dailyFixMenus);
+  };
+  const persistProducts = (p: Product[]) => {
+    setProducts(p);
+    localStorage.setItem(LS.PRODUCTS, JSON.stringify(p));
+    syncToServer(venue, categories, p, dailyFixMenus);
+  };
+  const persistFixMenus = (fm: DailyFixMenu[]) => {
+    setDailyFixMenus(fm);
+    localStorage.setItem(LS.FIX_MENUS, JSON.stringify(fm));
+    syncToServer(venue, categories, products, fm);
+  };
   const persistCart = (items: CartItem[]) => { setCartItems(items); localStorage.setItem(LS.CART, JSON.stringify(items)); };
 
   const setLang = (l: Language) => { setLangState(l); localStorage.setItem(LS.LANG, l); };
@@ -224,6 +265,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetAllData = () => {
     try {
+      fetch("/api/sync", { method: "DELETE" }).catch(() => {});
       Object.values(LS).forEach(k => localStorage.removeItem(k));
       // Also clear old legacy keys
       ["dut_venue", "dut_categories", "dut_products", "dut_fix_menus", "dut_cart"].forEach(k => localStorage.removeItem(k));
