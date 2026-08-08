@@ -2872,6 +2872,82 @@ export const mockProducts: Product[] = [
 
 export const mockDailyFixMenus: DailyFixMenu[] = [
   {
+    "dayOfWeek": 1,
+    "dayName": {
+      "tr": "Pazartesi",
+      "en": "Monday"
+    },
+    "title": {
+      "tr": "Pazartesi Fiks Menü",
+      "en": "Monday Fix Menu"
+    },
+    "subtitle": {
+      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Seçmeli Ana Yemek + İçecek İkramı.",
+      "en": "4 Cold Mezes + 2 Hot Appetizers + Main Course + Drink."
+    },
+    "price": 1500,
+    "currency": "₺",
+    "imageUrl": "https://lh3.googleusercontent.com/d/1F-BEZxh-SeZd3rm7e9v-3gDLI3JRyvqa",
+    "isActive": true
+  },
+  {
+    "dayOfWeek": 2,
+    "dayName": {
+      "tr": "Salı",
+      "en": "Tuesday"
+    },
+    "title": {
+      "tr": "Salı Fiks Menü",
+      "en": "Tuesday Fix Menu"
+    },
+    "subtitle": {
+      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Seçmeli Ana Yemek + İçecek İkramı.",
+      "en": "4 Cold Mezes + 2 Hot Appetizers + Main Course + Drink."
+    },
+    "price": 1500,
+    "currency": "₺",
+    "imageUrl": "https://lh3.googleusercontent.com/d/1F-BEZxh-SeZd3rm7e9v-3gDLI3JRyvqa",
+    "isActive": true
+  },
+  {
+    "dayOfWeek": 3,
+    "dayName": {
+      "tr": "Çarşamba",
+      "en": "Wednesday"
+    },
+    "title": {
+      "tr": "Çarşamba Canlı Müzik Fiks Menü",
+      "en": "Wednesday Live Music Fix Menu"
+    },
+    "subtitle": {
+      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Seçmeli Ana Yemek + Canlı Müzik Gecesi.",
+      "en": "4 Cold Mezes + 2 Hot Appetizers + Main Course + Live Music."
+    },
+    "price": 1650,
+    "currency": "₺",
+    "imageUrl": "https://lh3.googleusercontent.com/d/1F-BEZxh-SeZd3rm7e9v-3gDLI3JRyvqa",
+    "isActive": true
+  },
+  {
+    "dayOfWeek": 4,
+    "dayName": {
+      "tr": "Perşembe",
+      "en": "Thursday"
+    },
+    "title": {
+      "tr": "Perşembe Fiks Menü",
+      "en": "Thursday Fix Menu"
+    },
+    "subtitle": {
+      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Seçmeli Ana Yemek + Tatlı İkramı.",
+      "en": "4 Cold Mezes + 2 Hot Appetizers + Main Course + Dessert."
+    },
+    "price": 1750,
+    "currency": "₺",
+    "imageUrl": "https://lh3.googleusercontent.com/d/1F-BEZxh-SeZd3rm7e9v-3gDLI3JRyvqa",
+    "isActive": true
+  },
+  {
     "dayOfWeek": 5,
     "dayName": {
       "tr": "Cuma",
@@ -2882,8 +2958,8 @@ export const mockDailyFixMenus: DailyFixMenu[] = [
       "en": "Special Friday Fix Menu"
     },
     "subtitle": {
-      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Ana Yemek + Şarap veya Rakı + Tatlı",
-      "en": "4 Cold Mezes + 2 Hot Starters + Main Course + Spirit + Dessert"
+      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Seçmeli Ana Yemek + Şarap veya Rakı + Tatlı.",
+      "en": "4 Cold Mezes + 2 Hot Appetizers + Main Course + Spirit + Dessert."
     },
     "price": 1850,
     "currency": "₺",
@@ -2901,10 +2977,29 @@ export const mockDailyFixMenus: DailyFixMenu[] = [
       "en": "Grand Saturday Fix Menu"
     },
     "subtitle": {
-      "tr": "5 Çeşit Soğuk Meze + 3 Ara Sıcak + Seçmeli Ana Yemek + Sınırsız İçecek",
-      "en": "5 Cold Mezes + 3 Hot Starters + Choice of Main Course + Spirits"
+      "tr": "5 Çeşit Soğuk Meze + 3 Ara Sıcak + Seçmeli Ana Yemek + Sınırsız İçecek.",
+      "en": "5 Cold Mezes + 3 Hot Appetizers + Main Course + Unlimited Drinks."
     },
     "price": 2100,
+    "currency": "₺",
+    "imageUrl": "https://lh3.googleusercontent.com/d/1F-BEZxh-SeZd3rm7e9v-3gDLI3JRyvqa",
+    "isActive": true
+  },
+  {
+    "dayOfWeek": 0,
+    "dayName": {
+      "tr": "Pazar",
+      "en": "Sunday"
+    },
+    "title": {
+      "tr": "Pazar Dost Sofrası Fiks Menü",
+      "en": "Sunday Family & Friends Fix Menu"
+    },
+    "subtitle": {
+      "tr": "4 Çeşit Soğuk Meze + 2 Ara Sıcak + Seçmeli Ana Yemek + Meyve & Tatlı.",
+      "en": "4 Cold Mezes + 2 Hot Appetizers + Main Course + Fruits & Dessert."
+    },
+    "price": 1600,
     "currency": "₺",
     "imageUrl": "https://lh3.googleusercontent.com/d/1F-BEZxh-SeZd3rm7e9v-3gDLI3JRyvqa",
     "isActive": true

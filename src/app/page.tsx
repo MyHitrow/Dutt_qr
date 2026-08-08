@@ -98,9 +98,9 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Günün Özel Konsept / Banner Görseli (Salı vb. otomatik gününe göre değişir) */}
-            {!activeCategoryId && todayFixMenu && todayFixMenu.isActive && (
-              <DailyFixMenuBanner fixMenu={todayFixMenu} lang={lang} />
+            {/* Günün Özel Konsept / Banner Görseli (Tüm 7 gün interaktif seçilebilir) */}
+            {!activeCategoryId && dailyFixMenus && dailyFixMenus.length > 0 && (
+              <DailyFixMenuBanner dailyFixMenus={dailyFixMenus} lang={lang} />
             )}
 
             {/* Sticky Category Nav */}
