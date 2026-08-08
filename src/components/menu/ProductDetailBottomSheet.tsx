@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { X, Clock, ShieldAlert, ChefHat, Info, Star, Flame } from "lucide-react";
+import { X, Clock, ShieldAlert, ChefHat, Info, Flame, Sparkles } from "lucide-react";
 import { Product, Language, VenueSettings } from "@/types/menu";
 import { DietaryBadge } from "./DietaryBadge";
 
@@ -52,24 +52,35 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <X className="w-4 h-4" />
         </button>
 
-        {/* Food photo */}
-        {product.imageUrl && (
-          <div className="relative w-full h-52 flex-shrink-0">
-            <Image
-              src={product.imageUrl}
-              alt={product.name[lang]}
-              fill
-              sizes="100vw"
-              priority
-              className="object-cover"
-              unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--dut-bg2)] via-transparent to-transparent" />
+        {/* ── DUT Signature Overlapping Circular Plate Header ── */}
+        <div className="relative pt-4 pb-1 flex justify-center items-center flex-shrink-0">
+          <div
+            className="w-[112px] h-[112px] rounded-full border-4 overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.4)] relative flex-shrink-0 transition-transform duration-300 hover:scale-105"
+            style={{
+              borderColor: "var(--dut-bg)",
+              background: "var(--dut-elevated)",
+            }}
+          >
+            {product.hasImage && product.imageUrl ? (
+              <Image
+                src={product.imageUrl}
+                alt={product.name[lang]}
+                fill
+                sizes="112px"
+                priority
+                className="object-cover"
+                unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Sparkles className="w-8 h-8 opacity-40" style={{ color: "var(--dut-purple)" }} />
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8 space-y-5">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8 pt-2 space-y-5">
           {/* Title + price */}
           <div className="flex items-start justify-between gap-3 pt-1">
             <div className="flex-1">
@@ -91,7 +102,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           </div>
 
           {/* Description */}
-          <p className="text-sm leading-relaxed" style={{ color: "var(--dut-text2)" }}>{product.description[lang]}</p>
+          {product.description?.[lang] && (
+            <p className="text-sm leading-relaxed" style={{ color: "var(--dut-text2)" }}>{product.description[lang]}</p>
+          )}
 
           {/* Key specs: Calories & Prep time highlight */}
           <div className="flex items-center gap-3">
