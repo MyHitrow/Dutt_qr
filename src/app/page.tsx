@@ -149,11 +149,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Popular carousel — sadece "tümü" modunda */}
-            {!activeCategoryId && popularProducts.length > 0 && (
-              <PopularCarousel products={popularProducts} lang={lang} onOpen={p => setSelectedProduct(p)} />
-            )}
-
             {/* Ürün grid'i */}
             <main className="max-w-lg mx-auto px-4 space-y-10 pt-2 pb-8">
               {activeCategoryId ? (
