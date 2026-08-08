@@ -31,9 +31,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
       {/* Backdrop overlay */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Bottom Sheet Container (Covers ~65-75% screen height for better visual hierarchy) */}
+      {/* Bottom Sheet Container */}
       <div
-        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[78vh] flex flex-col animate-slide-up mt-20 pt-12 pb-5"
+        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[75vh] flex flex-col animate-slide-up mt-24 pt-16 pb-5"
         style={{
           background: "var(--dut-bg2)",
           color: "var(--dut-text)",
@@ -57,9 +57,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <X className="w-4 h-4" />
         </button>
 
-        {/* ── Big Overlapping Circular Plate Image Header (Overflows Above Card Top) ── */}
+        {/* ── Much Larger Overlapping Circular Plate Image Header (Overflows Above Card Top) ── */}
         <div
-          className="absolute -top-16 left-1/2 -translate-x-1/2 w-[130px] h-[130px] rounded-full border-4 overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
+          className="absolute -top-20 sm:-top-22 left-1/2 -translate-x-1/2 w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] rounded-full border-4 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
           style={{
             borderColor: "var(--dut-bg2)",
             background: "var(--dut-elevated)",
@@ -70,22 +70,22 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               src={product.imageUrl}
               alt={product.name[lang]}
               fill
-              sizes="130px"
+              sizes="180px"
               priority
               className="object-cover"
               unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Sparkles className="w-8 h-8 opacity-40" style={{ color: "var(--dut-purple)" }} />
+              <Sparkles className="w-10 h-10 opacity-40" style={{ color: "var(--dut-purple)" }} />
             </div>
           )}
         </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 pt-2">
-          {/* Title & Price Row (Clean header without duplicate prep time) */}
-          <div className="flex items-start justify-between gap-3 pt-2">
+          {/* Title & Price Row */}
+          <div className="flex items-start justify-between gap-3 pt-3">
             <div className="flex-1">
               <h2 className="text-xl font-bold leading-snug" style={{ color: "var(--dut-text)" }}>
                 {product.name[lang]}
@@ -147,21 +147,21 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
             {product.dietary?.isPopular && <DietaryBadge type="popular" lang={lang} size="xs" />}
           </div>
 
-          {/* ── 2-Item Grid / Carousel for Allergens & Chef's Note (Side by Side) ── */}
+          {/* ── 2-Column Grid on Mobile for Allergens & Chef's Note (Side by Side on ALL Screens) ── */}
           {(hasAllergens || hasChefNote) && (
-            <div className={`grid ${hasAllergens && hasChefNote ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
+            <div className={`grid ${hasAllergens && hasChefNote ? "grid-cols-2" : "grid-cols-1"} gap-2.5`}>
               {/* Allergens Box */}
               {hasAllergens && (
-                <div className="p-3.5 rounded-2xl border flex flex-col justify-between" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
+                <div className="p-3 rounded-2xl border flex flex-col justify-between" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <ShieldAlert className="w-3.5 h-3.5 text-[#F0B45A]" />
-                    <span className="text-[10px] font-bold text-[#F0B45A] uppercase tracking-wider">
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#F0B45A] flex-shrink-0" />
+                    <span className="text-[10px] font-bold text-[#F0B45A] uppercase tracking-wider truncate">
                       {lang === "tr" ? "Alerjenler" : "Allergens"}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1">
                     {product.allergens!.map(a => (
-                      <span key={a.id} className="text-[10px] px-2 py-0.5 rounded-md border font-medium" style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text2)" }}>
+                      <span key={a.id} className="text-[9px] px-1.5 py-0.5 rounded-md border font-medium" style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text2)" }}>
                         {a.name[lang as "tr" | "en"] ?? a.name.en}
                       </span>
                     ))}
@@ -171,14 +171,14 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
               {/* Chef's Note Box */}
               {hasChefNote && (
-                <div className="p-3.5 rounded-2xl border flex flex-col justify-between" style={{ background: "rgba(166,108,255,0.12)", borderColor: "rgba(166,108,255,0.25)" }}>
+                <div className="p-3 rounded-2xl border flex flex-col justify-between" style={{ background: "rgba(166,108,255,0.12)", borderColor: "rgba(166,108,255,0.25)" }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <ChefHat className="w-3.5 h-3.5" style={{ color: "var(--dut-purple)" }} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--dut-purple)" }}>
+                    <ChefHat className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--dut-purple)" }} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: "var(--dut-purple)" }}>
                       {lang === "tr" ? "Şefin Notu" : "Chef's Note"}
                     </span>
                   </div>
-                  <p className="text-xs italic leading-relaxed" style={{ color: "var(--dut-text2)" }}>
+                  <p className="text-[11px] italic leading-snug line-clamp-3" style={{ color: "var(--dut-text2)" }}>
                     "{product.chefNote![lang as "tr" | "en"]}"
                   </p>
                 </div>
