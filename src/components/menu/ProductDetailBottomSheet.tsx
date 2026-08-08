@@ -23,26 +23,31 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
   if (!product) return null;
 
+  const hasAllergens = product.allergens && product.allergens.length > 0;
+  const hasChefNote = Boolean(product.chefNote?.[lang as "tr" | "en"]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center dut-backdrop animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-end justify-center dut-backdrop animate-fade-in p-0 sm:p-4">
+      {/* Backdrop overlay */}
       <div className="absolute inset-0" onClick={onClose} />
 
+      {/* Bottom Sheet Container (Covers ~65-75% screen height for better visual hierarchy) */}
       <div
-        className="relative w-full max-w-lg rounded-t-[28px] shadow-bottom-sheet max-h-[92vh] flex flex-col animate-slide-up"
+        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[78vh] flex flex-col animate-slide-up mt-20 pt-12 pb-5"
         style={{
           background: "var(--dut-bg2)",
           color: "var(--dut-text)",
         }}
       >
         {/* Handle */}
-        <div className="pt-3 pb-1 flex justify-center flex-shrink-0">
+        <div className="absolute top-2.5 left-1/2 -translate-x-1/2 flex-shrink-0 z-20">
           <div className="dut-handle" />
         </div>
 
-        {/* Close */}
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10"
+          className="absolute top-3 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-20 active:scale-95"
           style={{
             background: "var(--dut-elevated)",
             border: "1px solid var(--dut-divider)",
@@ -52,39 +57,37 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <X className="w-4 h-4" />
         </button>
 
-        {/* ── DUT Signature Overlapping Circular Plate Header ── */}
-        <div className="relative pt-4 pb-1 flex justify-center items-center flex-shrink-0">
-          <div
-            className="w-[112px] h-[112px] rounded-full border-4 overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.4)] relative flex-shrink-0 transition-transform duration-300 hover:scale-105"
-            style={{
-              borderColor: "var(--dut-bg)",
-              background: "var(--dut-elevated)",
-            }}
-          >
-            {product.hasImage && product.imageUrl ? (
-              <Image
-                src={product.imageUrl}
-                alt={product.name[lang]}
-                fill
-                sizes="112px"
-                priority
-                className="object-cover"
-                unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Sparkles className="w-8 h-8 opacity-40" style={{ color: "var(--dut-purple)" }} />
-              </div>
-            )}
-          </div>
+        {/* ── Big Overlapping Circular Plate Image Header (Overflows Above Card Top) ── */}
+        <div
+          className="absolute -top-16 left-1/2 -translate-x-1/2 w-[130px] h-[130px] rounded-full border-4 overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
+          style={{
+            borderColor: "var(--dut-bg2)",
+            background: "var(--dut-elevated)",
+          }}
+        >
+          {product.hasImage && product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name[lang]}
+              fill
+              sizes="130px"
+              priority
+              className="object-cover"
+              unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Sparkles className="w-8 h-8 opacity-40" style={{ color: "var(--dut-purple)" }} />
+            </div>
+          )}
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8 pt-2 space-y-5">
-          {/* Title + price */}
-          <div className="flex items-start justify-between gap-3 pt-1">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 pt-2">
+          {/* Title & Price Row (Clean header without duplicate prep time) */}
+          <div className="flex items-start justify-between gap-3 pt-2">
             <div className="flex-1">
-              <h2 className="text-xl font-bold leading-tight" style={{ color: "var(--dut-text)" }}>
+              <h2 className="text-xl font-bold leading-snug" style={{ color: "var(--dut-text)" }}>
                 {product.name[lang]}
               </h2>
             </div>
@@ -92,105 +95,106 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               <span className="font-bold text-xl font-mono whitespace-nowrap" style={{ color: "var(--dut-purple)" }}>
                 {product.price} {product.currency}
               </span>
-              {product.prepTime && (
-                <div className="flex items-center justify-end gap-1 mt-1">
-                  <Clock className="w-3 h-3" style={{ color: "var(--dut-text3)" }} />
-                  <span className="text-xs" style={{ color: "var(--dut-text3)" }}>{product.prepTime}</span>
-                </div>
-              )}
             </div>
           </div>
 
           {/* Description */}
           {product.description?.[lang] && (
-            <p className="text-sm leading-relaxed" style={{ color: "var(--dut-text2)" }}>{product.description[lang]}</p>
+            <p className="text-xs sm:text-sm leading-relaxed opacity-85" style={{ color: "var(--dut-text2)" }}>
+              {product.description[lang]}
+            </p>
           )}
 
-          {/* Key specs: Calories & Prep time highlight */}
-          <div className="flex items-center gap-3">
-            {product.calories && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#F0B45A]/10 border border-[#F0B45A]/25">
-                <Flame className="w-4 h-4 text-[#F0B45A]" />
-                <div>
-                  <span className="text-[10px] text-[#F0B45A]/80 uppercase tracking-wider font-semibold block leading-none">
-                    {lang === "tr" ? "Kalori" : "Calories"}
-                  </span>
-                  <span className="text-xs font-bold text-[#F0B45A] font-mono leading-tight mt-0.5 block">
-                    {product.calories} kcal
-                  </span>
+          {/* Specs: Calories & Prep Time Highlight (Grid format) */}
+          {(product.calories || product.prepTime) && (
+            <div className="flex items-center gap-3">
+              {product.calories && (
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#F0B45A]/10 border border-[#F0B45A]/25">
+                  <Flame className="w-4 h-4 text-[#F0B45A]" />
+                  <div>
+                    <span className="text-[9px] text-[#F0B45A]/80 uppercase tracking-wider font-semibold block leading-none">
+                      {lang === "tr" ? "KALORİ" : "CALORIES"}
+                    </span>
+                    <span className="text-xs font-bold text-[#F0B45A] font-mono leading-tight mt-0.5 block">
+                      {product.calories} kcal
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-            {product.prepTime && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
-                <Clock className="w-4 h-4" style={{ color: "var(--dut-purple)" }} />
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider font-semibold block leading-none" style={{ color: "var(--dut-text3)" }}>
-                    {lang === "tr" ? "Hazırlanma" : "Prep Time"}
-                  </span>
-                  <span className="text-xs font-semibold leading-tight mt-0.5 block" style={{ color: "var(--dut-text)" }}>
-                    {product.prepTime}
-                  </span>
+              )}
+              {product.prepTime && (
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
+                  <Clock className="w-4 h-4" style={{ color: "var(--dut-purple)" }} />
+                  <div>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold block leading-none" style={{ color: "var(--dut-text3)" }}>
+                      {lang === "tr" ? "HAZIRLANMA" : "PREP TIME"}
+                    </span>
+                    <span className="text-xs font-semibold leading-tight mt-0.5 block" style={{ color: "var(--dut-text)" }}>
+                      {product.prepTime}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Dietary badges */}
-          <div className="flex flex-wrap gap-2">
-            {product.dietary?.isVegan && <DietaryBadge type="vegan" lang={lang} size="sm" />}
-            {!product.dietary?.isVegan && product.dietary?.isVegetarian && <DietaryBadge type="vegetarian" lang={lang} size="sm" />}
-            {product.dietary?.isGlutenFree && <DietaryBadge type="glutenFree" lang={lang} size="sm" />}
-            {product.dietary?.spicyLevel && product.dietary.spicyLevel > 0 ? <DietaryBadge type="spicy" lang={lang} size="sm" /> : null}
-            {product.dietary?.isChefRecommended && <DietaryBadge type="chef" lang={lang} size="sm" />}
-            {product.dietary?.isPopular && <DietaryBadge type="popular" lang={lang} size="sm" />}
-          </div>
-
-          {/* Allergens */}
-          {product.allergens && product.allergens.length > 0 && (
-            <div className="p-4 rounded-2xl border" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
-              <div className="flex items-center gap-1.5 mb-3">
-                <ShieldAlert className="w-3.5 h-3.5 text-[#F0B45A]" />
-                <span className="text-xs font-semibold text-[#F0B45A] uppercase tracking-wider">
-                  {lang === "tr" ? "Alerjenler" : "Allergens"}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {product.allergens.map(a => (
-                  <span key={a.id} className="text-[11px] px-2.5 py-1 rounded-lg border" style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text2)" }}>
-                    {a.name[lang as "tr" | "en"] ?? a.name.en}
-                  </span>
-                ))}
-              </div>
+              )}
             </div>
           )}
 
-          {/* Chef note */}
-          {product.chefNote?.[lang as "tr" | "en"] && (
-            <div className="p-4 rounded-2xl border" style={{ background: "rgba(166,108,255,0.12)", borderColor: "rgba(166,108,255,0.25)" }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <ChefHat className="w-3.5 h-3.5" style={{ color: "var(--dut-purple)" }} />
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--dut-purple)" }}>
-                  {lang === "tr" ? "Şefin Notu" : "Chef's Note"}
-                </span>
-              </div>
-              <p className="text-xs italic leading-relaxed" style={{ color: "var(--dut-text2)" }}>
-                "{product.chefNote[lang as "tr" | "en"]}"
-              </p>
+          {/* Dietary Badges */}
+          <div className="flex flex-wrap gap-1.5">
+            {product.dietary?.isVegan && <DietaryBadge type="vegan" lang={lang} size="xs" />}
+            {!product.dietary?.isVegan && product.dietary?.isVegetarian && <DietaryBadge type="vegetarian" lang={lang} size="xs" />}
+            {product.dietary?.isGlutenFree && <DietaryBadge type="glutenFree" lang={lang} size="xs" />}
+            {product.dietary?.spicyLevel && product.dietary.spicyLevel > 0 ? <DietaryBadge type="spicy" lang={lang} size="xs" /> : null}
+            {product.dietary?.isChefRecommended && <DietaryBadge type="chef" lang={lang} size="xs" />}
+            {product.dietary?.isPopular && <DietaryBadge type="popular" lang={lang} size="xs" />}
+          </div>
+
+          {/* ── 2-Item Grid / Carousel for Allergens & Chef's Note (Side by Side) ── */}
+          {(hasAllergens || hasChefNote) && (
+            <div className={`grid ${hasAllergens && hasChefNote ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
+              {/* Allergens Box */}
+              {hasAllergens && (
+                <div className="p-3.5 rounded-2xl border flex flex-col justify-between" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#F0B45A]" />
+                    <span className="text-[10px] font-bold text-[#F0B45A] uppercase tracking-wider">
+                      {lang === "tr" ? "Alerjenler" : "Allergens"}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {product.allergens!.map(a => (
+                      <span key={a.id} className="text-[10px] px-2 py-0.5 rounded-md border font-medium" style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text2)" }}>
+                        {a.name[lang as "tr" | "en"] ?? a.name.en}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chef's Note Box */}
+              {hasChefNote && (
+                <div className="p-3.5 rounded-2xl border flex flex-col justify-between" style={{ background: "rgba(166,108,255,0.12)", borderColor: "rgba(166,108,255,0.25)" }}>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <ChefHat className="w-3.5 h-3.5" style={{ color: "var(--dut-purple)" }} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--dut-purple)" }}>
+                      {lang === "tr" ? "Şefin Notu" : "Chef's Note"}
+                    </span>
+                  </div>
+                  <p className="text-xs italic leading-relaxed" style={{ color: "var(--dut-text2)" }}>
+                    "{product.chefNote![lang as "tr" | "en"]}"
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Serving suggestion */}
+          {/* Serving Suggestion */}
           {product.servingSuggestion?.[lang as "tr" | "en"] && (
-            <div className="p-4 rounded-2xl border" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--dut-text3)" }}>
-                {product.servingSuggestion[lang as "tr" | "en"]}
-              </p>
+            <div className="p-3 rounded-xl border text-xs" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}>
+              {product.servingSuggestion[lang as "tr" | "en"]}
             </div>
           )}
 
-          {/* Allergen disclaimer */}
-          <div className="flex items-start gap-2 text-xs pt-1 border-t" style={{ borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}>
+          {/* Allergen Disclaimer */}
+          <div className="flex items-start gap-2 text-[11px] pt-1.5 border-t" style={{ borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}>
             <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "var(--dut-purple)" }} />
             <p className="leading-relaxed">
               {venue.serviceNotice[lang as "tr" | "en"] ?? venue.serviceNotice.tr}
