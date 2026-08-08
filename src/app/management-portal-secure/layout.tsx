@@ -1,48 +1,174 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   UtensilsCrossed, FolderTree, Settings, ShieldCheck,
   LayoutDashboard, ExternalLink, LogOut, QrCode, Calendar, Menu, X,
+  User, Lock, Eye, EyeOff, AlertCircle
 } from "lucide-react";
 import { useMenu } from "@/context/MenuContext";
 import { QRCodeModal } from "@/components/admin/QRCodeModal";
 
+const AUTH_KEY = "dut_admin_session_auth";
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { venue, theme, toggleTheme } = useMenu();
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
+      if (stored === "true") {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch {
+      setIsAuthenticated(false);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    // Accepted default credentials: admin / dutt123 or admin / 123456 or dutt / dutt123
+    const validUsernames = ["admin", "dutt", "duttmeyhane"];
+    const validPasswords = ["dutt123", "123456", "admin123", "admin"];
+
+    const isUserValid = validUsernames.includes(username.trim().toLowerCase());
+    const isPassValid = validPasswords.includes(password.trim());
+
+    if (isUserValid && isPassValid) {
+      setIsAuthenticated(true);
+      try {
+        sessionStorage.setItem(AUTH_KEY, "true");
+        localStorage.setItem(AUTH_KEY, "true");
+      } catch {}
+    } else {
+      setErrorMsg("Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setUsername("");
+    setPassword("");
+    try {
+      sessionStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem(AUTH_KEY);
+    } catch {}
+  };
+
+  // Loading state check
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--dut-bg)" }}>
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--dut-purple)", borderTopColor: "transparent" }} />
+      </div>
+    );
+  }
+
+  // Login Screen
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 transition-colors" style={{ background: "var(--dut-bg)" }}>
-        <div
-          className="max-w-sm w-full p-8 rounded-3xl shadow-2xl text-center space-y-5"
-          style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}
-        >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#A66CFF] to-[#C7A8FF] flex items-center justify-center mx-auto shadow-lg">
-            <ShieldCheck className="w-8 h-8 text-white" />
+        <div className="w-full max-w-md space-y-6">
+          {/* Logo & Header */}
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#A66CFF] to-[#C7A8FF] flex items-center justify-center mx-auto shadow-xl">
+              <ShieldCheck className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--dut-text)" }}>
+              {venue.name} Admin Portal
+            </h1>
+            <p className="text-xs" style={{ color: "var(--dut-text3)" }}>
+              Yönetici paneline erişmek için kullanıcı adı ve şifrenizi girin.
+            </p>
           </div>
-          <div>
-            <h2 className="text-xl font-bold mb-1" style={{ color: "var(--dut-text)" }}>Yönetim Paneli</h2>
-            <p className="text-xs" style={{ color: "var(--dut-text3)" }}>Güvenli alana erişmek için parolanızı girin.</p>
-          </div>
-          <input
-            type="password"
-            placeholder="Yönetici Parolası"
-            className="admin-input"
-          />
-          <button
-            onClick={() => setIsAuthenticated(true)}
-            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-95"
-            style={{ background: "var(--dut-purple)" }}
+
+          {/* Form Card */}
+          <form
+            onSubmit={handleLogin}
+            className="p-7 rounded-3xl space-y-4 border shadow-2xl transition-all"
+            style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}
           >
-            Giriş Yap
-          </button>
+            {errorMsg && (
+              <div className="flex items-center gap-2 p-3 rounded-xl text-xs font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 animate-fade-in">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Username Input */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
+                Kullanıcı Adı
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--dut-text3)" }} />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="admin"
+                  required
+                  className="admin-input pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
+                Şifre
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--dut-text3)" }} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="admin-input pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: "var(--dut-text3)" }}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-2xl font-bold text-sm text-white transition-all active:scale-[0.98] shadow-lg mt-2 flex items-center justify-center gap-2"
+              style={{ background: "var(--dut-purple)", boxShadow: "0 8px 24px rgba(166,108,255,0.35)" }}
+            >
+              <span>Güvenli Giriş Yap</span>
+            </button>
+
+            {/* Default info note */}
+            <div className="pt-2 text-center">
+              <p className="text-[11px]" style={{ color: "var(--dut-text3)" }}>
+                Varsayılan Kullanıcı Adı: <span className="font-mono text-[#A66CFF]">admin</span> | Şifre: <span className="font-mono text-[#A66CFF]">dutt123</span>
+              </p>
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -110,10 +236,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
 
             <button
-              onClick={() => setIsAuthenticated(false)}
+              onClick={handleLogout}
               className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
               style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)", color: "var(--dut-text3)" }}
-              title="Çıkış"
+              title="Çıkış Yap"
             >
               <LogOut className="w-4 h-4" />
             </button>
