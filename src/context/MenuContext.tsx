@@ -95,7 +95,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   };
 
-  /* ── Load from localStorage + Server Sync ── */
+  /* ── Load from localStorage + Live Real-Time Server Sync (2.5s Polling) ── */
   useEffect(() => {
     try {
       const sv = localStorage.getItem(LS.VENUE);
@@ -116,19 +116,25 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
       document.documentElement.className = t;
     } catch { /* ignore */ }
 
-    // Fetch server sync for cross-device consistency (Desktop Admin -> Mobile Menu)
-    fetch("/api/sync")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json?.data) {
-          const d = json.data;
-          if (d.venue) { setVenue(d.venue); localStorage.setItem(LS.VENUE, JSON.stringify(d.venue)); }
-          if (d.categories) { setCategories(d.categories); localStorage.setItem(LS.CATEGORIES, JSON.stringify(d.categories)); }
-          if (d.products) { setProducts(d.products); localStorage.setItem(LS.PRODUCTS, JSON.stringify(d.products)); }
-          if (d.dailyFixMenus) { setDailyFixMenus(d.dailyFixMenus); localStorage.setItem(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus)); }
-        }
-      })
-      .catch(() => {});
+    // Instant & periodic live sync from Supabase Cloud Database (every 2.5 seconds)
+    const syncFromDatabase = () => {
+      fetch("/api/sync")
+        .then((res) => res.json())
+        .then((json) => {
+          if (json?.data) {
+            const d = json.data;
+            if (d.venue) { setVenue(d.venue); localStorage.setItem(LS.VENUE, JSON.stringify(d.venue)); }
+            if (d.categories) { setCategories(d.categories); localStorage.setItem(LS.CATEGORIES, JSON.stringify(d.categories)); }
+            if (d.products) { setProducts(d.products); localStorage.setItem(LS.PRODUCTS, JSON.stringify(d.products)); }
+            if (d.dailyFixMenus) { setDailyFixMenus(d.dailyFixMenus); localStorage.setItem(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus)); }
+          }
+        })
+        .catch(() => {});
+    };
+
+    syncFromDatabase();
+    const intervalId = setInterval(syncFromDatabase, 2500);
+    return () => clearInterval(intervalId);
   }, []);
 
   const toggleTheme = () => {
