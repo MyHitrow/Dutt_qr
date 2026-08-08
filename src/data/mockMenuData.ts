@@ -38,16 +38,16 @@ export const mockAllergensList: Allergen[] = [
 
 /* ─── Categories ─── */
 export const mockCategories: Category[] = [
-  { id: "cat-popular",   slug: "popular",     name: { tr: "Popüler",        en: "Popular"     }, sortOrder: 0, isActive: true, emoji: "🔥" },
-  { id: "cat-starter",   slug: "starters",    name: { tr: "Başlangıçlar",   en: "Starters"    }, sortOrder: 1, isActive: true, emoji: "🥗" },
-  { id: "cat-meze-cold", slug: "soguk-meze",  name: { tr: "Soğuk Mezeler",  en: "Cold Mezes"  }, sortOrder: 2, isActive: true, emoji: "🫙" },
-  { id: "cat-meze-hot",  slug: "sicak-meze",  name: { tr: "Sıcak Mezeler",  en: "Hot Mezes"   }, sortOrder: 3, isActive: true, emoji: "🍲" },
-  { id: "cat-main",      slug: "ana-yemek",   name: { tr: "Ana Yemekler",   en: "Main Course" }, sortOrder: 4, isActive: true, emoji: "🍽️" },
-  { id: "cat-seafood",   slug: "deniz",       name: { tr: "Deniz Ürünleri", en: "Seafood"     }, sortOrder: 5, isActive: true, emoji: "🦐" },
-  { id: "cat-dessert",   slug: "tatli",       name: { tr: "Tatlılar",       en: "Desserts"    }, sortOrder: 6, isActive: true, emoji: "🍮" },
-  { id: "cat-raki",      slug: "raki",        name: { tr: "Rakılar",        en: "Raki"        }, sortOrder: 7, isActive: true, emoji: "🥃" },
-  { id: "cat-wine",      slug: "sarap",       name: { tr: "Şaraplar",       en: "Wines"       }, sortOrder: 8, isActive: true, emoji: "🍷" },
-  { id: "cat-drinks",    slug: "alkolsuz",    name: { tr: "Alkolsüz",       en: "Non-Alcoholic" }, sortOrder: 9, isActive: true, emoji: "🧃" },
+  { id: "cat-popular",   slug: "popular",     name: { tr: "Popüler",        en: "Popular"     }, sortOrder: 0, isActive: true },
+  { id: "cat-starter",   slug: "starters",    name: { tr: "Başlangıçlar",   en: "Starters"    }, sortOrder: 1, isActive: true },
+  { id: "cat-meze-cold", slug: "soguk-meze",  name: { tr: "Soğuk Mezeler",  en: "Cold Mezes"  }, sortOrder: 2, isActive: true },
+  { id: "cat-meze-hot",  slug: "sicak-meze",  name: { tr: "Sıcak Mezeler",  en: "Hot Mezes"   }, sortOrder: 3, isActive: true },
+  { id: "cat-main",      slug: "ana-yemek",   name: { tr: "Ana Yemekler",   en: "Main Course" }, sortOrder: 4, isActive: true },
+  { id: "cat-seafood",   slug: "deniz",       name: { tr: "Deniz Ürünleri", en: "Seafood"     }, sortOrder: 5, isActive: true },
+  { id: "cat-dessert",   slug: "tatli",       name: { tr: "Tatlılar",       en: "Desserts"    }, sortOrder: 6, isActive: true },
+  { id: "cat-raki",      slug: "raki",        name: { tr: "Rakılar",        en: "Raki"        }, sortOrder: 7, isActive: true },
+  { id: "cat-wine",      slug: "sarap",       name: { tr: "Şaraplar",       en: "Wines"       }, sortOrder: 8, isActive: true },
+  { id: "cat-drinks",    slug: "alkolsuz",    name: { tr: "Alkolsüz",       en: "Non-Alcoholic" }, sortOrder: 9, isActive: true },
 ];
 
 /* ─── Products ─── */

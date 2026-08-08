@@ -137,7 +137,6 @@ export default function Home() {
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ml-1"
                   style={{ background: "rgba(166,108,255,0.15)", color: "var(--dut-purple-lt)", border: "1px solid rgba(166,108,255,0.3)" }}
                 >
-                  {activeCategory.emoji && <span>{activeCategory.emoji}</span>}
                   <span>{activeCategory.name[lang]}</span>
                   <button
                     onClick={() => handleCategorySelect(null)}
@@ -163,7 +162,6 @@ export default function Home() {
                   {activeCategory && (
                     <div className="mb-1">
                       <div className="flex items-center gap-2 mb-3">
-                        {activeCategory.emoji && <span className="text-xl">{activeCategory.emoji}</span>}
                         <h2 className="text-xl font-bold" style={{ color: "var(--dut-text)" }}>
                           {activeCategory.name[lang]}
                         </h2>
@@ -201,7 +199,6 @@ export default function Home() {
                     <section key={cat.id} id={`cat-section-${cat.id}`} className="scroll-mt-28">
                       <div className="mb-5">
                         <div className="flex items-center gap-2">
-                          {cat.emoji && <span className="text-xl">{cat.emoji}</span>}
                           <h2 className="text-xl font-bold" style={{ color: "var(--dut-text)" }}>{cat.name[lang]}</h2>
                           <span className="text-xs font-mono ml-auto" style={{ color: "var(--dut-text3)" }}>({products.length})</span>
                         </div>

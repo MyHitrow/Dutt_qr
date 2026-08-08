@@ -18,8 +18,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
     flexShrink: 0,
     display: "flex",
     alignItems: "center",
-    gap: "6px",
-    padding: "7px 14px",
+    justifyContent: "center",
+    padding: "7px 16px",
     borderRadius: "999px",
     fontSize: "12px",
     fontWeight: 600,
@@ -44,7 +44,6 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
           style={pill(activeCategoryId === null)}
           className="active:scale-95"
         >
-          <span className="text-sm leading-none">🍽️</span>
           <span>{lang === "tr" ? "Tümü" : "All"}</span>
         </button>
 
@@ -58,7 +57,6 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
               style={pill(active)}
               className="active:scale-95"
             >
-              {cat.emoji && <span className="text-sm leading-none">{cat.emoji}</span>}
               <span>{cat.name[lang]}</span>
             </button>
           );

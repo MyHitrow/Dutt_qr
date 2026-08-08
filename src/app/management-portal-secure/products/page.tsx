@@ -188,7 +188,7 @@ export default function AdminProductsPage() {
         >
           <option value="all">Tüm Kategoriler ({products.length})</option>
           {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.emoji} {cat.name.tr}</option>
+            <option key={cat.id} value={cat.id}>{cat.name.tr}</option>
           ))}
         </select>
       </div>
@@ -316,7 +316,7 @@ export default function AdminProductsPage() {
                     style={inputStyle}
                     required
                   >
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name.tr}</option>)}
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name.tr}</option>)}
                   </select>
                 )}
                 <div>
