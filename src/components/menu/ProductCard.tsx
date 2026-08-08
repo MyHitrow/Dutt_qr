@@ -69,7 +69,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
       </div>
 
       {/* Product Name & Description */}
-      <div className="mb-2">
+      <div className="mb-2 space-y-1">
         <h3
           className="font-bold text-[13px] leading-snug line-clamp-1 group-hover:text-[#A66CFF] transition-colors"
           style={{ color: "var(--dut-text)" }}
@@ -78,39 +78,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         </h3>
 
         {product.description?.[lang] && (
-          <p className="text-[11px] leading-relaxed line-clamp-1 mt-0.5 opacity-75" style={{ color: "var(--dut-text3)" }}>
+          <p className="text-[11px] leading-relaxed line-clamp-1 opacity-75" style={{ color: "var(--dut-text3)" }}>
             {product.description[lang]}
           </p>
         )}
+
+        {/* Dedicated Prep Time & Calories info line (separated from price) */}
+        {(product.prepTime || product.calories) && (
+          <div className="flex items-center gap-2 pt-0.5 flex-wrap text-[10px]" style={{ color: "var(--dut-text3)" }}>
+            {product.prepTime && (
+              <span className="flex items-center gap-0.5">
+                <Clock className="w-2.5 h-2.5 opacity-70" />
+                <span>{product.prepTime}</span>
+              </span>
+            )}
+            {product.calories && (
+              <span className="flex items-center gap-0.5 font-mono text-[#F0B45A]">
+                <Flame className="w-2.5 h-2.5" />
+                <span>{product.calories} kcal</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Footer: Price + Prep Time + Calories */}
+      {/* Footer: Dedicated Price + Info button (Never overlaps or breaks) */}
       <div className="pt-2 border-t flex items-center justify-between mt-auto" style={{ borderColor: "var(--dut-divider)" }}>
-        <div className="flex items-center gap-1.5">
-          <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>
-            {product.price} {product.currency}
-          </span>
-          {product.calories && (
-            <span className="flex items-center gap-0.5 text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-[#F0B45A]/10 text-[#F0B45A]">
-              <Flame className="w-2.5 h-2.5" />
-              {product.calories}k
-            </span>
-          )}
-        </div>
+        <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>
+          {product.price} {product.currency}
+        </span>
 
-        <div className="flex items-center gap-1.5">
-          {product.prepTime && (
-            <div className="flex items-center gap-0.5 text-[10px]" style={{ color: "var(--dut-text3)" }}>
-              <Clock className="w-2.5 h-2.5" />
-              <span>{product.prepTime}</span>
-            </div>
-          )}
-          <div
-            className="w-6 h-6 rounded-full border flex items-center justify-center group-hover:text-[#A66CFF] transition-all"
-            style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
-          >
-            <Info className="w-3 h-3" />
-          </div>
+        <div
+          className="w-6 h-6 rounded-full border flex items-center justify-center group-hover:text-[#A66CFF] transition-all flex-shrink-0"
+          style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
+        >
+          <Info className="w-3 h-3" />
         </div>
       </div>
     </article>
