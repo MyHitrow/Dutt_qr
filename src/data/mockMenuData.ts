@@ -358,6 +358,31 @@ export const mockProducts: Product[] = [
   },
   /* ── Raki ── */
   {
+    id: "prod-700",
+    categoryId: "cat-raki",
+    name: { tr: "Sarızeybek 3 Meşe", en: "Sarizeybek 3 Mese" },
+    description: {
+      tr: "3 farklı meşe fıçıda yıllandırılmış %100 yaş üzüm premium göbek rakısı.",
+      en: "Aged in 3 distinct oak barrels, 100% fresh grape premium Raki.",
+    },
+    price: 500,
+    currency: "₺",
+    hasImage: false,
+    isAvailable: true,
+    isActive: true,
+    sortOrder: 0,
+    dietary: { isChefRecommended: true, isPopular: true },
+    variants: [
+      { id: "var-1", name: { tr: "Tek", en: "Single" }, price: 500 },
+      { id: "var-2", name: { tr: "Duble", en: "Double" }, price: 625 },
+      { id: "var-3", name: { tr: "35 cl", en: "35 cl" }, price: 2250 },
+      { id: "var-4", name: { tr: "50 cl", en: "50 cl" }, price: 3000 },
+      { id: "var-5", name: { tr: "70 cl", en: "70 cl" }, price: 4000 },
+      { id: "var-6", name: { tr: "100 cl", en: "100 cl" }, price: 4900 },
+    ],
+    servingSuggestion: { tr: "Buzsuz veya az soğuk su ile tercih edilmesi önerilir.", en: "Recommended with minimal cold water." },
+  },
+  {
     id: "prod-701",
     categoryId: "cat-raki",
     name: { tr: "Yeni Rakı Giz — 50cl", en: "Yeni Raki Giz — 50cl" },

@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Clock, ShieldAlert, ChefHat, Info, Flame, Sparkles } from "lucide-react";
-import { Product, Language, VenueSettings } from "@/types/menu";
+import { Product, Language, VenueSettings, ProductVariant } from "@/types/menu";
 import { DietaryBadge } from "./DietaryBadge";
 
 interface ProductDetailBottomSheetProps {
@@ -15,16 +15,28 @@ interface ProductDetailBottomSheetProps {
 export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> = ({
   product, onClose, lang, venue,
 }) => {
+  const hasVariants = Boolean(product?.variants && product.variants.length > 0);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
   useEffect(() => {
     if (product) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [product]);
 
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariant(product.variants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [product]);
+
   if (!product) return null;
 
   const hasAllergens = product.allergens && product.allergens.length > 0;
   const hasChefNote = Boolean(product.chefNote?.[lang as "tr" | "en"]);
+  const displayPrice = selectedVariant ? selectedVariant.price : product.price;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center dut-backdrop animate-fade-in p-0 sm:p-4">
@@ -33,7 +45,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
       {/* Bottom Sheet Container */}
       <div
-        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[75vh] flex flex-col animate-slide-up mt-44 sm:mt-52 pt-16 pb-5"
+        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[78vh] flex flex-col animate-slide-up mt-44 sm:mt-52 pt-16 pb-5"
         style={{
           background: "var(--dut-bg2)",
           color: "var(--dut-text)",
@@ -57,7 +69,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <X className="w-4 h-4" />
         </button>
 
-        {/* ── 200%-250% Scale Circular Plate Image Header (%75-%80 Outside, %20-%25 Inside) ── */}
+        {/* ── 200%-250% Scale Circular Plate Image Header ── */}
         <div
           className="absolute -top-[160px] sm:-top-[185px] left-1/2 -translate-x-1/2 w-[210px] h-[210px] sm:w-[240px] sm:h-[240px] rounded-full border-4 overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.65)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
           style={{
@@ -86,17 +98,60 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
         <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 pt-3">
           {/* Title & Price Row */}
           <div className="flex items-start justify-between gap-3 pt-3">
-            <div className="flex-1">
-              <h2 className="text-xl font-bold leading-snug" style={{ color: "var(--dut-text)" }}>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold leading-snug truncate" style={{ color: "var(--dut-text)" }}>
                 {product.name[lang]}
               </h2>
+              {selectedVariant && (
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md mt-1 inline-block" style={{ background: "rgba(166,108,255,0.15)", color: "var(--dut-purple)", border: "1px solid rgba(166,108,255,0.3)" }}>
+                  {selectedVariant.name[lang]}
+                </span>
+              )}
             </div>
             <div className="text-right flex-shrink-0">
               <span className="font-bold text-xl font-mono whitespace-nowrap" style={{ color: "var(--dut-purple)" }}>
-                {product.price} {product.currency}
+                {displayPrice} {product.currency}
               </span>
             </div>
           </div>
+
+          {/* Portion / Volume Variant Selection */}
+          {hasVariants && (
+            <div className="p-3.5 rounded-2xl border space-y-2.5" style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--dut-text2)" }}>
+                  {lang === "tr" ? "Ölçü / Porsiyon Seçeneği" : "Select Size / Portion"}
+                </span>
+                <span className="text-[10px] font-mono opacity-60" style={{ color: "var(--dut-text3)" }}>
+                  {product.variants!.length} {lang === "tr" ? "Seçenek" : "Options"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {product.variants!.map((v) => {
+                  const isSelected = selectedVariant?.id === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setSelectedVariant(v)}
+                      className="p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all text-center active:scale-95 shadow-sm"
+                      style={{
+                        background: isSelected ? "rgba(166,108,255,0.15)" : "var(--dut-elevated)",
+                        borderColor: isSelected ? "var(--dut-purple)" : "var(--dut-divider)",
+                        color: isSelected ? "var(--dut-purple)" : "var(--dut-text)",
+                      }}
+                    >
+                      <span className="text-xs font-bold">{v.name[lang]}</span>
+                      <span className="text-[11px] font-mono font-semibold opacity-90 mt-0.5">
+                        {v.price} {product.currency}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           {product.description?.[lang] && (
@@ -105,7 +160,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
             </p>
           )}
 
-          {/* Specs: Calories & Prep Time Highlight (Grid format) */}
+          {/* Specs: Calories & Prep Time Highlight */}
           {(product.calories || product.prepTime) && (
             <div className="flex items-center gap-3">
               {product.calories && (
@@ -147,7 +202,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
             {product.dietary?.isPopular && <DietaryBadge type="popular" lang={lang} size="xs" />}
           </div>
 
-          {/* ── 2-Column Grid on Mobile for Allergens & Chef's Note (Side by Side on ALL Screens) ── */}
+          {/* ── 2-Column Grid on Mobile for Allergens & Chef's Note ── */}
           {(hasAllergens || hasChefNote) && (
             <div className={`grid ${hasAllergens && hasChefNote ? "grid-cols-2" : "grid-cols-1"} gap-2.5`}>
               {/* Allergens Box */}

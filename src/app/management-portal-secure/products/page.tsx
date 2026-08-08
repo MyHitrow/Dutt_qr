@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef } from "react";
 import { useMenu } from "@/context/MenuContext";
-import { Product } from "@/types/menu";
+import { Product, ProductVariant } from "@/types/menu";
 import {
   Plus, Search, Edit2, Trash2, CheckCircle2, XCircle, X,
   Flame, Leaf, WheatOff, Sparkles, ChefHat, Link2, Upload, Eye,
@@ -54,6 +54,7 @@ export default function AdminProductsPage() {
     isVegan: false, isVegetarian: false, isGlutenFree: false,
     spicyLevel: 0, chefNoteTr: "", chefNoteEn: "",
     servingSuggestionTr: "", servingSuggestionEn: "", allergenIds: [] as string[],
+    variants: [] as ProductVariant[],
   });
 
   const filteredProducts = useMemo(() => products.filter(p => {
@@ -69,6 +70,7 @@ export default function AdminProductsPage() {
     isVegan: false, isVegetarian: false, isGlutenFree: false,
     spicyLevel: 0, chefNoteTr: "", chefNoteEn: "",
     servingSuggestionTr: "", servingSuggestionEn: "", allergenIds: [] as string[],
+    variants: [] as ProductVariant[],
   });
 
   const handleOpenAdd = () => {
@@ -92,6 +94,7 @@ export default function AdminProductsPage() {
       chefNoteTr: prod.chefNote?.tr || "", chefNoteEn: prod.chefNote?.en || "",
       servingSuggestionTr: prod.servingSuggestion?.tr || "", servingSuggestionEn: prod.servingSuggestion?.en || "",
       allergenIds: prod.allergens ? prod.allergens.map(a => a.id) : [],
+      variants: prod.variants ? [...prod.variants] : [],
     });
     setUploadPreview(prod.imageUrl?.startsWith("data:") ? prod.imageUrl : null);
     setImgMode(prod.imageUrl?.startsWith("data:") ? "upload" : "url");
@@ -128,6 +131,7 @@ export default function AdminProductsPage() {
       sortOrder: editingProduct?.sortOrder || 1,
       dietary: { isVegan: formData.isVegan, isVegetarian: formData.isVegetarian, isGlutenFree: formData.isGlutenFree, spicyLevel: formData.spicyLevel },
       allergens: selectedAllergens,
+      variants: formData.variants.length > 0 ? formData.variants : undefined,
       chefNote: formData.chefNoteTr ? { tr: formData.chefNoteTr, en: formData.chefNoteEn } : undefined,
       servingSuggestion: formData.servingSuggestionTr ? { tr: formData.servingSuggestionTr, en: formData.servingSuggestionEn } : undefined,
     };
@@ -521,17 +525,85 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Chef note */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {field("👨‍🍳 Şefin Notu (TR)",
-                  <input type="text" value={formData.chefNoteTr}
-                    onChange={e => setFormData({ ...formData, chefNoteTr: e.target.value })}
-                    placeholder="Özel baharat harcı ile..." className={DUT_INPUT} style={inputStyle} />
-                )}
-                {field("✨ Servis Önerisi (TR)",
-                  <input type="text" value={formData.servingSuggestionTr}
-                    onChange={e => setFormData({ ...formData, servingSuggestionTr: e.target.value })}
-                    placeholder="Soğuk karaf ile..." className={DUT_INPUT} style={inputStyle} />
+              {/* Ölçü / Porsiyon Seçenekleri (Varyantlar) */}
+              <div className="space-y-2.5 pt-2 border-t" style={{ borderColor: "var(--dut-divider)" }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold" style={{ color: "var(--dut-text)" }}>
+                      Ölçü / Porsiyon Seçenekleri (Opsiyonel)
+                    </label>
+                    <p className="text-[10px] mt-0.5" style={{ color: "var(--dut-text3)" }}>
+                      Örn: Tek (₺500), Duble (₺625), 35cl (₺2.250), 70cl (₺4.000)...
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(f => ({
+                        ...f,
+                        variants: [
+                          ...f.variants,
+                          { id: `var-${Date.now()}`, name: { tr: "", en: "" }, price: Number(f.price) }
+                        ]
+                      }));
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all"
+                    style={{ background: "rgba(166,108,255,0.12)", color: "var(--dut-purple)", border: "1px solid rgba(166,108,255,0.25)" }}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Ölçü Ekle
+                  </button>
+                </div>
+
+                {formData.variants.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    {formData.variants.map((v, idx) => (
+                      <div key={v.id} className="flex items-center gap-2 p-2 rounded-xl" style={{ background: "var(--dut-bg)", border: "1px solid var(--dut-divider)" }}>
+                        <input
+                          type="text"
+                          placeholder="Ölçü Adı (Örn: Tek, Duble, 35 cl, 70 cl)"
+                          value={v.name.tr}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(f => {
+                              const next = [...f.variants];
+                              next[idx] = { ...next[idx], name: { tr: val, en: val } };
+                              return { ...f, variants: next };
+                            });
+                          }}
+                          className={DUT_INPUT}
+                          style={inputStyle}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Fiyat (₺)"
+                          value={v.price}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setFormData(f => {
+                              const next = [...f.variants];
+                              next[idx] = { ...next[idx], price: val };
+                              return { ...f, variants: next };
+                            });
+                          }}
+                          className={`${DUT_INPUT} w-28 font-mono`}
+                          style={inputStyle}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(f => ({
+                              ...f,
+                              variants: f.variants.filter((_, i) => i !== idx)
+                            }));
+                          }}
+                          className="p-2 rounded-lg text-rose-400 hover:text-rose-300 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 

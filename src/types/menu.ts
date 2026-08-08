@@ -36,6 +36,12 @@ export interface CustomizationGroup {
   required?: boolean;
 }
 
+export interface ProductVariant {
+  id: string;
+  name: { tr: string; en: string };
+  price: number;
+}
+
 /* ─── Product ─── */
 export interface Product {
   id: string;
@@ -55,6 +61,7 @@ export interface Product {
   reviewCount?: number;
   dietary?: DietaryInfo;
   allergens?: Allergen[];
+  variants?: ProductVariant[]; // Ölçü / porsiyon seçenekleri (Tek, Duble, 35cl, 70cl...)
   customizations?: CustomizationGroup[];
   chefNote?: { tr?: string; en?: string };
   servingSuggestion?: { tr?: string; en?: string };

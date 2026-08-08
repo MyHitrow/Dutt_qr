@@ -104,9 +104,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
 
       {/* Footer: Dedicated Price + Info button (Never overlaps or breaks) */}
       <div className="pt-2 border-t flex items-center justify-between mt-auto" style={{ borderColor: "var(--dut-divider)" }}>
-        <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>
-          {product.price} {product.currency}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>
+            {product.variants && product.variants.length > 0
+              ? `${Math.min(...product.variants.map(v => v.price))} ${product.currency}`
+              : `${product.price} ${product.currency}`}
+          </span>
+          {product.variants && product.variants.length > 0 && (
+            <span className="text-[9px] font-semibold opacity-75" style={{ color: "var(--dut-purple)" }}>
+              {product.variants.length} {lang === "tr" ? "Farklı Ölçü" : "Sizes"}
+            </span>
+          )}
+        </div>
 
         <div
           className="w-6 h-6 rounded-full border flex items-center justify-center group-hover:text-[#A66CFF] transition-all flex-shrink-0"
