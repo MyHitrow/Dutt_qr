@@ -1,17 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import {
-  Category, Product, VenueSettings, Allergen, DailyFixMenu,
-  CartItem, CartCustomization, Order, OrderStatus, ActiveFilters, Language,
+  Product, Category, Allergen, DailyFixMenu, ActiveFilters,
+  CartItem, CartCustomization, Order, OrderStatus, Language, VenueSettings
 } from "@/types/menu";
 import {
-  mockVenueSettings, mockCategories, mockProducts, mockDailyFixMenus,
-  mockAllergensList, defaultFilters,
+  mockVenueSettings, mockCategories, mockProducts,
+  mockDailyFixMenus, mockAllergensList
 } from "@/data/mockMenuData";
 
 interface MenuContextType {
-  /* ─ Data ─ */
   venue: VenueSettings;
   categories: Category[];
   products: Product[];
@@ -22,9 +21,11 @@ interface MenuContextType {
   theme: "dark" | "light";
   toggleTheme: () => void;
 
-  /* ─ Fix Menu ─ */
+  /* ── Fix Menu ── */
   getCurrentDayFixMenu: () => DailyFixMenu | undefined;
-  updateDailyFixMenu: (dayOfWeek: number, data: Partial<DailyFixMenu>) => void;
+  updateDailyFixMenu: (day: number, data: Partial<DailyFixMenu>) => void;
+
+  /* ── Venue / Product / Category CRUD ── */
   updateVenue: (v: Partial<VenueSettings>) => void;
   addProduct: (p: Omit<Product, "id">) => void;
   updateProduct: (id: string, p: Partial<Product>) => void;
@@ -34,13 +35,13 @@ interface MenuContextType {
   updateCategory: (id: string, c: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
 
-  /* ─ Filters ─ */
+  /* ── Filtering ── */
   filters: ActiveFilters;
-  setFilters: (f: ActiveFilters) => void;
+  setFilters: React.Dispatch<React.SetStateAction<ActiveFilters>>;
   filteredProducts: Product[];
   activeFilterCount: number;
 
-  /* ─ Cart ─ */
+  /* ── Cart ── */
   cartItems: CartItem[];
   cartCount: number;
   cartSubtotal: number;
@@ -51,13 +52,13 @@ interface MenuContextType {
   removeFromCart: (cartId: string) => void;
   clearCart: () => void;
 
-  /* ─ Order ─ */
+  /* ── Order ── */
   currentOrder: Order | null;
   submitOrder: () => void;
   updateOrderStatus: (status: OrderStatus) => void;
   clearOrder: () => void;
 
-  /* ─ Reset Cache ─ */
+  /* ── Reset Cache ── */
   resetAllData: () => void;
 }
 
@@ -69,6 +70,16 @@ const LS = {
   CART: "dut_v5_cart",
   LANG: "dut_v5_lang",
   THEME: "dut_v5_theme",
+};
+
+const defaultFilters: ActiveFilters = {
+  vegetarian: false,
+  vegan: false,
+  glutenFree: false,
+  spicy: false,
+  chefRecommended: false,
+  popular: false,
+  allergens: [],
 };
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -84,7 +95,9 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lang, setLangState] = useState<Language>("tr");
   const [theme, setThemeState] = useState<"dark" | "light">("dark");
 
-  /* ── Server Sync Helper ── */
+  const lastLocalSaveTimeRef = useRef<number>(0);
+
+  /* ── Server Sync Helper (HTTP POST to Supabase Cloud DB) ── */
   const syncToServer = async (v = venue, c = categories, p = products, fm = dailyFixMenus) => {
     try {
       await fetch("/api/sync", {
@@ -92,7 +105,9 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ venue: v, categories: c, products: p, dailyFixMenus: fm }),
       });
-    } catch {}
+    } catch (err) {
+      console.error("Supabase sync server error:", err);
+    }
   };
 
   /* ── Load from localStorage + Live Real-Time Server Sync (2.5s Polling) ── */
@@ -118,6 +133,9 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Instant & periodic live sync from Supabase Cloud Database (every 2.5 seconds)
     const syncFromDatabase = () => {
+      // If a local edit happened within the last 4 seconds, skip poll to prevent overwrite race condition
+      if (Date.now() - lastLocalSaveTimeRef.current < 4000) return;
+
       fetch("/api/sync")
         .then((res) => res.json())
         .then((json) => {
@@ -146,21 +164,25 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /* ── Persist helpers ── */
   const persistVenue = (v: VenueSettings) => {
+    lastLocalSaveTimeRef.current = Date.now();
     setVenue(v);
     localStorage.setItem(LS.VENUE, JSON.stringify(v));
     syncToServer(v, categories, products, dailyFixMenus);
   };
   const persistCategories = (c: Category[]) => {
+    lastLocalSaveTimeRef.current = Date.now();
     setCategories(c);
     localStorage.setItem(LS.CATEGORIES, JSON.stringify(c));
     syncToServer(venue, c, products, dailyFixMenus);
   };
   const persistProducts = (p: Product[]) => {
+    lastLocalSaveTimeRef.current = Date.now();
     setProducts(p);
     localStorage.setItem(LS.PRODUCTS, JSON.stringify(p));
     syncToServer(venue, categories, p, dailyFixMenus);
   };
   const persistFixMenus = (fm: DailyFixMenu[]) => {
+    lastLocalSaveTimeRef.current = Date.now();
     setDailyFixMenus(fm);
     localStorage.setItem(LS.FIX_MENUS, JSON.stringify(fm));
     syncToServer(venue, categories, products, fm);
@@ -207,7 +229,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const activeFilterCount = Object.values(filters).reduce((acc, v) => {
-    if (Array.isArray(v)) return acc + v.length;
+    if (Array.isArray(v)) return acc + (v as string[]).length;
     return acc + (v ? 1 : 0);
   }, 0);
 
@@ -273,7 +295,6 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       fetch("/api/sync", { method: "DELETE" }).catch(() => {});
       Object.values(LS).forEach(k => localStorage.removeItem(k));
-      // Also clear old legacy keys
       ["dut_venue", "dut_categories", "dut_products", "dut_fix_menus", "dut_cart"].forEach(k => localStorage.removeItem(k));
     } catch {}
     setVenue(mockVenueSettings);
@@ -303,7 +324,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useMenu = () => {
-  const ctx = useContext(MenuContext);
-  if (!ctx) throw new Error("useMenu must be used within MenuProvider");
-  return ctx;
+  const context = useContext(MenuContext);
+  if (!context) throw new Error("useMenu must be used within a MenuProvider");
+  return context;
 };
