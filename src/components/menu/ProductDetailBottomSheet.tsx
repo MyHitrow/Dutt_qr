@@ -33,7 +33,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
       {/* Bottom Sheet Container */}
       <div
-        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[75vh] flex flex-col animate-slide-up mt-24 pt-16 pb-5"
+        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[75vh] flex flex-col animate-slide-up mt-44 sm:mt-52 pt-16 pb-5"
         style={{
           background: "var(--dut-bg2)",
           color: "var(--dut-text)",
@@ -47,7 +47,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-20 active:scale-95"
+          className="absolute top-3 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-20 active:scale-95 shadow-md"
           style={{
             background: "var(--dut-elevated)",
             border: "1px solid var(--dut-divider)",
@@ -57,9 +57,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <X className="w-4 h-4" />
         </button>
 
-        {/* ── Much Larger Overlapping Circular Plate Image Header (Overflows Above Card Top) ── */}
+        {/* ── 200%-250% Scale Circular Plate Image Header (%75-%80 Outside, %20-%25 Inside) ── */}
         <div
-          className="absolute -top-20 sm:-top-22 left-1/2 -translate-x-1/2 w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] rounded-full border-4 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
+          className="absolute -top-[160px] sm:-top-[185px] left-1/2 -translate-x-1/2 w-[210px] h-[210px] sm:w-[240px] sm:h-[240px] rounded-full border-4 overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.65)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
           style={{
             borderColor: "var(--dut-bg2)",
             background: "var(--dut-elevated)",
@@ -70,20 +70,20 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               src={product.imageUrl}
               alt={product.name[lang]}
               fill
-              sizes="180px"
+              sizes="240px"
               priority
               className="object-cover"
               unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Sparkles className="w-10 h-10 opacity-40" style={{ color: "var(--dut-purple)" }} />
+              <Sparkles className="w-12 h-12 opacity-40" style={{ color: "var(--dut-purple)" }} />
             </div>
           )}
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 pt-2">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 pt-3">
           {/* Title & Price Row */}
           <div className="flex items-start justify-between gap-3 pt-3">
             <div className="flex-1">
