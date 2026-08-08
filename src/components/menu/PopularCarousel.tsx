@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { Star, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Product, Language } from "@/types/menu";
+import { DietaryBadge } from "./DietaryBadge";
 
 interface PopularCarouselProps {
   products: Product[];
@@ -27,13 +28,13 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
         </div>
       </div>
 
-      {/* Horizontal scroll cards (padding py-3 prevents shadow clipping) */}
+      {/* Horizontal scroll cards */}
       <div className="flex gap-3.5 px-4 overflow-x-auto no-scrollbar py-3 -my-1">
         {products.map((product) => (
           <button
             key={product.id}
             onClick={() => onOpen(product)}
-            className="flex-shrink-0 w-44 rounded-[20px] overflow-hidden border active:scale-[0.97] transition-all group text-left"
+            className="flex-shrink-0 w-44 rounded-[20px] overflow-hidden border active:scale-[0.97] transition-all group text-left flex flex-col justify-between"
             style={{
               background: "var(--dut-card)",
               borderColor: "var(--dut-divider)",
@@ -41,7 +42,7 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
             }}
           >
             {/* Food photo */}
-            <div className="relative w-full h-28 overflow-hidden">
+            <div className="relative w-full h-28 overflow-hidden flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}>
               {product.imageUrl ? (
                 <Image
                   src={product.imageUrl}
@@ -52,28 +53,34 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
                   unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}>
+                <div className="w-full h-full flex items-center justify-center">
                   <span className="text-3xl">🍽️</span>
                 </div>
               )}
-              {/* Rating badge overlay */}
-              {product.rating && (
-                <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
-                  <Star className="w-2.5 h-2.5 fill-[#A66CFF] text-[#A66CFF]" />
-                  <span className="text-[10px] text-white font-semibold">{product.rating}</span>
-                </div>
-              )}
+
+              {/* Minimal Icon-Only Badges */}
+              <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+                {product.dietary?.isChefRecommended && <DietaryBadge type="chef" lang={lang} iconOnly />}
+                {product.dietary?.isNew && <DietaryBadge type="new" lang={lang} iconOnly />}
+                {product.dietary?.isVegan && <DietaryBadge type="vegan" lang={lang} iconOnly />}
+                {!product.dietary?.isVegan && product.dietary?.isVegetarian && <DietaryBadge type="vegetarian" lang={lang} iconOnly />}
+                {product.dietary?.spicyLevel && product.dietary.spicyLevel > 0 ? <DietaryBadge type="spicy" lang={lang} iconOnly /> : null}
+              </div>
             </div>
 
             {/* Card content */}
-            <div className="p-3">
-              <h3 className="text-[13px] font-semibold leading-snug line-clamp-2 mb-1" style={{ color: "var(--dut-text)" }}>
-                {product.name[lang]}
-              </h3>
-              <p className="text-[11px] leading-relaxed line-clamp-1 mb-2" style={{ color: "var(--dut-text3)" }}>
-                {product.description[lang]}
-              </p>
-              <div className="flex items-center justify-between">
+            <div className="p-3 flex-1 flex flex-col justify-between space-y-1.5">
+              <div>
+                <h3 className="text-[13px] font-bold leading-snug line-clamp-1" style={{ color: "var(--dut-text)" }}>
+                  {product.name[lang]}
+                </h3>
+                {product.description?.[lang] && (
+                  <p className="text-[11px] leading-relaxed line-clamp-1 mt-0.5 opacity-75" style={{ color: "var(--dut-text3)" }}>
+                    {product.description[lang]}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: "var(--dut-divider)" }}>
                 <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>{product.price} {product.currency}</span>
                 {product.prepTime && (
                   <span className="flex items-center gap-0.5 text-[10px]" style={{ color: "var(--dut-text3)" }}>

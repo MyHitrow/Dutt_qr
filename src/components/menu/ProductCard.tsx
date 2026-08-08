@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { Star, Clock, Sparkles, Info, Flame } from "lucide-react";
+import { Clock, Sparkles, Info, Flame } from "lucide-react";
 import { Product, Language } from "@/types/menu";
 import { DietaryBadge } from "./DietaryBadge";
 
@@ -18,92 +18,97 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
   return (
     <article
       onClick={() => onOpen(product)}
-      className={`relative rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-50" : ""}`}
+      className={`relative rounded-[20px] flex flex-col cursor-pointer border active:scale-[0.97] transition-all group overflow-hidden ${isSoldOut ? "opacity-55" : ""}`}
       style={{
         background: "var(--dut-card)",
         borderColor: "var(--dut-divider)",
         boxShadow: "var(--dut-shadow)",
       }}
     >
-      {/* ── DUT Signature: overlapping circular plate ── */}
-      <div
-        className={`absolute -top-12 left-1/2 -translate-x-1/2 w-[88px] h-[88px] rounded-full border-4 overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.3)] z-10 flex-shrink-0 transition-transform duration-300 ${!isSoldOut ? "group-hover:scale-105" : ""}`}
-        style={{
-          borderColor: "var(--dut-bg)",
-          background: "var(--dut-elevated)",
-        }}
-      >
-        {product.hasImage && product.imageUrl && !imgErr
-          ? <Image
-              src={product.imageUrl}
-              alt={product.name[lang]}
-              fill
-              sizes="88px"
-              className="object-cover"
-              unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
-              onError={() => setImgErr(true)}
-            />
-          : <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}><Sparkles className="w-5 h-5 opacity-40" style={{ color: "var(--dut-purple)" }} /></div>
-        }
-        {/* Sold out plate overlay */}
+      {/* ── Product Photo Container (Top) ── */}
+      <div className="relative w-full h-32 sm:h-36 overflow-hidden flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}>
+        {product.hasImage && product.imageUrl && !imgErr ? (
+          <Image
+            src={product.imageUrl}
+            alt={product.name[lang]}
+            fill
+            sizes="(max-width: 640px) 50vw, 300px"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+            onError={() => setImgErr(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Sparkles className="w-6 h-6 opacity-30" style={{ color: "var(--dut-purple)" }} />
+          </div>
+        )}
+
+        {/* Sold out overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--dut-bg) 80%, transparent)" }}>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-center leading-tight px-1" style={{ color: "var(--dut-text3)" }}>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs z-10">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full bg-red-600/80 border border-red-400/30">
               {lang === "tr" ? "Tükendi" : "Sold Out"}
             </span>
           </div>
         )}
+
+        {/* Minimal Icon-Only Dietary Badges (Top-Right Overlay) */}
+        <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+          {product.dietary?.isChefRecommended && <DietaryBadge type="chef" lang={lang} iconOnly />}
+          {product.dietary?.isNew && <DietaryBadge type="new" lang={lang} iconOnly />}
+          {product.dietary?.isVegan && <DietaryBadge type="vegan" lang={lang} iconOnly />}
+          {!product.dietary?.isVegan && product.dietary?.isVegetarian && <DietaryBadge type="vegetarian" lang={lang} iconOnly />}
+          {product.dietary?.spicyLevel && product.dietary.spicyLevel > 0 ? <DietaryBadge type="spicy" lang={lang} iconOnly /> : null}
+        </div>
       </div>
 
-      {/* Dietary badges */}
-      <div className="flex flex-wrap gap-1 mb-2 min-h-[18px]">
-        {product.dietary?.isChefRecommended && <DietaryBadge type="chef" lang={lang} />}
-        {product.dietary?.isNew && <DietaryBadge type="new" lang={lang} />}
-        {product.dietary?.isVegan && <DietaryBadge type="vegan" lang={lang} />}
-        {!product.dietary?.isVegan && product.dietary?.isVegetarian && <DietaryBadge type="vegetarian" lang={lang} />}
-        {product.dietary?.spicyLevel && product.dietary.spicyLevel > 0 ? <DietaryBadge type="spicy" lang={lang} /> : null}
-      </div>
-
-      {/* Name */}
-      <h3 className="font-semibold text-[13px] leading-snug line-clamp-2 mb-1 group-hover:text-[#A66CFF] transition-colors" style={{ color: "var(--dut-text)" }}>
-        {product.name[lang]}
-      </h3>
-
-      {/* Rating & Calories row */}
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        {product.rating && (
-          <div className="flex items-center gap-0.5">
-            <Star className="w-3 h-3 fill-[#A66CFF] text-[#A66CFF]" />
-            <span className="text-[11px]" style={{ color: "var(--dut-text2)" }}>{product.rating}</span>
-          </div>
-        )}
-        {product.calories && (
-          <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#F0B45A]/10 border border-[#F0B45A]/20">
-            <Flame className="w-3 h-3 text-[#F0B45A]" />
-            <span className="text-[10px] font-semibold text-[#F0B45A] font-mono">{product.calories} kcal</span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex-1" />
-
-      {/* Footer: price + prep time */}
-      <div className="pt-2 border-t flex items-center justify-between mt-2" style={{ borderColor: "var(--dut-divider)" }}>
+      {/* ── Product Details (Bottom) ── */}
+      <div className="p-3.5 flex flex-col flex-1 justify-between space-y-2">
         <div>
-          <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>{product.price} {product.currency}</span>
-          {product.prepTime && (
-            <div className="flex items-center gap-0.5 mt-0.5">
-              <Clock className="w-2.5 h-2.5" style={{ color: "var(--dut-text3)" }} />
-              <span className="text-[10px]" style={{ color: "var(--dut-text3)" }}>{product.prepTime}</span>
-            </div>
+          {/* Product Name */}
+          <h3
+            className="font-bold text-[13px] leading-snug line-clamp-1 group-hover:text-[#A66CFF] transition-colors"
+            style={{ color: "var(--dut-text)" }}
+          >
+            {product.name[lang]}
+          </h3>
+
+          {/* Description */}
+          {product.description?.[lang] && (
+            <p className="text-[11px] leading-relaxed line-clamp-1 mt-0.5 opacity-75" style={{ color: "var(--dut-text3)" }}>
+              {product.description[lang]}
+            </p>
           )}
         </div>
-        {/* Info icon */}
-        <div
-          className="w-7 h-7 rounded-full border flex items-center justify-center group-hover:text-[#A66CFF] group-hover:border-[#A66CFF]/30 transition-all"
-          style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
-        >
-          <Info className="w-3.5 h-3.5" />
+
+        {/* Footer: Price + Prep Time / Calories */}
+        <div className="pt-2 border-t flex items-center justify-between mt-auto" style={{ borderColor: "var(--dut-divider)" }}>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>
+              {product.price} {product.currency}
+            </span>
+            {product.calories && (
+              <span className="flex items-center gap-0.5 text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-[#F0B45A]/10 text-[#F0B45A]">
+                <Flame className="w-2.5 h-2.5" />
+                {product.calories}k
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {product.prepTime && (
+              <div className="flex items-center gap-0.5 text-[10px]" style={{ color: "var(--dut-text3)" }}>
+                <Clock className="w-2.5 h-2.5" />
+                <span>{product.prepTime}</span>
+              </div>
+            )}
+            <div
+              className="w-6 h-6 rounded-full border flex items-center justify-center group-hover:text-[#A66CFF] transition-all"
+              style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
+            >
+              <Info className="w-3 h-3" />
+            </div>
+          </div>
         </div>
       </div>
     </article>

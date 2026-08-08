@@ -3,20 +3,19 @@ import React from "react";
 
 export const SkeletonCard: React.FC = () => (
   <div
-    className="rounded-[20px] p-4 pt-14 mt-10 relative overflow-hidden border"
+    className="rounded-[20px] overflow-hidden border flex flex-col justify-between"
     style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}
   >
-    {/* Plate skeleton */}
-    <div
-      className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full dut-skeleton border-4"
-      style={{ borderColor: "var(--dut-bg)" }}
-    />
-    <div className="h-4 w-3/4 mx-auto rounded-full dut-skeleton mb-2" />
-    <div className="h-3 w-1/2 mx-auto rounded-full dut-skeleton mb-4" />
-    <div className="h-px w-full mb-3" style={{ background: "var(--dut-divider)" }} />
-    <div className="flex justify-between px-1">
-      <div className="h-3 w-12 rounded-full dut-skeleton" />
-      <div className="h-3 w-16 rounded-full dut-skeleton" />
+    {/* Photo container skeleton */}
+    <div className="w-full h-32 dut-skeleton" />
+    <div className="p-3.5 space-y-2">
+      <div className="h-4 w-3/4 rounded-full dut-skeleton" />
+      <div className="h-3 w-1/2 rounded-full dut-skeleton" />
+      <div className="h-px w-full pt-1" style={{ background: "var(--dut-divider)" }} />
+      <div className="flex justify-between pt-1">
+        <div className="h-4 w-14 rounded-full dut-skeleton" />
+        <div className="h-4 w-10 rounded-full dut-skeleton" />
+      </div>
     </div>
   </div>
 );

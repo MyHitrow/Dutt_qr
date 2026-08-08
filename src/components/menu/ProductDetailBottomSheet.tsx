@@ -76,16 +76,6 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               <h2 className="text-xl font-bold leading-tight" style={{ color: "var(--dut-text)" }}>
                 {product.name[lang]}
               </h2>
-              {/* Rating */}
-              {product.rating && (
-                <div className="flex items-center gap-1 mt-1.5">
-                  {[1,2,3,4,5].map(s => (
-                    <Star key={s} className={`w-3 h-3 ${s <= Math.round(product.rating!) ? "fill-[#A66CFF] text-[#A66CFF]" : "opacity-20 text-dut3"}`} />
-                  ))}
-                  <span className="text-xs ml-1" style={{ color: "var(--dut-text2)" }}>{product.rating}</span>
-                  {product.reviewCount && <span className="text-[11px]" style={{ color: "var(--dut-text3)" }}>({product.reviewCount})</span>}
-                </div>
-              )}
             </div>
             <div className="text-right flex-shrink-0">
               <span className="font-bold text-xl font-mono whitespace-nowrap" style={{ color: "var(--dut-purple)" }}>
