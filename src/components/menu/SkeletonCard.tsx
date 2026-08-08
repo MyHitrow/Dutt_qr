@@ -2,12 +2,18 @@
 import React from "react";
 
 export const SkeletonCard: React.FC = () => (
-  <div className="bg-[#1D1D1F] rounded-[20px] p-4 pt-14 mt-10 relative overflow-hidden">
+  <div
+    className="rounded-[20px] p-4 pt-14 mt-10 relative overflow-hidden border"
+    style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}
+  >
     {/* Plate skeleton */}
-    <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full dut-skeleton border-4 border-[#101011]" />
+    <div
+      className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full dut-skeleton border-4"
+      style={{ borderColor: "var(--dut-bg)" }}
+    />
     <div className="h-4 w-3/4 mx-auto rounded-full dut-skeleton mb-2" />
     <div className="h-3 w-1/2 mx-auto rounded-full dut-skeleton mb-4" />
-    <div className="h-px w-full bg-white/5 mb-3" />
+    <div className="h-px w-full mb-3" style={{ background: "var(--dut-divider)" }} />
     <div className="flex justify-between px-1">
       <div className="h-3 w-12 rounded-full dut-skeleton" />
       <div className="h-3 w-16 rounded-full dut-skeleton" />

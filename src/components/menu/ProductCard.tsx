@@ -18,18 +18,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
   return (
     <article
       onClick={() => onOpen(product)}
-      className={`relative bg-[#1D1D1F] rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border border-white/[0.04] shadow-card active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-50" : ""}`}
+      className={`relative rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border shadow-card active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-50" : ""}`}
+      style={{
+        background: "var(--dut-card)",
+        borderColor: "var(--dut-divider)",
+      }}
     >
       {/* ── DUT Signature: overlapping circular plate ── */}
-      <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-[88px] h-[88px] rounded-full border-4 border-[#101011] overflow-hidden bg-[#222224] shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-10 flex-shrink-0 transition-transform duration-300 ${!isSoldOut ? "group-hover:scale-105" : ""}`}>
+      <div
+        className={`absolute -top-12 left-1/2 -translate-x-1/2 w-[88px] h-[88px] rounded-full border-4 overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.3)] z-10 flex-shrink-0 transition-transform duration-300 ${!isSoldOut ? "group-hover:scale-105" : ""}`}
+        style={{
+          borderColor: "var(--dut-bg)",
+          background: "var(--dut-elevated)",
+        }}
+      >
         {product.hasImage && product.imageUrl && !imgErr
           ? <Image src={product.imageUrl} alt={product.name[lang]} fill sizes="88px" className="object-cover" onError={() => setImgErr(true)} />
-          : <div className="w-full h-full flex items-center justify-center bg-[#252527]"><Sparkles className="w-5 h-5 text-[#A66CFF]/40" /></div>
+          : <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}><Sparkles className="w-5 h-5 opacity-40" style={{ color: "var(--dut-purple)" }} /></div>
         }
         {/* Sold out plate overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-[#101011]/75 flex items-center justify-center">
-            <span className="text-[9px] font-bold text-[#68686E] uppercase tracking-wider text-center leading-tight px-1">
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--dut-bg) 80%, transparent)" }}>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-center leading-tight px-1" style={{ color: "var(--dut-text3)" }}>
               {lang === "tr" ? "Tükendi" : "Sold Out"}
             </span>
           </div>
@@ -46,7 +56,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
       </div>
 
       {/* Name */}
-      <h3 className="font-semibold text-[13px] text-[#F7F7F8] leading-snug line-clamp-2 mb-1 group-hover:text-[#C7A8FF] transition-colors">
+      <h3 className="font-semibold text-[13px] leading-snug line-clamp-2 mb-1 group-hover:text-[#A66CFF] transition-colors" style={{ color: "var(--dut-text)" }}>
         {product.name[lang]}
       </h3>
 
@@ -55,7 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
         {product.rating && (
           <div className="flex items-center gap-0.5">
             <Star className="w-3 h-3 fill-[#A66CFF] text-[#A66CFF]" />
-            <span className="text-[11px] text-[#96969D]">{product.rating}</span>
+            <span className="text-[11px]" style={{ color: "var(--dut-text2)" }}>{product.rating}</span>
           </div>
         )}
         {product.calories && (
@@ -69,18 +79,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
       <div className="flex-1" />
 
       {/* Footer: price + prep time */}
-      <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between mt-2">
+      <div className="pt-2 border-t flex items-center justify-between mt-2" style={{ borderColor: "var(--dut-divider)" }}>
         <div>
-          <span className="font-bold text-sm text-[#A66CFF]">{product.price} {product.currency}</span>
+          <span className="font-bold text-sm" style={{ color: "var(--dut-purple)" }}>{product.price} {product.currency}</span>
           {product.prepTime && (
             <div className="flex items-center gap-0.5 mt-0.5">
-              <Clock className="w-2.5 h-2.5 text-[#68686E]" />
-              <span className="text-[10px] text-[#68686E]">{product.prepTime}</span>
+              <Clock className="w-2.5 h-2.5" style={{ color: "var(--dut-text3)" }} />
+              <span className="text-[10px]" style={{ color: "var(--dut-text3)" }}>{product.prepTime}</span>
             </div>
           )}
         </div>
         {/* Info icon */}
-        <div className="w-7 h-7 rounded-full bg-[#222224] border border-white/[0.06] flex items-center justify-center text-[#68686E] group-hover:text-[#A66CFF] group-hover:border-[#A66CFF]/30 transition-all">
+        <div
+          className="w-7 h-7 rounded-full border flex items-center justify-center group-hover:text-[#A66CFF] group-hover:border-[#A66CFF]/30 transition-all"
+          style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
+        >
           <Info className="w-3.5 h-3.5" />
         </div>
       </div>
