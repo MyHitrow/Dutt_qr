@@ -18,10 +18,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
   return (
     <article
       onClick={() => onOpen(product)}
-      className={`relative rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border shadow-card active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-50" : ""}`}
+      className={`relative rounded-[20px] p-4 pt-14 flex flex-col cursor-pointer mt-12 border active:scale-[0.97] transition-transform group ${isSoldOut ? "opacity-50" : ""}`}
       style={{
         background: "var(--dut-card)",
         borderColor: "var(--dut-divider)",
+        boxShadow: "var(--dut-shadow)",
       }}
     >
       {/* ── DUT Signature: overlapping circular plate ── */}

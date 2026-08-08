@@ -14,7 +14,7 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
   if (products.length === 0) return null;
 
   return (
-    <div className="py-4">
+    <div className="py-3">
       {/* Header */}
       <div className="px-4 flex items-center justify-between mb-3">
         <div>
@@ -27,16 +27,17 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
         </div>
       </div>
 
-      {/* Horizontal scroll cards */}
-      <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2">
+      {/* Horizontal scroll cards (padding py-3 prevents shadow clipping) */}
+      <div className="flex gap-3.5 px-4 overflow-x-auto no-scrollbar py-3 -my-1">
         {products.map((product) => (
           <button
             key={product.id}
             onClick={() => onOpen(product)}
-            className="flex-shrink-0 w-44 rounded-[20px] overflow-hidden border shadow-card active:scale-[0.97] transition-transform group text-left"
+            className="flex-shrink-0 w-44 rounded-[20px] overflow-hidden border active:scale-[0.97] transition-all group text-left"
             style={{
               background: "var(--dut-card)",
               borderColor: "var(--dut-divider)",
+              boxShadow: "var(--dut-shadow)",
             }}
           >
             {/* Food photo */}

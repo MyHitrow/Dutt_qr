@@ -23,6 +23,7 @@ html.dark {
   --dut-danger:      #FF6B6B;
   --dut-skeleton-a:  #1D1D1F;
   --dut-skeleton-b:  #252527;
+  --dut-shadow:      0 8px 24px rgba(0,0,0,0.4);
 }
 
 /* ─── Light Mode ─── */
@@ -43,6 +44,7 @@ html.light {
   --dut-danger:      #D93B3B;
   --dut-skeleton-a:  #E8E6E2;
   --dut-skeleton-b:  #F0EDE8;
+  --dut-shadow:      0 4px 16px rgba(0,0,0,0.04);
 }
 
 /* ─── Base Styles ─── */
