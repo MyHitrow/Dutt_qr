@@ -132,6 +132,8 @@ export interface VenueSettings {
   tableNumber?: string;
   slogan: { tr: string; en: string };
   logoUrl?: string;
+  logoDarkUrl?: string;  // Dark theme logo (light colored/white icon)
+  logoLightUrl?: string; // Light theme logo (dark colored/black icon)
   isOpen: boolean;
   closingTime?: string; // "23:30"
   defaultTheme: ThemeMode;

@@ -27,7 +27,7 @@ export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ fixMenu,
         <div>
           <p className="text-xs font-light" style={{ color: "var(--dut-text2)" }}>{greeting}</p>
           <h2 className="text-lg font-bold leading-tight mt-0.5" style={{ color: "var(--dut-text)" }}>
-            {lang === "tr" ? "Günün Öne Çıkan Konsepti" : "Today's Featured Concept"}
+            {t(fixMenu.dayName, lang)} {lang === "tr" ? "Fix Menü" : "Fix Menu"}
           </h2>
         </div>
         <div

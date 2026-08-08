@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import { Sun, Moon, Search } from "lucide-react";
 import { Language, VenueSettings } from "@/types/menu";
 import { useMenu } from "@/context/MenuContext";
@@ -14,34 +15,45 @@ interface DutHeaderProps {
 export const DutHeader: React.FC<DutHeaderProps> = ({ venue, lang, onSearchOpen, onLangOpen }) => {
   const { theme, toggleTheme } = useMenu();
 
+  const activeLogo = theme === "dark"
+    ? (venue.logoDarkUrl || venue.logoUrl)
+    : (venue.logoLightUrl || venue.logoUrl);
+
   return (
     <header
       className="w-full px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 z-30 relative transition-colors"
       style={{ backgroundColor: "var(--dut-bg)" }}
     >
       <div className="flex items-center gap-3 max-w-md mx-auto">
-        {/* DUT Logo */}
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[var(--dut-purple)] to-[var(--dut-purple-lt)] flex items-center justify-center flex-shrink-0 shadow-lg">
-          <span className="font-bold text-sm text-white tracking-tight">DUT</span>
-        </div>
-
-        {/* Venue name + table + status */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1
-              className="font-bold text-base truncate leading-none transition-colors"
-              style={{ color: "var(--dut-text)" }}
-            >
-              {venue.name}
-            </h1>
-            <span
-              className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-md font-mono transition-colors"
-              style={{ background: "var(--dut-card)", color: "var(--dut-text2)", border: "1px solid var(--dut-divider)" }}
-            >
-              Masa {venue.tableNumber ?? "–"}
-            </span>
+        {/* Venue Logo (Dark & Light support) */}
+        {activeLogo ? (
+          <div
+            className="w-10 h-10 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 relative border shadow-md transition-all"
+            style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}
+          >
+            <Image
+              src={activeLogo}
+              alt={venue.name}
+              fill
+              sizes="40px"
+              className="object-contain p-1"
+            />
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5">
+        ) : (
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[var(--dut-purple)] to-[var(--dut-purple-lt)] flex items-center justify-center flex-shrink-0 shadow-lg">
+            <span className="font-bold text-sm text-white tracking-tight">DUT</span>
+          </div>
+        )}
+
+        {/* Venue name & status (Table badge removed) */}
+        <div className="flex-1 min-w-0">
+          <h1
+            className="font-bold text-base truncate leading-none transition-colors"
+            style={{ color: "var(--dut-text)" }}
+          >
+            {venue.name}
+          </h1>
+          <div className="flex items-center gap-1.5 mt-1">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
               style={{ background: venue.isOpen ? "var(--dut-success)" : "var(--dut-danger)" }}
