@@ -27,7 +27,7 @@ async function optimizeLogoImage(file: File): Promise<string> {
 }
 
 export default function AdminSettingsPage() {
-  const { venue, updateVenue } = useMenu();
+  const { venue, updateVenue, resetAllData } = useMenu();
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isUploadingDark, setIsUploadingDark] = useState(false);
   const [isUploadingLight, setIsUploadingLight] = useState(false);
@@ -323,7 +323,20 @@ export default function AdminSettingsPage() {
           )}
         </div>
 
-        <div className="pt-4 flex items-center justify-end border-t" style={{ borderColor: "var(--dut-divider)" }}>
+        <div className="pt-4 flex items-center justify-between border-t" style={{ borderColor: "var(--dut-divider)" }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Mobil cihazınızdaki veya tarayıcınızdaki eski önbellek temizlenip güncel canlı veriler yüklenecektir. Onaylıyor musunuz?")) {
+                resetAllData();
+              }
+            }}
+            className="px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all hover:scale-95"
+            style={{ background: "rgba(255,107,107,0.12)", color: "var(--dut-danger)", border: "1px solid rgba(255,107,107,0.25)" }}
+          >
+            Önbelleği Sıfırla & Mobil Veriyi Yenile
+          </button>
+
           <button
             type="submit"
             className="flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg"

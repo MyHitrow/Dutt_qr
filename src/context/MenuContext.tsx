@@ -56,16 +56,19 @@ interface MenuContextType {
   submitOrder: () => void;
   updateOrderStatus: (status: OrderStatus) => void;
   clearOrder: () => void;
+
+  /* ─ Reset Cache ─ */
+  resetAllData: () => void;
 }
 
 const LS = {
-  VENUE: "dut_venue",
-  CATEGORIES: "dut_categories",
-  PRODUCTS: "dut_products",
-  FIX_MENUS: "dut_fix_menus",
-  CART: "dut_cart",
-  LANG: "dut_lang",
-  THEME: "dut_theme",
+  VENUE: "dut_v5_venue",
+  CATEGORIES: "dut_v5_categories",
+  PRODUCTS: "dut_v5_products",
+  FIX_MENUS: "dut_v5_fix_menus",
+  CART: "dut_v5_cart",
+  LANG: "dut_v5_lang",
+  THEME: "dut_v5_theme",
 };
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -219,6 +222,20 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearOrder = () => setCurrentOrder(null);
 
+  const resetAllData = () => {
+    try {
+      Object.values(LS).forEach(k => localStorage.removeItem(k));
+      // Also clear old legacy keys
+      ["dut_venue", "dut_categories", "dut_products", "dut_fix_menus", "dut_cart"].forEach(k => localStorage.removeItem(k));
+    } catch {}
+    setVenue(mockVenueSettings);
+    setCategories(mockCategories);
+    setProducts(mockProducts);
+    setDailyFixMenus(mockDailyFixMenus);
+    setCartItems([]);
+    window.location.reload();
+  };
+
   return (
     <MenuContext.Provider value={{
       venue, categories, products, allergens: mockAllergensList, dailyFixMenus, lang, setLang,
@@ -230,6 +247,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cartItems, cartCount, cartSubtotal, cartTotal, serviceFee,
       addToCart, updateCartItemQty, removeFromCart, clearCart,
       currentOrder, submitOrder, updateOrderStatus, clearOrder,
+      resetAllData,
     }}>
       {children}
     </MenuContext.Provider>
