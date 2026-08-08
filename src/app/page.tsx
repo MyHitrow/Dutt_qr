@@ -18,7 +18,7 @@ import { SlidersHorizontal } from "lucide-react";
 type ActiveSheet = null | "language" | "filter" | "search";
 
 export default function Home() {
-  const { venue, categories, filteredProducts, activeFilterCount, lang, theme, getCurrentDayFixMenu } = useMenu();
+  const { venue, categories, dailyFixMenus, filteredProducts, activeFilterCount, lang, theme } = useMenu();
 
   const [isLoading, setIsLoading]       = useState(true);
   const [activeSheet, setActiveSheet]   = useState<ActiveSheet>(null);
@@ -26,7 +26,6 @@ export default function Home() {
   // null = tüm kategoriler, string = sadece o kategori
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
-  const todayFixMenu = getCurrentDayFixMenu();
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 700);

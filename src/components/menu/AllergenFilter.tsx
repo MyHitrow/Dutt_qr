@@ -2,8 +2,15 @@
 import React from "react";
 import { X, Check, SlidersHorizontal } from "lucide-react";
 import { Language, ActiveFilters } from "@/types/menu";
-import { useMenu } from "@/context/MenuContext";
-import { defaultFilters } from "@/data/mockMenuData";
+const defaultFilters: ActiveFilters = {
+  vegetarian: false,
+  vegan: false,
+  glutenFree: false,
+  spicy: false,
+  chefRecommended: false,
+  popular: false,
+  allergens: [],
+};
 
 interface AllergenFilterProps {
   lang: Language;
