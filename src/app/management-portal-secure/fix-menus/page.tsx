@@ -13,27 +13,17 @@ export default function AdminFixMenusPage() {
   const currentDayOfWeek = new Date().getDay();
 
   const [formData, setFormData] = useState({
-    titleTr: "",
-    titleEn: "",
-    subtitleTr: "",
-    subtitleEn: "",
-    price: 0,
-    currency: "₺",
-    imageUrl: "",
-    isActive: true,
+    titleTr: "", titleEn: "", subtitleTr: "", subtitleEn: "",
+    price: 0, currency: "₺", imageUrl: "", isActive: true,
   });
 
   const handleOpenEdit = (menu: DailyFixMenu) => {
     setEditingDay(menu);
     setFormData({
-      titleTr: menu.title.tr,
-      titleEn: menu.title.en,
-      subtitleTr: menu.subtitle.tr,
-      subtitleEn: menu.subtitle.en,
-      price: menu.price,
-      currency: menu.currency,
-      imageUrl: menu.imageUrl || "",
-      isActive: menu.isActive,
+      titleTr: menu.title.tr, titleEn: menu.title.en,
+      subtitleTr: menu.subtitle.tr, subtitleEn: menu.subtitle.en,
+      price: menu.price, currency: menu.currency,
+      imageUrl: menu.imageUrl || "", isActive: menu.isActive,
     });
   };
 
@@ -55,25 +45,35 @@ export default function AdminFixMenusPage() {
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
+  const field = (label: string, children: React.ReactNode) => (
+    <div>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--dut-text2)" }}>{label}</label>
+      {children}
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="font-serif text-2xl font-semibold text-content-primary">
-          Günlük Fix Menü & Etkinlik Banners
+        <h2 className="text-2xl font-extrabold" style={{ color: "var(--dut-text)" }}>
+          Günlük Fix Menü & Konseptler
         </h2>
-        <p className="text-xs text-content-secondary font-light">
-          Haftanın her günü için özel fix menü, konsept (Kadınlar Matinesi, Fasıl Gecesi vb.) ve fiyat belirleyin. Sistem ilgili gün geldiğinde 00:01'de otomatik yayına alacaktır.
+        <p className="text-xs mt-0.5" style={{ color: "var(--dut-text3)" }}>
+          Haftanın her günü için özel fix menü (Kadınlar Matinesi, Fasıl Gecesi vb.) belirleyin. İlgili günde saat 00:01-23:59 arası otomatik gösterilir.
         </p>
       </div>
 
       {savedSuccess && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
-          <CheckCircle2 className="w-5 h-5" />
-          <span>Günlük Fix Menü konsepti kaydedildi!</span>
+        <div
+          className="p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-fadeIn"
+          style={{ background: "rgba(99,211,145,0.12)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.25)" }}
+        >
+          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          <span>Fix Menü konsepti başarıyla güncellendi!</span>
         </div>
       )}
 
-      {/* 7 Days Fix Menu Grid */}
+      {/* 7 Days Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {dailyFixMenus.map((menu) => {
           const isToday = menu.dayOfWeek === currentDayOfWeek;
@@ -81,24 +81,29 @@ export default function AdminFixMenusPage() {
           return (
             <div
               key={menu.dayOfWeek}
-              className={`bg-surface-card border rounded-xl p-4 space-y-3 relative transition-all ${
-                isToday
-                  ? "border-brand-purple shadow-purple-glow bg-brand-purple/5"
-                  : "border-menuBorder"
-              }`}
+              className="p-5 rounded-3xl space-y-3 relative transition-all hover:scale-[1.005] shadow-lg"
+              style={{
+                background: isToday ? "linear-gradient(135deg, rgba(166,108,255,0.1) 0%, var(--dut-card) 100%)" : "var(--dut-card)",
+                border: isToday ? "1px solid rgba(166,108,255,0.4)" : "1px solid var(--dut-divider)",
+              }}
             >
-              {/* Header Row */}
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-brand-purple/10 border border-brand-purple/30 text-brand-purple font-semibold text-xs flex items-center justify-center font-mono">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs font-mono"
+                    style={{ background: "rgba(166,108,255,0.15)", color: "var(--dut-purple-lt)", border: "1px solid rgba(166,108,255,0.3)" }}
+                  >
                     {menu.dayName.tr.substring(0, 3)}
-                  </span>
+                  </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-content-primary flex items-center gap-2">
-                      {menu.dayName.tr} Günlük Menü
+                    <h3 className="font-bold text-sm flex items-center gap-2" style={{ color: "var(--dut-text)" }}>
+                      {menu.dayName.tr}
                       {isToday && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span
+                          className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+                          style={{ background: "rgba(99,211,145,0.15)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.3)" }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--dut-success)" }} />
                           BUGÜN YAYINDA
                         </span>
                       )}
@@ -108,31 +113,26 @@ export default function AdminFixMenusPage() {
 
                 <button
                   onClick={() => handleOpenEdit(menu)}
-                  className="p-1.5 rounded-lg bg-background-secondary border border-menuBorder hover:border-brand-purple/40 text-content-secondary hover:text-brand-purple transition-all"
+                  className="p-2 rounded-xl transition-all"
+                  style={{ background: "var(--dut-elevated)", border: "1px solid var(--dut-divider)", color: "var(--dut-text3)" }}
                   title="Düzenle"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Title & Subtitle */}
               <div>
-                <h4 className="font-semibold text-sm text-content-primary">
-                  {menu.title.tr}
-                </h4>
-                <p className="text-xs text-content-secondary font-light line-clamp-2 mt-0.5">
-                  {menu.subtitle.tr}
-                </p>
+                <h4 className="font-bold text-sm" style={{ color: "var(--dut-text)" }}>{menu.title.tr}</h4>
+                <p className="text-xs line-clamp-2 mt-0.5" style={{ color: "var(--dut-text3)" }}>{menu.subtitle.tr}</p>
               </div>
 
-              {/* Price & Timing */}
-              <div className="pt-2 border-t border-menuBorder/60 flex items-center justify-between text-xs">
-                <span className="font-mono font-bold text-brand-purple">
+              <div className="pt-3 border-t flex items-center justify-between text-xs" style={{ borderColor: "var(--dut-divider)" }}>
+                <span className="font-mono font-bold text-sm" style={{ color: "var(--dut-purple-lt)" }}>
                   {menu.price} {menu.currency}
                 </span>
-                <span className="text-[10px] text-content-muted font-mono flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-brand-purple" />
-                  00:01 - 23:59
+                <span className="text-[11px] font-mono flex items-center gap-1" style={{ color: "var(--dut-text3)" }}>
+                  <Clock className="w-3 h-3 text-[#A66CFF]" />
+                  00:01 – 23:59
                 </span>
               </div>
             </div>
@@ -142,98 +142,84 @@ export default function AdminFixMenusPage() {
 
       {/* Edit Modal */}
       {editingDay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-surface-card border border-menuBorder rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden purple-corner-tr">
-            <div className="p-4 border-b border-menuBorder flex items-center justify-between bg-background-secondary">
-              <h3 className="font-semibold text-base text-content-primary">
-                {editingDay.dayName.tr} Günü Fix Menü Konsepti
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 dut-backdrop animate-fade-in">
+          <div
+            className="w-full max-w-lg rounded-3xl shadow-2xl animate-scale-in"
+            style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}
+          >
+            <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: "var(--dut-divider)" }}>
+              <h3 className="font-bold text-base" style={{ color: "var(--dut-text)" }}>
+                {editingDay.dayName.tr} Fix Menü Konsepti
               </h3>
               <button
                 onClick={() => setEditingDay(null)}
-                className="p-1 rounded-full text-content-muted hover:text-content-primary"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                style={{ background: "var(--dut-elevated)", color: "var(--dut-text2)" }}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-5 space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold mb-1 text-content-secondary">
-                  Fix Menü Başlığı (Türkçe) *
-                </label>
+            <form onSubmit={handleSave} className="p-6 space-y-4">
+              {field("Fix Menü Başlığı (Türkçe) *",
                 <input
                   type="text"
                   value={formData.titleTr}
-                  onChange={(e) =>
-                    setFormData({ ...formData, titleTr: e.target.value })
-                  }
-                  placeholder="Örn: Salı Kadınlar Matinesi Özel Fix Menü"
-                  className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+                  onChange={(e) => setFormData({ ...formData, titleTr: e.target.value })}
+                  placeholder="Salı Kadınlar Matinesi Özel Fix Menü"
+                  className="admin-input"
                   required
                 />
-              </div>
+              )}
 
-              <div>
-                <label className="block font-semibold mb-1 text-content-secondary">
-                  Menü İçeriği & Konsept Açıklaması (Türkçe)
-                </label>
+              {field("Konsept Açıklaması (Türkçe)",
                 <textarea
                   rows={2}
                   value={formData.subtitleTr}
-                  onChange={(e) =>
-                    setFormData({ ...formData, subtitleTr: e.target.value })
-                  }
-                  placeholder="Örn: Sınırsız Meze Büfesi + Canlı Müzik..."
-                  className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+                  onChange={(e) => setFormData({ ...formData, subtitleTr: e.target.value })}
+                  placeholder="Sınırsız meze büfesi + canlı müzik..."
+                  className="admin-input"
+                  style={{ resize: "none" }}
                 />
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold mb-1 text-content-secondary">
-                    Fix Menü Fiyatı (₺) *
-                  </label>
+                {field("Fix Menü Fiyatı (₺) *",
                   <input
                     type="number"
                     value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: Number(e.target.value) })
-                    }
-                    className="w-full p-2.5 bg-background border border-menuBorder rounded-lg font-mono focus:border-brand-purple"
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    className="admin-input font-mono"
                     required
                   />
-                </div>
+                )}
 
-                <div>
-                  <label className="block font-semibold mb-1 text-content-secondary">
-                    Görsel URL
-                  </label>
+                {field("Görsel URL",
                   <input
                     type="url"
                     value={formData.imageUrl}
-                    onChange={(e) =>
-                      setFormData({ ...formData, imageUrl: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                     placeholder="https://..."
-                    className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+                    className="admin-input"
                   />
-                </div>
+                )}
               </div>
 
-              <div className="pt-4 border-t border-menuBorder flex items-center justify-end gap-3">
+              <div className="pt-4 flex items-center justify-end gap-3 border-t" style={{ borderColor: "var(--dut-divider)" }}>
                 <button
                   type="button"
                   onClick={() => setEditingDay(null)}
-                  className="px-4 py-2 bg-background-secondary border border-menuBorder rounded-xl text-content-secondary"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold"
+                  style={{ background: "var(--dut-elevated)", border: "1px solid var(--dut-divider)", color: "var(--dut-text2)" }}
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-5 py-2 bg-brand-purple hover:bg-brand-purple-dark text-white rounded-xl font-semibold shadow-purple-glow"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg"
+                  style={{ background: "var(--dut-purple)", boxShadow: "0 8px 24px rgba(166,108,255,0.3)" }}
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Kaydet</span>
+                  Kaydet
                 </button>
               </div>
             </form>

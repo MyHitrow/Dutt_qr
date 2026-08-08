@@ -30,125 +30,112 @@ export default function AdminSettingsPage() {
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
+  const field = (label: string, children: React.ReactNode) => (
+    <div>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--dut-text2)" }}>{label}</label>
+      {children}
+    </div>
+  );
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6 animate-fade-in">
       <div>
-        <h2 className="font-serif text-2xl font-semibold text-content-primary">
-          Mekan & Menü Genel Ayarları
+        <h2 className="text-2xl font-extrabold" style={{ color: "var(--dut-text)" }}>
+          Mekan & Menü Ayarları
         </h2>
-        <p className="text-xs text-content-secondary font-light">
-          Dijital menünüzde görünen mekan ismi, slogan, para birimi ve servis uyarılarını yönetin.
+        <p className="text-xs mt-0.5" style={{ color: "var(--dut-text3)" }}>
+          Dijital menünüzdeki mekan adı, slogan, para birimi ve dipnot uyarılarını yönetin.
         </p>
       </div>
 
       {savedSuccess && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
-          <CheckCircle2 className="w-5 h-5" />
-          <span>Mekan ayarları başarıyla güncellendi! Müşteri menüsüne anında yansıdı.</span>
+        <div
+          className="p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-fadeIn"
+          style={{ background: "rgba(99,211,145,0.12)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.25)" }}
+        >
+          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          <span>Mekan ayarları kaydedildi! Değişiklikler anında canlı menüye yansıdı.</span>
         </div>
       )}
 
       <form
         onSubmit={handleSubmit}
-        className="bg-surface-card border border-menuBorder rounded-2xl p-6 space-y-5 purple-corner-tr text-xs"
+        className="rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl"
+        style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}
       >
-        {/* Venue Name & Currency */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="sm:col-span-2">
-            <label className="block font-semibold mb-1 text-content-secondary">
-              Mekan / Restoran Adı *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple text-sm font-semibold"
-              required
-            />
+            {field("Mekan / Restoran Adı *",
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="admin-input font-bold"
+                required
+              />
+            )}
           </div>
 
           <div>
-            <label className="block font-semibold mb-1 text-content-secondary">
-              Para Birimi Sembolü
-            </label>
-            <input
-              type="text"
-              value={formData.currencySymbol}
-              onChange={(e) =>
-                setFormData({ ...formData, currencySymbol: e.target.value })
-              }
-              className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple font-mono"
-              required
-            />
+            {field("Para Birimi",
+              <input
+                type="text"
+                value={formData.currencySymbol}
+                onChange={(e) => setFormData({ ...formData, currencySymbol: e.target.value })}
+                className="admin-input font-mono"
+                required
+              />
+            )}
           </div>
         </div>
 
-        {/* Slogans TR & EN */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-semibold mb-1 text-content-secondary">
-              Slogan (Türkçe)
-            </label>
+          {field("Slogan (Türkçe)",
             <input
               type="text"
               value={formData.sloganTr}
-              onChange={(e) =>
-                setFormData({ ...formData, sloganTr: e.target.value })
-              }
-              className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+              onChange={(e) => setFormData({ ...formData, sloganTr: e.target.value })}
+              className="admin-input"
             />
-          </div>
+          )}
 
-          <div>
-            <label className="block font-semibold mb-1 text-content-secondary">
-              Slogan (English)
-            </label>
+          {field("Slogan (English)",
             <input
               type="text"
               value={formData.sloganEn}
-              onChange={(e) =>
-                setFormData({ ...formData, sloganEn: e.target.value })
-              }
-              className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+              onChange={(e) => setFormData({ ...formData, sloganEn: e.target.value })}
+              className="admin-input"
             />
-          </div>
+          )}
         </div>
 
-        {/* Service Notices TR & EN */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-semibold mb-1 text-content-secondary">
-              Servis Ekibi Hatırlatma Notu (Türkçe)
-            </label>
+          {field("Dipnot / Servis Notu (Türkçe)",
             <textarea
               rows={3}
               value={formData.noticeTr}
-              onChange={(e) =>
-                setFormData({ ...formData, noticeTr: e.target.value })
-              }
-              className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+              onChange={(e) => setFormData({ ...formData, noticeTr: e.target.value })}
+              className="admin-input"
+              style={{ resize: "none" }}
             />
-          </div>
+          )}
 
-          <div>
-            <label className="block font-semibold mb-1 text-content-secondary">
-              Service Notice (English)
-            </label>
+          {field("Service Notice (English)",
             <textarea
               rows={3}
               value={formData.noticeEn}
-              onChange={(e) =>
-                setFormData({ ...formData, noticeEn: e.target.value })
-              }
-              className="w-full p-2.5 bg-background border border-menuBorder rounded-lg focus:border-brand-purple"
+              onChange={(e) => setFormData({ ...formData, noticeEn: e.target.value })}
+              className="admin-input"
+              style={{ resize: "none" }}
             />
-          </div>
+          )}
         </div>
 
-        <div className="pt-4 border-t border-menuBorder flex items-center justify-end">
+        <div className="pt-4 flex items-center justify-end border-t" style={{ borderColor: "var(--dut-divider)" }}>
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-2.5 bg-brand-purple hover:bg-brand-purple-dark text-white rounded-xl font-semibold shadow-purple-glow transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg"
+            style={{ background: "var(--dut-purple)", boxShadow: "0 8px 24px rgba(166,108,255,0.3)" }}
           >
             <Save className="w-4 h-4" />
             <span>Ayarları Kaydet</span>
