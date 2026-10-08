@@ -14,6 +14,7 @@ import { AllergenFilter }          from "@/components/menu/AllergenFilter";
 import { SearchOverlay }           from "@/components/menu/SearchOverlay";
 import { SkeletonCard, SkeletonHero, SkeletonCategoryRow } from "@/components/menu/SkeletonCard";
 import { RestaurantClosedScreen } from "@/components/menu/RestaurantClosedScreen";
+import { VenueInfoSheet }          from "@/components/menu/VenueInfoSheet";
 import { SlidersHorizontal } from "lucide-react";
 
 type ActiveSheet = null | "language" | "filter" | "search";
@@ -162,9 +163,14 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Günün Özel Konsept / Banner Görseli (Tüm 7 gün interaktif seçilebilir) */}
+            {/* Günün Özel Konsept / Banner Görseli (İşletme kapalı günlerinde veya banner kapatıldığında gizlenir) */}
             {!activeCategoryId && dailyFixMenus && dailyFixMenus.length > 0 && (
-              <DailyFixMenuBanner dailyFixMenus={dailyFixMenus} lang={lang} />
+              <DailyFixMenuBanner
+                dailyFixMenus={dailyFixMenus}
+                lang={lang}
+                showBanner={venue.showFixMenuBanner}
+                closedDays={venue.closedDays}
+              />
             )}
 
             {/* Sticky Category Nav */}
@@ -307,6 +313,9 @@ export default function Home() {
       {activeSheet === "search" && (
         <SearchOverlay lang={lang} onClose={close} onProductOpen={handleProductOpen} />
       )}
+
+      {/* Floating 3-Dot Quick Action (Wi-Fi, Adres & İletişim) */}
+      <VenueInfoSheet venue={venue} lang={lang} />
     </>
   );
 }

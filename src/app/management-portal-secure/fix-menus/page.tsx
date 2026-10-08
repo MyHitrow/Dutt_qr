@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useMenu } from "@/context/MenuContext";
 import { DailyFixMenu } from "@/types/menu";
-import { Calendar, Edit2, Save, X, CheckCircle2, Clock, Upload, Link2, ImageIcon } from "lucide-react";
+import { Calendar, Edit2, Save, X, CheckCircle2, Clock, Upload, Link2, ImageIcon, Eye, EyeOff, Ban, AlertCircle } from "lucide-react";
 
 // Banner görsel optimizasyonu: canvas üzerinden WebP'ye sıkıştırır (max 1200px)
 async function optimizeBannerImage(file: File): Promise<string> {
@@ -28,8 +28,18 @@ async function optimizeBannerImage(file: File): Promise<string> {
   });
 }
 
+const daysOfWeekList = [
+  { day: 1, label: "Pazartesi", short: "Pzt" },
+  { day: 2, label: "Salı", short: "Sal" },
+  { day: 3, label: "Çarşamba", short: "Çar" },
+  { day: 4, label: "Perşembe", short: "Per" },
+  { day: 5, label: "Cuma", short: "Cum" },
+  { day: 6, label: "Cumartesi", short: "Cmt" },
+  { day: 0, label: "Pazar", short: "Paz" },
+];
+
 export default function AdminFixMenusPage() {
-  const { dailyFixMenus, updateDailyFixMenu } = useMenu();
+  const { dailyFixMenus, updateDailyFixMenu, venue, updateVenue } = useMenu();
   const [editingDay, setEditingDay] = useState<DailyFixMenu | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [imgMode, setImgMode] = useState<"url" | "upload">("upload");
@@ -37,6 +47,25 @@ export default function AdminFixMenusPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentDayOfWeek = new Date().getDay();
+
+  const isBannerActive = venue.showFixMenuBanner !== false;
+  const closedDays = venue.closedDays || [];
+  const isTodayClosed = closedDays.includes(currentDayOfWeek);
+
+  const handleToggleBanner = () => {
+    updateVenue({ showFixMenuBanner: !isBannerActive });
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2500);
+  };
+
+  const handleToggleClosedDay = (dayIndex: number) => {
+    const updated = closedDays.includes(dayIndex)
+      ? closedDays.filter((d) => d !== dayIndex)
+      : [...closedDays, dayIndex];
+    updateVenue({ closedDays: updated });
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2500);
+  };
 
   const [formData, setFormData] = useState({
     titleTr: "", titleEn: "", subtitleTr: "", subtitleEn: "",
@@ -111,6 +140,126 @@ export default function AdminFixMenusPage() {
           <span>Günün Banner görseli ve konsepti başarıyla güncellendi! Müşteri menüsünde anında yayında.</span>
         </div>
       )}
+
+      {/* Banner Master Control & Closed Days Bar */}
+      <div
+        className="p-5 sm:p-6 rounded-3xl border space-y-5 transition-all shadow-lg"
+        style={{
+          background: isBannerActive
+            ? "linear-gradient(135deg, rgba(166,108,255,0.08) 0%, var(--dut-card) 100%)"
+            : "linear-gradient(135deg, rgba(255,107,107,0.08) 0%, var(--dut-card) 100%)",
+          borderColor: isBannerActive ? "rgba(166,108,255,0.3)" : "rgba(255,107,107,0.3)",
+        }}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{
+                background: isBannerActive ? "rgba(166,108,255,0.2)" : "rgba(255,107,107,0.2)",
+                color: isBannerActive ? "var(--dut-purple-lt)" : "var(--dut-danger)",
+              }}
+            >
+              {isBannerActive ? <Eye className="w-5 h-5 text-purple-300" /> : <EyeOff className="w-5 h-5 text-rose-400" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold" style={{ color: "var(--dut-text)" }}>
+                  Fix Menü Üst Banner Görünürlüğü
+                </h3>
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                  style={{
+                    background: isBannerActive ? "rgba(99,211,145,0.2)" : "rgba(255,107,107,0.2)",
+                    color: isBannerActive ? "var(--dut-success)" : "var(--dut-danger)",
+                  }}
+                >
+                  {isBannerActive ? "Banner Açık (Yayında)" : "Banner Kapalı (Gizli)"}
+                </span>
+              </div>
+              <p className="text-xs mt-1" style={{ color: "var(--dut-text3)" }}>
+                {isBannerActive
+                  ? "Müşteriler QR menüyü açtığında günün aktif Fix Menü görseli en üstte afiş olarak gösterilir."
+                  : "Fix Menü üst bannerı manuel kapatıldı. Müşteriler menüye girince fix menü bannerını görmez."}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleToggleBanner}
+            className="px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex-shrink-0 flex items-center justify-center gap-2 shadow-md"
+            style={{
+              background: isBannerActive ? "var(--dut-danger)" : "var(--dut-purple)",
+              boxShadow: isBannerActive ? "0 4px 14px rgba(255,107,107,0.3)" : "0 4px 14px rgba(166,108,255,0.3)",
+            }}
+          >
+            {isBannerActive ? (
+              <>
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>Bannerı Kapat</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-3.5 h-3.5" />
+                <span>Bannerı Aç</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Closed Days Selector */}
+        <div className="pt-4 border-t space-y-2.5" style={{ borderColor: "var(--dut-divider)" }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: "var(--dut-text2)" }}>
+              <Ban className="w-3.5 h-3.5 text-amber-400" />
+              İşletmenin Kapalı Olduğu Günler (Bu günlerde Fix Menü bannerı otomatik gizlenir):
+            </span>
+            {isTodayClosed && (
+              <span className="text-[11px] font-semibold text-amber-300 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Bugün kapalı gün seçili (Banner menüde otomatik gizleniyor)
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {daysOfWeekList.map((d) => {
+              const isClosed = closedDays.includes(d.day);
+              const isToday = d.day === currentDayOfWeek;
+              return (
+                <button
+                  key={d.day}
+                  type="button"
+                  onClick={() => handleToggleClosedDay(d.day)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-95 flex items-center gap-2"
+                  style={{
+                    background: isClosed
+                      ? "rgba(255,107,107,0.18)"
+                      : "rgba(255,255,255,0.04)",
+                    borderColor: isClosed
+                      ? "rgba(255,107,107,0.4)"
+                      : "var(--dut-divider)",
+                    color: isClosed
+                      ? "#FFA8A8"
+                      : "var(--dut-text3)",
+                  }}
+                >
+                  <span>{d.label}</span>
+                  {isClosed ? (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 font-bold">Kapalı</span>
+                  ) : (
+                    <span className="text-[10px] opacity-40">Açık</span>
+                  )}
+                  {isToday && (
+                    <span className="w-2 h-2 rounded-full bg-purple-400 ml-0.5" title="Bugün" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* 7 Days Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

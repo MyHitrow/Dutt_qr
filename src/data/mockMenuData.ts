@@ -15,7 +15,6 @@ export const mockVenueSettings: VenueSettings = {
     "tr": "Değerli misafirlerimiz, restoranımız şu anda hizmet vermemektedir. Servis hazırlıklarımızın ardından en kısa sürede tekrar sizlerle buluşacağız.",
     "en": "Dear guests, our restaurant is currently closed. We will be back in service shortly after our preparations."
   },
-  "contactPhone": "+90 252 000 00 00",
   "defaultTheme": "dark",
   "defaultLanguage": "tr",
   "currencySymbol": "₺",
@@ -25,6 +24,14 @@ export const mockVenueSettings: VenueSettings = {
   },
   "orderMode": "waiter",
   "serviceFeePercent": 10,
+  "closedDays": [1],
+  "showFixMenuBanner": true,
+  "wifiName": "Dutt Meyhane",
+  "wifiPassword": "duttmeyhane2026",
+  "address": "Çamlıbel Mh., İsmet İnönü Blv. No:14, Akdeniz / Mersin",
+  "googleMapsUrl": "https://maps.google.com/?q=Dutt+Mersin",
+  "contactPhone": "+90 532 123 45 67",
+  "whatsappNumber": "905321234567",
   "license": {
     "status": "active",
     "planName": "Yıllık Kurumsal Lisans",

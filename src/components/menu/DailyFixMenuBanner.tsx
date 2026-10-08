@@ -6,12 +6,28 @@ import { DailyFixMenu, Language } from "@/types/menu";
 interface DailyFixMenuBannerProps {
   dailyFixMenus: DailyFixMenu[];
   lang: Language;
+  showBanner?: boolean;
+  closedDays?: number[];
 }
 
-export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ dailyFixMenus, lang }) => {
-  if (!dailyFixMenus || dailyFixMenus.length === 0) return null;
+export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({
+  dailyFixMenus,
+  lang,
+  showBanner = true,
+  closedDays = [],
+}) => {
+  // Eğer yönetici banner'ı manuel kapattıysa gösterme
+  if (showBanner === false) return null;
 
   const todayOfWeek = new Date().getDay();
+
+  // İşletmenin kapalı olduğu gün ise Fix Menü banner'ı otomatik gizlenir
+  if (closedDays && closedDays.includes(todayOfWeek)) {
+    return null;
+  }
+
+  if (!dailyFixMenus || dailyFixMenus.length === 0) return null;
+
   // Only display today's fix menu if it is actively enabled
   const currentMenu = dailyFixMenus.find(m => m.dayOfWeek === todayOfWeek && m.isActive);
 

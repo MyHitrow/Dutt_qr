@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useMenu } from "@/context/MenuContext";
-import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone } from "lucide-react";
+import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone, Wifi, MapPin, MessageCircle, Ban, AlertCircle } from "lucide-react";
 import { LicenseBanner } from "@/components/admin/LicenseBanner";
 
 async function optimizeLogoImage(file: File): Promise<string> {
@@ -26,6 +26,16 @@ async function optimizeLogoImage(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+const daysOfWeekList = [
+  { day: 1, label: "Pazartesi", short: "Pzt" },
+  { day: 2, label: "Salı", short: "Sal" },
+  { day: 3, label: "Çarşamba", short: "Çar" },
+  { day: 4, label: "Perşembe", short: "Per" },
+  { day: 5, label: "Cuma", short: "Cum" },
+  { day: 6, label: "Cumartesi", short: "Cmt" },
+  { day: 0, label: "Pazar", short: "Paz" },
+];
 
 export default function AdminSettingsPage() {
   const { venue, updateVenue, resetAllData } = useMenu();
@@ -51,6 +61,12 @@ export default function AdminSettingsPage() {
     closedMessageEn: venue.closedMessage?.en || "",
     contactPhone: venue.contactPhone || "",
     closingTime: venue.closingTime || "02:00",
+    closedDays: venue.closedDays || [],
+    wifiName: venue.wifiName || "",
+    wifiPassword: venue.wifiPassword || "",
+    address: venue.address || "",
+    googleMapsUrl: venue.googleMapsUrl || "",
+    whatsappNumber: venue.whatsappNumber || "",
   });
 
   // Sync formData if venue is loaded or updated asynchronously, but ONLY if the user has not made unsaved changes
@@ -70,6 +86,12 @@ export default function AdminSettingsPage() {
         closedMessageEn: venue.closedMessage?.en || "",
         contactPhone: venue.contactPhone || "",
         closingTime: venue.closingTime || "02:00",
+        closedDays: venue.closedDays || [],
+        wifiName: venue.wifiName || "",
+        wifiPassword: venue.wifiPassword || "",
+        address: venue.address || "",
+        googleMapsUrl: venue.googleMapsUrl || "",
+        whatsappNumber: venue.whatsappNumber || "",
       });
     }
   }, [venue]);
@@ -105,6 +127,15 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleToggleClosedDay = (dayIndex: number) => {
+    isDirtyRef.current = true;
+    const current = formData.closedDays || [];
+    const updated = current.includes(dayIndex)
+      ? current.filter((d) => d !== dayIndex)
+      : [...current, dayIndex];
+    setFormData((prev) => ({ ...prev, closedDays: updated }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     isDirtyRef.current = false;
@@ -119,6 +150,12 @@ export default function AdminSettingsPage() {
       closingTime: formData.closingTime,
       closedMessage: { tr: formData.closedMessageTr, en: formData.closedMessageEn },
       contactPhone: formData.contactPhone || undefined,
+      closedDays: formData.closedDays,
+      wifiName: formData.wifiName || undefined,
+      wifiPassword: formData.wifiPassword || undefined,
+      address: formData.address || undefined,
+      googleMapsUrl: formData.googleMapsUrl || undefined,
+      whatsappNumber: formData.whatsappNumber || undefined,
     });
 
     setSavedSuccess(true);
@@ -270,6 +307,125 @@ export default function AdminSettingsPage() {
                 placeholder="02:00"
                 className="admin-input text-xs font-mono"
               />
+            </div>
+
+            {/* Haftalık Kapalı Günler */}
+            <div className="pt-3 border-t sm:col-span-2 space-y-2" style={{ borderColor: "var(--dut-divider)" }}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
+                  Haftalık Kapalı Günler (Bu günlerde Fix Menü üst bannerı otomatik gizlenir)
+                </label>
+                {(formData.closedDays || []).includes(new Date().getDay()) && (
+                  <span className="text-[11px] font-semibold text-amber-300 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Bugün kapalı gün seçili (Banner menüde gizli)
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {daysOfWeekList.map((d) => {
+                  const isClosed = (formData.closedDays || []).includes(d.day);
+                  return (
+                    <button
+                      key={d.day}
+                      type="button"
+                      onClick={() => handleToggleClosedDay(d.day)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-95 flex items-center gap-1.5"
+                      style={{
+                        background: isClosed ? "rgba(255,107,107,0.18)" : "rgba(255,255,255,0.04)",
+                        borderColor: isClosed ? "rgba(255,107,107,0.4)" : "var(--dut-divider)",
+                        color: isClosed ? "#FFA8A8" : "var(--dut-text3)",
+                      }}
+                    >
+                      <span>{d.label}</span>
+                      {isClosed ? (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 font-bold">Kapalı</span>
+                      ) : (
+                        <span className="text-[10px] opacity-40">Açık</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Müşteri Bilgileri, Wi-Fi & İletişim (3-Nokta Menüsü İçeriği) */}
+        <div
+          className="p-5 sm:p-6 rounded-2xl border space-y-4 shadow-sm"
+          style={{ background: "rgba(166,108,255,0.04)", borderColor: "rgba(166,108,255,0.2)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-300">
+              <Wifi className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: "var(--dut-text)" }}>
+                Müşteri Masası Wi-Fi & İletişim Bilgileri (QR 3-Nokta Menüsü)
+              </h3>
+              <p className="text-xs" style={{ color: "var(--dut-text3)" }}>
+                Müşterilerin masada sağ alttaki 3-nokta butonuna bastıklarında görecekleri Wi-Fi şifresi, otomatik bağlanma ve açık adres bilgileri.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            {field("Wi-Fi Ağ Adı (SSID)",
+              <input
+                type="text"
+                value={formData.wifiName}
+                onChange={(e) => updateField("wifiName", e.target.value)}
+                placeholder="Örn: Dutt Meyhane"
+                className="admin-input font-mono text-xs"
+              />
+            )}
+
+            {field("Wi-Fi Şifresi",
+              <input
+                type="text"
+                value={formData.wifiPassword}
+                onChange={(e) => updateField("wifiPassword", e.target.value)}
+                placeholder="Örn: duttmeyhane2026"
+                className="admin-input font-mono text-xs"
+              />
+            )}
+
+            <div className="sm:col-span-2">
+              {field("Mekan Açık Adresi",
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => updateField("address", e.target.value)}
+                  placeholder="Örn: Çamlıbel Mh., İsmet İnönü Blv. No:14, Akdeniz / Mersin"
+                  className="admin-input text-xs"
+                />
+              )}
+            </div>
+
+            <div>
+              {field("Google Haritalar Linki (Yol Tarifi)",
+                <input
+                  type="url"
+                  value={formData.googleMapsUrl}
+                  onChange={(e) => updateField("googleMapsUrl", e.target.value)}
+                  placeholder="https://maps.google.com/?q=..."
+                  className="admin-input text-xs font-mono"
+                />
+              )}
+            </div>
+
+            <div>
+              {field("WhatsApp Rezervasyon Numarası",
+                <input
+                  type="text"
+                  value={formData.whatsappNumber}
+                  onChange={(e) => updateField("whatsappNumber", e.target.value)}
+                  placeholder="Örn: 905321234567"
+                  className="admin-input text-xs font-mono"
+                />
+              )}
             </div>
           </div>
         </div>

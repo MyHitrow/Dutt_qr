@@ -163,4 +163,11 @@ export interface VenueSettings {
   orderMode: "direct" | "waiter"; // direct = send to kitchen, waiter = show to waiter
   serviceFeePercent?: number;
   license?: LicenseInfo;
+  closedDays?: number[]; // 0: Pazar, 1: Pazartesi, ..., 6: Cumartesi
+  showFixMenuBanner?: boolean;
+  wifiName?: string;
+  wifiPassword?: string;
+  address?: string;
+  googleMapsUrl?: string;
+  whatsappNumber?: string;
 }
