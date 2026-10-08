@@ -38,17 +38,12 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
   const hasChefNote = Boolean(product.chefNote?.[lang as "tr" | "en"]);
   const displayPrice = selectedVariant ? selectedVariant.price : product.price;
 
-  const getCategoryPlaceholder = (catId?: string) => {
-    if (!catId) return "🍽️";
-    if (catId.includes("sampanya")) return "🍾";
-    if (catId.includes("sarap")) return "🍷";
-    if (catId.includes("raki") || catId.includes("viski")) return "🥃";
-    if (catId.includes("bira")) return "🍺";
-    if (catId.includes("gin") || catId.includes("votka") || catId.includes("shot") || catId.includes("likor")) return "🍸";
-    if (catId.includes("salata")) return "🥗";
-    if (catId.includes("soguk") || catId.includes("sicak")) return "🧆";
-    return "🍽️";
-  };
+  const cardStyle = venue.cardStyle || "floating";
+  const hasImage = Boolean(product.hasImage && product.imageUrl);
+
+  // If floating mode and has image, we use negative top offset so plate floats above sheet
+  const isFloatingWithImage = cardStyle === "floating" && hasImage;
+  const isCoverOrListWithImage = (cardStyle === "cover" || cardStyle === "list") && hasImage;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center dut-backdrop animate-fade-in p-0 sm:p-4">
@@ -57,72 +52,92 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
       {/* Bottom Sheet Container */}
       <div
-        className="relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[78vh] flex flex-col animate-slide-up mt-44 sm:mt-52 pt-16 pb-5"
+        className={`relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[85vh] flex flex-col animate-slide-up pb-5 overflow-hidden ${
+          isFloatingWithImage
+            ? "mt-44 sm:mt-52 pt-14"
+            : "mt-auto pt-0"
+        }`}
         style={{
           background: "var(--dut-bg2)",
           color: "var(--dut-text)",
         }}
       >
-        {/* Handle */}
-        <div className="absolute top-2.5 left-1/2 -translate-x-1/2 flex-shrink-0 z-20">
-          <div className="dut-handle" />
-        </div>
+        {/* Handle for non-cover or imageless states */}
+        {!isCoverOrListWithImage && (
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 flex-shrink-0 z-20">
+            <div className="dut-handle" />
+          </div>
+        )}
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-20 active:scale-95 shadow-md"
+          className="absolute top-3 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-30 active:scale-95 shadow-md backdrop-blur-md"
           style={{
-            background: "var(--dut-elevated)",
-            border: "1px solid var(--dut-divider)",
-            color: "var(--dut-text2)",
+            background: isCoverOrListWithImage ? "rgba(0,0,0,0.55)" : "var(--dut-elevated)",
+            border: isCoverOrListWithImage ? "1px solid rgba(255,255,255,0.2)" : "1px solid var(--dut-divider)",
+            color: isCoverOrListWithImage ? "#ffffff" : "var(--dut-text2)",
           }}
+          aria-label="Kapat"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* ── Floating Frameless PNG Product Presentation ── */}
-        <div className="absolute -top-[165px] sm:-top-[190px] left-1/2 -translate-x-1/2 w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] z-20 flex items-center justify-center pointer-events-none transition-transform duration-500 hover:scale-105">
-          {/* Ambient luxury glow spotlight behind PNG */}
-          <div
-            className="absolute inset-0 rounded-full blur-2xl opacity-60 pointer-events-none"
-            style={{
-              background: "radial-gradient(circle, rgba(166,108,255,0.22) 0%, rgba(240,180,90,0.1) 45%, transparent 70%)",
-            }}
-          />
-
-          {product.hasImage && product.imageUrl ? (
+        {/* ── MODE 1: Floating Frameless PNG Product Presentation (Dekupe) ── */}
+        {isFloatingWithImage && (
+          <div className="absolute -top-[160px] sm:-top-[185px] left-1/2 -translate-x-1/2 w-[210px] h-[210px] sm:w-[240px] sm:h-[240px] z-20 flex items-center justify-center pointer-events-none transition-transform duration-500 hover:scale-105">
+            {/* Ambient luxury glow spotlight behind PNG */}
+            <div
+              className="absolute inset-0 rounded-full blur-2xl opacity-60 pointer-events-none"
+              style={{
+                background: "radial-gradient(circle, rgba(166,108,255,0.25) 0%, rgba(240,180,90,0.12) 45%, transparent 70%)",
+              }}
+            />
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
-                src={product.imageUrl}
+                src={product.imageUrl!}
                 alt={product.name[lang]}
                 fill
                 sizes="250px"
                 priority
                 className="object-contain drop-shadow-[0_24px_35px_rgba(0,0,0,0.65)] drop-shadow-[0_4px_12px_rgba(166,108,255,0.25)]"
-                unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
               />
             </div>
-          ) : (
+          </div>
+        )}
+
+        {/* ── MODE 2: Cover & List Luxury Hero Banner (Normal/Kapak Fotoğrafları) ── */}
+        {isCoverOrListWithImage && (
+          <div className="relative w-full h-56 sm:h-64 flex-shrink-0 bg-black/20 overflow-hidden">
+            <Image
+              src={product.imageUrl!}
+              alt={product.name[lang]}
+              fill
+              priority
+              sizes="(max-width: 640px) 100vw, 520px"
+              className="object-cover"
+              unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
+            />
+            {/* Smooth gradient blend into sheet background */}
             <div
-              className="w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl transition-transform duration-300"
+              className="absolute inset-0"
               style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%), var(--dut-card)",
-                border: "1px solid var(--dut-divider)",
-                boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 16px 36px rgba(0,0,0,0.45)",
+                background: "linear-gradient(to top, var(--dut-bg2) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.5) 100%)",
               }}
-            >
-              <span className="text-5xl filter drop-shadow-lg select-none">
-                {getCategoryPlaceholder(product.categoryId)}
-              </span>
+            />
+            <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20">
+              <div className="w-10 h-1 bg-white/40 rounded-full backdrop-blur-sm" />
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 pt-3">
+        <div className={`flex-1 overflow-y-auto no-scrollbar px-5 pb-4 space-y-4 ${
+          !hasImage ? "pt-7" : isCoverOrListWithImage ? "pt-2" : "pt-3"
+        }`}>
           {/* Title & Price Row */}
-          <div className="flex items-start justify-between gap-3 pt-3">
+          <div className="flex items-start justify-between gap-3 pt-1">
             <div className="flex-1 min-w-0">
               <h2 className="font-editorial text-2xl font-bold leading-tight" style={{ color: "var(--dut-text)" }}>
                 {product.name[lang]}
