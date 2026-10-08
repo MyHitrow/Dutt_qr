@@ -33,6 +33,36 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
+  // Track page visit on mount
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const table = urlParams.get("masa") || urlParams.get("table") || undefined;
+      fetch("/api/analytics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "visit", table, lang }),
+      }).catch(() => {});
+    } catch {}
+  }, [lang]);
+
+  const handleProductOpen = useCallback((product: Product) => {
+    setSelectedProduct(product);
+    try {
+      fetch("/api/analytics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "product_view",
+          productId: product.id,
+          productName: product.name.tr || product.name.en,
+          categoryId: product.categoryId,
+          lang,
+        }),
+      }).catch(() => {});
+    } catch {}
+  }, [lang]);
+
   // Tema class'ını html elemanına uygula
   useEffect(() => {
     document.documentElement.className = theme;
@@ -207,7 +237,7 @@ export default function Home() {
                         key={product.id}
                         product={product}
                         lang={lang}
-                        onOpen={p => setSelectedProduct(p)}
+                        onOpen={handleProductOpen}
                       />
                     ))}
                   </div>
@@ -239,7 +269,7 @@ export default function Home() {
                             key={product.id}
                             product={product}
                             lang={lang}
-                            onOpen={p => setSelectedProduct(p)}
+                            onOpen={handleProductOpen}
                           />
                         ))}
                       </div>
@@ -275,7 +305,7 @@ export default function Home() {
       {activeSheet === "language" && <LanguageSelector onClose={close} />}
       {activeSheet === "filter" && <AllergenFilter lang={lang} onClose={close} />}
       {activeSheet === "search" && (
-        <SearchOverlay lang={lang} onClose={close} onProductOpen={p => setSelectedProduct(p)} />
+        <SearchOverlay lang={lang} onClose={close} onProductOpen={handleProductOpen} />
       )}
     </>
   );

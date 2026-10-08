@@ -19,6 +19,15 @@
     "closedMessage": {
       "tr": "Değerli misafirlerimiz, restoranımız şu anda hizmet vermemektedir. Servis hazırlıklarımızın ardından en kısa sürede tekrar sizlerle buluşacağız.",
       "en": "Dear guests, our restaurant is currently closed. We will be back in service shortly after our preparations."
+    },
+    "license": {
+      "status": "active",
+      "planName": "Yıllık Kurumsal Lisans",
+      "expiresAt": "2027-10-15T00:00:00.000Z",
+      "licenseKey": "MOKA-DUTT-2026-X889",
+      "agencyName": "Moka Works",
+      "agencyWhatsapp": "905300000000",
+      "agencyPhone": "+90 530 000 00 00"
     }
   },
   "categories": [

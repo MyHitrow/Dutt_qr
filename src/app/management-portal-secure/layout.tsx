@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   UtensilsCrossed, FolderTree, Settings, ShieldCheck,
   LayoutDashboard, ExternalLink, LogOut, QrCode, Calendar, Menu, X,
-  User, Lock, Eye, EyeOff, AlertCircle
+  User, Lock, Eye, EyeOff, AlertCircle, BarChart3, MessageCircle
 } from "lucide-react";
 import { useMenu } from "@/context/MenuContext";
 import { QRCodeModal } from "@/components/admin/QRCodeModal";
@@ -210,6 +210,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { name: "Genel Bakış",    href: "/management-portal-secure",             icon: LayoutDashboard },
+    { name: "Trafik & Analiz",href: "/management-portal-secure/analytics",     icon: BarChart3       },
     { name: "Fix Menü",       href: "/management-portal-secure/fix-menus",   icon: Calendar        },
     { name: "Ürünler",        href: "/management-portal-secure/products",    icon: UtensilsCrossed },
     { name: "Kategoriler",    href: "/management-portal-secure/categories",  icon: FolderTree      },
@@ -304,6 +305,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Menüyü Gör
               <ExternalLink className="w-3 h-3" style={{ color: "var(--dut-purple)" }} />
             </Link>
+
+            {/* Moka Destek WhatsApp */}
+            <a
+              href={`https://wa.me/${venue.license?.agencyWhatsapp || "905300000000"}?text=${encodeURIComponent(
+                `Merhaba, ${venue.name} QR Menü destek talebimiz bulunmaktadır.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl text-white transition-all shadow-sm active:scale-95 hover:opacity-95"
+              style={{
+                background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                boxShadow: "0 2px 10px rgba(37,211,102,0.25)",
+              }}
+              title="Ajans Destek Hattı"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-white" />
+              <span>Destek</span>
+            </a>
 
             <button
               onClick={handleLogout}

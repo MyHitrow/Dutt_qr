@@ -133,6 +133,17 @@ export interface ActiveFilters {
   allergens: string[]; // allergen codes to EXCLUDE
 }
 
+/* ─── License ─── */
+export interface LicenseInfo {
+  status: "active" | "trial" | "expired";
+  planName: string; // e.g. "Yıllık Kurumsal Lisans"
+  expiresAt: string; // ISO date string e.g. "2027-10-15T00:00:00.000Z"
+  licenseKey?: string; // e.g. "MOKA-DUTT-2026-X889"
+  agencyName?: string; // "Moka Works"
+  agencyWhatsapp?: string; // e.g. "905300000000"
+  agencyPhone?: string;
+}
+
 /* ─── Venue ─── */
 export interface VenueSettings {
   name: string;
@@ -151,4 +162,5 @@ export interface VenueSettings {
   serviceNotice: { tr: string; en: string };
   orderMode: "direct" | "waiter"; // direct = send to kitchen, waiter = show to waiter
   serviceFeePercent?: number;
+  license?: LicenseInfo;
 }

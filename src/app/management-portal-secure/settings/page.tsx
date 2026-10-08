@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useMenu } from "@/context/MenuContext";
 import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone } from "lucide-react";
+import { LicenseBanner } from "@/components/admin/LicenseBanner";
 
 async function optimizeLogoImage(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -142,15 +143,8 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      {savedSuccess && (
-        <div
-          className="p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-fadeIn"
-          style={{ background: "rgba(99,211,145,0.12)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.25)" }}
-        >
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          <span>Mekan ayarları ve logolar kaydedildi! Değişiklikler anında canlı menüye yansıdı.</span>
-        </div>
-      )}
+      {/* License Status & Countdown Banner */}
+      <LicenseBanner license={venue.license} venueName={venue.name} />
 
       <form
         onSubmit={handleSubmit}

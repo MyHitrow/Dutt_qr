@@ -7,7 +7,9 @@ import { useMenu } from "@/context/MenuContext";
 import {
   UtensilsCrossed, FolderTree, AlertTriangle, CheckCircle2, XCircle,
   Plus, ArrowRight, Settings, Sparkles, Flame, Globe2, Lock, ShieldCheck,
+  BarChart3,
 } from "lucide-react";
+import { LicenseBanner } from "@/components/admin/LicenseBanner";
 
 export default function AdminDashboard() {
   const { products, categories, venue, updateVenue, toggleProductAvailability } = useMenu();
@@ -20,6 +22,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* License Status & Countdown Banner */}
+      <LicenseBanner license={venue.license} venueName={venue.name} />
       {/* Restaurant Live Status Banner */}
       {venue.isOpen ? (
         <div
@@ -120,7 +124,20 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="relative z-10 flex-shrink-0">
+        <div className="relative z-10 flex-shrink-0 flex items-center gap-2.5">
+          <Link
+            href="/management-portal-secure/analytics"
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold transition-all active:scale-95 border"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              borderColor: "var(--dut-divider)",
+              color: "var(--dut-text)",
+            }}
+          >
+            <BarChart3 className="w-4 h-4 text-purple-400" />
+            <span>Trafik & Analiz</span>
+          </Link>
+
           <Link
             href="/management-portal-secure/products"
             className="flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg"

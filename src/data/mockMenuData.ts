@@ -24,7 +24,16 @@ export const mockVenueSettings: VenueSettings = {
     "en": "VAT included. Please inform our service team regarding any dietary restrictions or food allergies."
   },
   "orderMode": "waiter",
-  "serviceFeePercent": 10
+  "serviceFeePercent": 10,
+  "license": {
+    "status": "active",
+    "planName": "Yıllık Kurumsal Lisans",
+    "expiresAt": "2027-10-15T00:00:00.000Z",
+    "licenseKey": "MOKA-DUTT-2026-X889",
+    "agencyName": "Moka Works",
+    "agencyWhatsapp": "905300000000",
+    "agencyPhone": "+90 530 000 00 00"
+  }
 };
 
 export const mockCategories: Category[] = [
