@@ -9,84 +9,19 @@ const ANALYTICS_FILE_PATH = process.env.ANALYTICS_PATH
   ? path.resolve(process.env.ANALYTICS_PATH)
   : path.join(process.cwd(), "src", "data", "analytics.json");
 
-// Helper to seed realistic baseline data if file is new
-function generateSeedEvents(): AnalyticsEvent[] {
-  const events: AnalyticsEvent[] = [];
-  const now = new Date();
-  const sampleProducts = [
-    { id: "p-levrek-marin", name: "Vişneli Levrek Marin", cat: "cat-soguk" },
-    { id: "p-atom", name: "Sıcak Atom", cat: "cat-soguk" },
-    { id: "p-ahtapot", name: "Izgara Ege Ahtapotu", cat: "cat-sicak" },
-    { id: "p-yeni-seri", name: "Yeni Rakı Yeni Seri 70cl", cat: "cat-raki" },
-    { id: "p-beylerbeyi", name: "Beylerbeyi Göbek 70cl", cat: "cat-raki" },
-    { id: "p-karides-guvec", name: "Tereyağlı Karides Güveç", cat: "cat-sicak" },
-    { id: "p-haydari", name: "Nane Yağlı Haydari", cat: "cat-soguk" },
-    { id: "p-gavurdagi", name: "Cevizli Gavurdağı Salatası", cat: "cat-salata" },
-  ];
-
-  // Generate for past 7 days
-  for (let d = 6; d >= 0; d--) {
-    const dayDate = new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
-    // 35 to 85 visits per day
-    const dayVisits = 45 + Math.floor(Math.sin(d) * 15) + (d === 0 ? 32 : (d === 1 || d === 2 ? 40 : 20));
-
-    for (let i = 0; i < dayVisits; i++) {
-      // Skew hours towards dinner time (19:00 - 00:00)
-      const hour = Math.random() < 0.75 
-        ? 19 + Math.floor(Math.random() * 5) 
-        : 12 + Math.floor(Math.random() * 6);
-      
-      const evtTime = new Date(dayDate);
-      evtTime.setHours(hour, Math.floor(Math.random() * 60), 0);
-
-      const tableNum = Math.floor(Math.random() * 18) + 1;
-      const lang = Math.random() < 0.85 ? "tr" : "en";
-
-      events.push({
-        id: `seed-v-${d}-${i}`,
-        type: "visit",
-        timestamp: evtTime.toISOString(),
-        table: Math.random() < 0.4 ? String(tableNum) : undefined,
-        lang,
-      });
-
-      // Also add some product views
-      if (Math.random() < 0.65) {
-        const prod = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
-        events.push({
-          id: `seed-p-${d}-${i}`,
-          type: "product_view",
-          timestamp: evtTime.toISOString(),
-          productId: prod.id,
-          productName: prod.name,
-          categoryId: prod.cat,
-          table: Math.random() < 0.4 ? String(tableNum) : undefined,
-          lang,
-        });
-      }
-    }
-  }
-
-  return events;
-}
-
 async function readEvents(): Promise<AnalyticsEvent[]> {
   try {
     if (fs.existsSync(ANALYTICS_FILE_PATH)) {
       const data = await fs.promises.readFile(ANALYTICS_FILE_PATH, "utf8");
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (err) {
     console.warn("Could not read analytics file:", err);
   }
-
-  // Initialize with seed events
-  const seed = generateSeedEvents();
-  await writeEvents(seed).catch(() => {});
-  return seed;
+  return [];
 }
 
 async function writeEvents(events: AnalyticsEvent[]): Promise<boolean> {
@@ -95,8 +30,8 @@ async function writeEvents(events: AnalyticsEvent[]): Promise<boolean> {
     if (!fs.existsSync(dir)) {
       await fs.promises.mkdir(dir, { recursive: true });
     }
-    // Prune events older than 45 days to keep JSON lightweight
-    const cutoff = Date.now() - 45 * 24 * 60 * 60 * 1000;
+    // Prune events older than 60 days
+    const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
     const filtered = events.filter((e) => new Date(e.timestamp).getTime() > cutoff);
 
     await fs.promises.writeFile(ANALYTICS_FILE_PATH, JSON.stringify(filtered), "utf8");
@@ -121,8 +56,9 @@ export async function GET() {
     let totalVisits = 0;
 
     const dailyMap = new Map<string, number>();
-    // Pre-populate last 7 days
     const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+
+    // Pre-populate last 7 days with 0 counts
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -234,6 +170,15 @@ export async function POST(req: Request) {
     await writeEvents(currentEvents);
 
     return NextResponse.json({ success: true, eventId: event.id });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    await writeEvents([]);
+    return NextResponse.json({ success: true, message: "Tüm analiz verileri sıfırlandı." });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

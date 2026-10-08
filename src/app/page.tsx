@@ -44,7 +44,7 @@ export default function Home() {
         body: JSON.stringify({ type: "visit", table, lang }),
       }).catch(() => {});
     } catch {}
-  }, [lang]);
+  }, []);
 
   const handleProductOpen = useCallback((product: Product) => {
     setSelectedProduct(product);

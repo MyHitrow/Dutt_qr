@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import {
   BarChart3, TrendingUp, Users, Eye, Sparkles, RefreshCw,
-  Globe2, QrCode, Clock, Flame, ChevronRight, Layers,
+  Globe2, QrCode, Clock, Flame, ChevronRight, Layers, Trash2,
 } from "lucide-react";
 import { AnalyticsSummary } from "@/types/analytics";
 
@@ -25,6 +25,24 @@ export default function AdminAnalyticsPage() {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (
+      confirm(
+        "DİKKAT: Tüm analitik verilerini sıfırlamak istediğinize emin misiniz? Tüm sayaçlar sıfırlanacak ve sadece gerçek masalardan gelen yeni okutmalar sayılacaktır."
+      )
+    ) {
+      try {
+        setIsRefreshing(true);
+        await fetch("/api/analytics", { method: "DELETE" });
+        await fetchAnalytics();
+      } catch (err) {
+        console.error("Failed to reset:", err);
+      } finally {
+        setIsRefreshing(false);
+      }
     }
   };
 
@@ -59,7 +77,7 @@ export default function AdminAnalyticsPage() {
               className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
               style={{ background: "rgba(166,108,255,0.15)", color: "var(--dut-purple-lt)" }}
             >
-              CANLI VERİ
+              GERÇEK ZAMANLI VERİ
             </span>
           </div>
           <p className="text-xs mt-0.5" style={{ color: "var(--dut-text3)" }}>
@@ -67,20 +85,34 @@ export default function AdminAnalyticsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchAnalytics}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-95 disabled:opacity-50"
-          style={{
-            background: "var(--dut-card)",
-            borderColor: "var(--dut-divider)",
-            color: "var(--dut-text)",
-          }}
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-purple-400" : ""}`} />
-          <span>Verileri Yenile</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-95 text-rose-400 hover:bg-rose-500/10"
+            style={{ borderColor: "rgba(255,107,107,0.3)" }}
+            title="Sayaçları Sıfırla"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Verileri Sıfırla</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={fetchAnalytics}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-95 disabled:opacity-50"
+            style={{
+              background: "var(--dut-card)",
+              borderColor: "var(--dut-divider)",
+              color: "var(--dut-text)",
+            }}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-purple-400" : ""}`} />
+            <span>Yenile</span>
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -180,10 +212,10 @@ export default function AdminAnalyticsPage() {
               </div>
               <div className="mt-3">
                 <span className="text-2xl sm:text-3xl font-bold font-mono" style={{ color: "var(--dut-text)" }}>
-                  {peakHourItem ? `${String(peakHourItem.hour).padStart(2, "0")}:00` : "21:00"}
+                  {peakHourItem && peakHourItem.count > 0 ? `${String(peakHourItem.hour).padStart(2, "0")}:00` : "—"}
                 </span>
                 <p className="text-[10px] mt-0.5 text-emerald-400">
-                  Akşam Masaları Zirve Noktası
+                  {peakHourItem && peakHourItem.count > 0 ? "Akşam Masaları Zirve Noktası" : "Henüz trafik oluşmadı"}
                 </p>
               </div>
             </div>
@@ -328,10 +360,17 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-              {data.topProducts.map((p, index) => {
-                const maxProductView = data.topProducts[0]?.count || 1;
-                const ratio = Math.round((p.count / maxProductView) * 100);
-                return (
+              {data.topProducts.length === 0 ? (
+                <div className="col-span-1 md:col-span-2 text-center py-8 rounded-xl border border-dashed border-white/10">
+                  <p className="text-xs" style={{ color: "var(--dut-text3)" }}>
+                    Henüz ürün detayı açılmadı. Müşteriler masada lezzetleri tıkladıkça popüler ürünler burada gerçek zamanlı sıralanacaktır.
+                  </p>
+                </div>
+              ) : (
+                data.topProducts.map((p, index) => {
+                  const maxProductView = data.topProducts[0]?.count || 1;
+                  const ratio = Math.round((p.count / maxProductView) * 100);
+                  return (
                   <div
                     key={p.id}
                     className="p-3 rounded-xl border flex items-center justify-between gap-3 transition-all hover:border-purple-500/40"
@@ -374,7 +413,7 @@ export default function AdminAnalyticsPage() {
                     </div>
                   </div>
                 );
-              })}
+              }))}
             </div>
           </div>
         </>
