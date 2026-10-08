@@ -17,18 +17,19 @@ const statusSteps: { key: OrderStatus; labelTr: string; labelEn: string }[] = [
 
 export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ lang, onClose }) => {
   const { currentOrder, updateOrderStatus } = useMenu();
-  if (!currentOrder) return null;
-
-  const currentIndex = statusSteps.findIndex(s => s.key === currentOrder.status);
 
   // Demo: auto-advance status
   useEffect(() => {
-    if (currentOrder.status === "received") {
+    if (currentOrder && currentOrder.status === "received") {
       const t1 = setTimeout(() => updateOrderStatus("preparing"), 5000);
       const t2 = setTimeout(() => updateOrderStatus("ready"), 20000);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }
-  }, []);
+  }, [currentOrder, updateOrderStatus]);
+
+  if (!currentOrder) return null;
+
+  const currentIndex = statusSteps.findIndex(s => s.key === currentOrder.status);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center dut-backdrop px-4 animate-fade-in">

@@ -38,6 +38,18 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
   const hasChefNote = Boolean(product.chefNote?.[lang as "tr" | "en"]);
   const displayPrice = selectedVariant ? selectedVariant.price : product.price;
 
+  const getCategoryPlaceholder = (catId?: string) => {
+    if (!catId) return "🍽️";
+    if (catId.includes("sampanya")) return "🍾";
+    if (catId.includes("sarap")) return "🍷";
+    if (catId.includes("raki") || catId.includes("viski")) return "🥃";
+    if (catId.includes("bira")) return "🍺";
+    if (catId.includes("gin") || catId.includes("votka") || catId.includes("shot") || catId.includes("likor")) return "🍸";
+    if (catId.includes("salata")) return "🥗";
+    if (catId.includes("soguk") || catId.includes("sicak")) return "🧆";
+    return "🍽️";
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center dut-backdrop animate-fade-in p-0 sm:p-4">
       {/* Backdrop overlay */}
@@ -69,27 +81,40 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <X className="w-4 h-4" />
         </button>
 
-        {/* ── 200%-250% Scale Circular Plate Image Header ── */}
-        <div
-          className="absolute -top-[160px] sm:-top-[185px] left-1/2 -translate-x-1/2 w-[210px] h-[210px] sm:w-[240px] sm:h-[240px] rounded-full border-4 overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.65)] z-20 flex-shrink-0 transition-transform duration-300 hover:scale-105"
-          style={{
-            borderColor: "var(--dut-bg2)",
-            background: "var(--dut-elevated)",
-          }}
-        >
+        {/* ── Floating Frameless PNG Product Presentation ── */}
+        <div className="absolute -top-[165px] sm:-top-[190px] left-1/2 -translate-x-1/2 w-[220px] h-[220px] sm:w-[250px] sm:h-[250px] z-20 flex items-center justify-center pointer-events-none transition-transform duration-500 hover:scale-105">
+          {/* Ambient luxury glow spotlight behind PNG */}
+          <div
+            className="absolute inset-0 rounded-full blur-2xl opacity-60 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(166,108,255,0.22) 0%, rgba(240,180,90,0.1) 45%, transparent 70%)",
+            }}
+          />
+
           {product.hasImage && product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.name[lang]}
-              fill
-              sizes="240px"
-              priority
-              className="object-cover"
-              unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={product.imageUrl}
+                alt={product.name[lang]}
+                fill
+                sizes="250px"
+                priority
+                className="object-contain drop-shadow-[0_24px_35px_rgba(0,0,0,0.65)] drop-shadow-[0_4px_12px_rgba(166,108,255,0.25)]"
+                unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+              />
+            </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Sparkles className="w-12 h-12 opacity-40" style={{ color: "var(--dut-purple)" }} />
+            <div
+              className="w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl transition-transform duration-300"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%), var(--dut-card)",
+                border: "1px solid var(--dut-divider)",
+                boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 16px 36px rgba(0,0,0,0.45)",
+              }}
+            >
+              <span className="text-5xl filter drop-shadow-lg select-none">
+                {getCategoryPlaceholder(product.categoryId)}
+              </span>
             </div>
           )}
         </div>
@@ -99,7 +124,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           {/* Title & Price Row */}
           <div className="flex items-start justify-between gap-3 pt-3">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold leading-snug truncate" style={{ color: "var(--dut-text)" }}>
+              <h2 className="font-editorial text-2xl font-bold leading-tight" style={{ color: "var(--dut-text)" }}>
                 {product.name[lang]}
               </h2>
               {selectedVariant && (
@@ -109,8 +134,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               )}
             </div>
             <div className="text-right flex-shrink-0">
-              <span className="font-bold text-xl font-mono whitespace-nowrap" style={{ color: "var(--dut-purple)" }}>
-                {displayPrice} {product.currency}
+              <span className="font-bold text-2xl tracking-tight flex items-baseline gap-1 justify-end">
+                <span className="font-mono text-2xl font-bold" style={{ color: "var(--dut-text)" }}>{displayPrice}</span>
+                <span className="text-sm font-semibold text-[#F0B45A]">{product.currency}</span>
               </span>
             </div>
           </div>
@@ -234,7 +260,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
                     </span>
                   </div>
                   <p className="text-[11px] italic leading-snug line-clamp-3" style={{ color: "var(--dut-text2)" }}>
-                    "{product.chefNote![lang as "tr" | "en"]}"
+                    &ldquo;{product.chefNote![lang as "tr" | "en"]}&rdquo;
                   </p>
                 </div>
               )}

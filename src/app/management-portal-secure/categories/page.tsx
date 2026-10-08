@@ -31,9 +31,28 @@ export default function AdminCategoriesPage() {
     setIsModalOpen(true);
   };
 
+  const generateSlug = (text: string) => {
+    const trMap: Record<string, string> = {
+      'ç': 'c', 'Ç': 'c',
+      'ğ': 'g', 'Ğ': 'g',
+      'ş': 's', 'Ş': 's',
+      'ü': 'u', 'Ü': 'u',
+      'ı': 'i', 'I': 'i', 'İ': 'i',
+      'ö': 'o', 'Ö': 'o'
+    };
+    return text
+      .split('')
+      .map(c => trMap[c] || c)
+      .join('')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
   const handleSaveForm = (e: React.FormEvent) => {
     e.preventDefault();
-    const slugified = formData.slug || formData.nameTr.toLowerCase().replace(/[^a-z0-9]/g, "-");
+    const slugified = formData.slug || generateSlug(formData.nameTr);
     const payload: Partial<Category> = {
       slug: slugified,
       emoji: formData.emoji,

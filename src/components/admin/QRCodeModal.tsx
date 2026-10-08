@@ -21,6 +21,8 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
       : "https://menu.mekaninadi.com"
   );
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
   if (!isOpen) return null;
 
   // Generate Google Chart API QR Code image URL for quick rendering & download
@@ -32,6 +34,26 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
     navigator.clipboard.writeText(menuUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadQR = async () => {
+    try {
+      setIsDownloading(true);
+      const res = await fetch(qrImageUrl);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${venueName.toLowerCase().replace(/\s+/g, "-")}-qr-code.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch {
+      window.open(qrImageUrl, "_blank");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -91,17 +113,20 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="pt-2 flex items-center justify-center gap-3">
-          <a
-            href={qrImageUrl}
-            download={`${venueName.toLowerCase().replace(/\s+/g, "-")}-qr-code.png`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-2.5 bg-brand-purple hover:bg-brand-purple-dark text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-purple-glow transition-all active:scale-95"
+        <div className="pt-2 flex flex-col items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={handleDownloadQR}
+            disabled={isDownloading}
+            className="w-full py-2.5 bg-brand-purple hover:bg-brand-purple-dark text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-purple-glow transition-all active:scale-95 disabled:opacity-60"
           >
             <Download className="w-4 h-4" />
-            <span>QR Kodu İndir (PNG)</span>
-          </a>
+            <span>{isDownloading ? "İndiriliyor..." : "QR Kodu İndir (PNG)"}</span>
+          </button>
+
+          <p className="text-[10px] font-mono text-content-muted/70">
+            Altyapı & Tasarım: <strong className="font-semibold text-content-secondary">Moka Creative</strong>
+          </p>
         </div>
       </div>
     </div>

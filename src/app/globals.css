@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
 /* ─── DUT Design System — Dark Mode (Default) ─── */
 :root,
 html.dark {
@@ -56,7 +54,7 @@ html {
 body {
   background-color: var(--dut-bg);
   color: var(--dut-text);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -186,7 +184,7 @@ html.light .dut-handle {
   border: 1px solid var(--dut-divider);
   color: var(--dut-text);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-size: 13px;
   outline: none;
   width: 100%;
@@ -197,6 +195,39 @@ html.light .dut-handle {
   border-color: var(--dut-purple);
 }
 
+.admin-input.has-icon-left {
+  padding-left: 42px !important;
+}
+
+.admin-input.has-icon-right {
+  padding-right: 42px !important;
+}
+
 /* ─── Safe Area Padding ─── */
 .pb-safe { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 .pt-safe { padding-top:    max(0px,  env(safe-area-inset-top)); }
+
+/* ─── Haute Cuisine & Editorial Serif ─── */
+.font-editorial {
+  font-family: var(--font-cormorant), "Times New Roman", Garamond, serif;
+}
+
+/* ─── Apple-style 1px Inner Hairline Highlight Card ─── */
+.dut-glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.005) 100%), var(--dut-card);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), var(--dut-shadow);
+  border: 1px solid var(--dut-divider);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dut-glass-card:hover {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.22), 0 14px 36px rgba(0, 0, 0, 0.45);
+  border-color: rgba(166, 108, 255, 0.3);
+}
+
+/* ─── Hide Next.js Development Badges & Overlays ─── */
+nextjs-portal,
+[data-nextjs-dev-tools-button],
+[data-nextjs-toast] {
+  display: none !important;
+}

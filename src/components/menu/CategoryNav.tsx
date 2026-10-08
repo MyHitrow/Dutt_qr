@@ -47,7 +47,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
           <span>{lang === "tr" ? "Tümü" : "All"}</span>
         </button>
 
-        {categories.map((cat) => {
+        {categories.filter((cat) => cat.isActive !== false).map((cat) => {
           const active = cat.id === activeCategoryId;
           return (
             <button

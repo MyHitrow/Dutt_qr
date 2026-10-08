@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-// Görsel optimizasyonu: canvas üzerinden WebP'ye sıkıştırır
+// Görsel optimizasyonu: saydam arka planlı PNG ve WebP desteği
 async function optimizeImage(file: File): Promise<string> {
   return new Promise((resolve) => {
+    const isPng = file.type === "image/png" || file.name.toLowerCase().endsWith(".png");
     const img = new window.Image();
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -23,8 +24,13 @@ async function optimizeImage(file: File): Promise<string> {
         canvas.width  = Math.round(img.width  * ratio);
         canvas.height = Math.round(img.height * ratio);
         const ctx = canvas.getContext("2d")!;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/webp", 0.82));
+        if (isPng) {
+          resolve(canvas.toDataURL("image/png"));
+        } else {
+          resolve(canvas.toDataURL("image/webp", 0.88));
+        }
       };
     };
     reader.readAsDataURL(file);
@@ -169,15 +175,15 @@ export default function AdminProductsPage() {
 
       {/* Filter bar */}
       <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-2xl" style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}>
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--dut-text3)" }} />
+        <div className="relative flex-1 flex items-center">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--dut-text3)" }} />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Ürün ara..."
-            className={`${DUT_INPUT} pl-9`}
-            style={inputStyle}
+            className={DUT_INPUT}
+            style={{ ...inputStyle, paddingLeft: "38px" }}
           />
         </div>
         <select
@@ -206,13 +212,16 @@ export default function AdminProductsPage() {
               <div className="flex items-start gap-3">
                 {/* Thumbnail */}
                 {prod.hasImage && prod.imageUrl ? (
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative">
+                  <div
+                    className="w-14 h-14 rounded-xl flex-shrink-0 relative flex items-center justify-center p-1"
+                    style={{ background: "var(--dut-elevated)" }}
+                  >
                     <Image
                       src={prod.imageUrl}
                       alt={prod.name.tr}
                       fill
                       sizes="56px"
-                      className="object-cover"
+                      className="object-contain drop-shadow-sm"
                       unoptimized={prod.imageUrl.startsWith("data:") || prod.imageUrl.startsWith("blob:")}
                     />
                   </div>
@@ -359,11 +368,11 @@ export default function AdminProductsPage() {
               {/* Calories */}
               <div className="grid grid-cols-2 gap-4">
                 {field("Kalori (kcal)",
-                  <div className="relative">
-                    <Flame className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--dut-warning)" }} />
+                  <div className="relative flex items-center">
+                    <Flame className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--dut-warning)" }} />
                     <input type="number" min={0} value={formData.calories || ""}
                       onChange={e => setFormData({ ...formData, calories: Number(e.target.value) })}
-                      placeholder="420" className={`${DUT_INPUT} pl-9 font-mono`} style={inputStyle} />
+                      placeholder="420" className={`${DUT_INPUT} font-mono`} style={{ ...inputStyle, paddingLeft: "36px" }} />
                   </div>
                 )}
                 <div />
@@ -428,34 +437,40 @@ export default function AdminProductsPage() {
                         ? <span className="text-xs animate-pulse" style={{ color: "var(--dut-purple)" }}>Optimize ediliyor...</span>
                         : <>
                           <Upload className="w-6 h-6" />
-                          <span className="text-xs font-semibold">Görsel seçin — JPEG, PNG, WebP</span>
-                          <span className="text-[10px] opacity-60">Otomatik olarak WebP&apos;ye optimize edilir (max 900px)</span>
+                          <span className="text-xs font-semibold">Görsel seçin — Şeffaf PNG, WebP veya JPEG</span>
+                          <span className="text-[10px] opacity-60">Şeffaf arka planlı PNG&apos;ler menüde çerçevesiz 3D yüzer şekilde görünür</span>
                         </>
                       }
                     </button>
                     {uploadPreview && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                      <div className="mt-2 flex items-center gap-3 p-2 rounded-xl" style={{ background: "var(--dut-bg)", border: "1px solid var(--dut-divider)" }}>
+                        <div
+                          className="relative w-14 h-14 rounded-xl flex items-center justify-center p-1 flex-shrink-0"
+                          style={{
+                            background: "var(--dut-elevated)",
+                            backgroundImage: "radial-gradient(circle at center, rgba(166,108,255,0.15) 0%, transparent 70%)"
+                          }}
+                        >
                           <Image
                             src={uploadPreview}
                             alt="preview"
                             fill
-                            sizes="48px"
-                            className="object-cover"
+                            sizes="56px"
+                            className="object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)]"
                             unoptimized={uploadPreview.startsWith("data:") || uploadPreview.startsWith("blob:")}
                           />
                         </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-semibold" style={{ color: "var(--dut-success)" }}>✓ Görsel yüklendi ve optimize edildi</p>
-                          <p className="text-[10px]" style={{ color: "var(--dut-text3)" }}>WebP, max 900px genişlik, %82 kalite</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold" style={{ color: "var(--dut-success)" }}>✓ Görsel hazır (Şeffaf Arka Plan Korundu)</p>
+                          <p className="text-[10px]" style={{ color: "var(--dut-text3)" }}>Menü kartlarında çerçevesiz ve yüzen efektle sergilenir</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => { setUploadPreview(null); setFormData(f => ({ ...f, imageUrl: "", hasImage: false })); }}
-                          className="p-1 rounded-lg transition-all"
+                          className="p-1.5 rounded-lg transition-all"
                           style={{ color: "var(--dut-danger)" }}
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     )}

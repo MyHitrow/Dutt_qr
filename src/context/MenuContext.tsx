@@ -110,7 +110,15 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /* ── Load from localStorage + Live Real-Time Server Sync (2.5s Polling) ── */
+const safeLocalStorageSet = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`[MenuContext] LocalStorage setItem failed for key "${key}" (possibly quota limit):`, e);
+  }
+};
+
+  /* ── Load from localStorage + Live Real-Time Server Sync with Adaptive Backoff ── */
   useEffect(() => {
     try {
       const sv = localStorage.getItem(LS.VENUE);
@@ -131,34 +139,116 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
       document.documentElement.className = t;
     } catch { /* ignore */ }
 
-    // Instant & periodic live sync from Supabase Cloud Database (every 2.5 seconds)
-    const syncFromDatabase = () => {
-      // If a local edit happened within the last 4 seconds, skip poll to prevent overwrite race condition
-      if (Date.now() - lastLocalSaveTimeRef.current < 4000) return;
+    // Instant & adaptive periodic live sync from Server Database
+    let isSubscribed = true;
+    let pollTimer: NodeJS.Timeout | null = null;
+    let currentDelay = 15000;
 
-      fetch("/api/sync")
-        .then((res) => res.json())
-        .then((json) => {
-          if (json?.data) {
-            const d = json.data;
-            if (d.venue) { setVenue(d.venue); localStorage.setItem(LS.VENUE, JSON.stringify(d.venue)); }
-            if (d.categories) { setCategories(d.categories); localStorage.setItem(LS.CATEGORIES, JSON.stringify(d.categories)); }
-            if (d.products) { setProducts(d.products); localStorage.setItem(LS.PRODUCTS, JSON.stringify(d.products)); }
-            if (d.dailyFixMenus) { setDailyFixMenus(d.dailyFixMenus); localStorage.setItem(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus)); }
+    const syncFromDatabase = async () => {
+      if (!isSubscribed) return;
+      // Skip poll if page is hidden to conserve server resources and mobile battery
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        if (isSubscribed) pollTimer = setTimeout(syncFromDatabase, currentDelay);
+        return;
+      }
+      // If a local edit happened within the last 4 seconds, skip poll to prevent overwrite race condition
+      if (Date.now() - lastLocalSaveTimeRef.current < 4000) {
+        if (isSubscribed) pollTimer = setTimeout(syncFromDatabase, currentDelay);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/sync");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (json?.data && isSubscribed) {
+          const d = json.data;
+          if (d.venue) {
+            setVenue(prev => {
+              if (JSON.stringify(prev) === JSON.stringify(d.venue)) return prev;
+              safeLocalStorageSet(LS.VENUE, JSON.stringify(d.venue));
+              return d.venue;
+            });
           }
-        })
-        .catch(() => {});
+          if (d.categories) {
+            setCategories(prev => {
+              if (JSON.stringify(prev) === JSON.stringify(d.categories)) return prev;
+              safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(d.categories));
+              return d.categories;
+            });
+          }
+          if (d.products) {
+            setProducts(prev => {
+              if (JSON.stringify(prev) === JSON.stringify(d.products)) return prev;
+              safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(d.products));
+              return d.products;
+            });
+          }
+          if (d.dailyFixMenus) {
+            setDailyFixMenus(prev => {
+              if (JSON.stringify(prev) === JSON.stringify(d.dailyFixMenus)) return prev;
+              safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus));
+              return d.dailyFixMenus;
+            });
+          }
+          currentDelay = 15000; // Reset to standard interval upon success
+        }
+      } catch {
+        // Back off up to 30 seconds when offline or server unreachable
+        currentDelay = Math.min(currentDelay * 1.5, 30000);
+      } finally {
+        if (isSubscribed) {
+          pollTimer = setTimeout(syncFromDatabase, currentDelay);
+        }
+      }
     };
 
+    // Cross-tab real-time sync (updates customer menu tab instantly when admin changes data in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.newValue) return;
+      try {
+        if (e.key === LS.VENUE) {
+          const parsed = JSON.parse(e.newValue);
+          setVenue(prev => JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed);
+        }
+        if (e.key === LS.CATEGORIES) {
+          const parsed = JSON.parse(e.newValue);
+          setCategories(prev => JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed);
+        }
+        if (e.key === LS.PRODUCTS) {
+          const parsed = JSON.parse(e.newValue);
+          setProducts(prev => JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed);
+        }
+        if (e.key === LS.FIX_MENUS) {
+          const parsed = JSON.parse(e.newValue);
+          setDailyFixMenus(prev => JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed);
+        }
+      } catch {}
+    };
+
+    // Refresh immediately when tab gains focus/visibility
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncFromDatabase();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     syncFromDatabase();
-    const intervalId = setInterval(syncFromDatabase, 2500);
-    return () => clearInterval(intervalId);
+    return () => {
+      isSubscribed = false;
+      if (pollTimer) clearTimeout(pollTimer);
+      window.removeEventListener("storage", handleStorageChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setThemeState(next);
-    localStorage.setItem(LS.THEME, next);
+    safeLocalStorageSet(LS.THEME, next);
     document.documentElement.className = next;
   };
 
@@ -166,30 +256,30 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const persistVenue = (v: VenueSettings) => {
     lastLocalSaveTimeRef.current = Date.now();
     setVenue(v);
-    localStorage.setItem(LS.VENUE, JSON.stringify(v));
+    safeLocalStorageSet(LS.VENUE, JSON.stringify(v));
     syncToServer(v, categories, products, dailyFixMenus);
   };
   const persistCategories = (c: Category[]) => {
     lastLocalSaveTimeRef.current = Date.now();
     setCategories(c);
-    localStorage.setItem(LS.CATEGORIES, JSON.stringify(c));
+    safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(c));
     syncToServer(venue, c, products, dailyFixMenus);
   };
   const persistProducts = (p: Product[]) => {
     lastLocalSaveTimeRef.current = Date.now();
     setProducts(p);
-    localStorage.setItem(LS.PRODUCTS, JSON.stringify(p));
+    safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(p));
     syncToServer(venue, categories, p, dailyFixMenus);
   };
   const persistFixMenus = (fm: DailyFixMenu[]) => {
     lastLocalSaveTimeRef.current = Date.now();
     setDailyFixMenus(fm);
-    localStorage.setItem(LS.FIX_MENUS, JSON.stringify(fm));
+    safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(fm));
     syncToServer(venue, categories, products, fm);
   };
-  const persistCart = (items: CartItem[]) => { setCartItems(items); localStorage.setItem(LS.CART, JSON.stringify(items)); };
+  const persistCart = (items: CartItem[]) => { setCartItems(items); safeLocalStorageSet(LS.CART, JSON.stringify(items)); };
 
-  const setLang = (l: Language) => { setLangState(l); localStorage.setItem(LS.LANG, l); };
+  const setLang = (l: Language) => { setLangState(l); safeLocalStorageSet(LS.LANG, l); };
 
   /* ── Fix Menu ── */
   const getCurrentDayFixMenu = () => {
@@ -201,14 +291,14 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /* ── Venue / Product / Category CRUD ── */
   const updateVenue = (v: Partial<VenueSettings>) => persistVenue({ ...venue, ...v });
-  const addProduct = (p: Omit<Product, "id">) => persistProducts([{ ...p, id: `prod-${Date.now()}` }, ...products]);
+  const addProduct = (p: Omit<Product, "id">) => persistProducts([{ ...p, id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` }, ...products]);
   const updateProduct = (id: string, p: Partial<Product>) => persistProducts(products.map(x => x.id === id ? { ...x, ...p } : x));
   const deleteProduct = (id: string) => persistProducts(products.filter(x => x.id !== id));
   const toggleProductAvailability = (id: string) => {
     const t = products.find(x => x.id === id);
     if (t) updateProduct(id, { isAvailable: !t.isAvailable });
   };
-  const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}` }]);
+  const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` }]);
   const updateCategory = (id: string, c: Partial<Category>) => persistCategories(categories.map(x => x.id === id ? { ...x, ...c } : x));
   const deleteCategory = (id: string) => { persistCategories(categories.filter(x => x.id !== id)); persistProducts(products.filter(x => x.categoryId !== id)); };
 
@@ -293,7 +383,6 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetAllData = () => {
     try {
-      fetch("/api/sync", { method: "DELETE" }).catch(() => {});
       Object.values(LS).forEach(k => localStorage.removeItem(k));
       ["dut_venue", "dut_categories", "dut_products", "dut_fix_menus", "dut_cart"].forEach(k => localStorage.removeItem(k));
     } catch {}

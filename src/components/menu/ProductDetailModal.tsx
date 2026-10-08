@@ -172,7 +172,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <span>{lang === "tr" ? "Şefin Notu" : "Chef's Note"}</span>
               </div>
               <p className="text-xs text-content-secondary font-light italic">
-                "{chefNoteText}"
+                &ldquo;{chefNoteText}&rdquo;
               </p>
             </div>
           )}

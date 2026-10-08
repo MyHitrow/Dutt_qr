@@ -98,7 +98,7 @@ export default function AdminFixMenusPage() {
           Günlük Fix Menü & Banner Görselleri
         </h2>
         <p className="text-xs mt-0.5" style={{ color: "var(--dut-text3)" }}>
-          Haftanın her günü için özel banner görseli ve fix menü konsepti belirleyin. Salı günü tasarımı Salı 00:01'de otomatik yayına girecektir.
+          Haftanın her günü için özel banner görseli ve fix menü konsepti belirleyin. Salı günü tasarımı Salı 00:01&apos;de otomatik yayına girecektir.
         </p>
       </div>
 
@@ -279,9 +279,12 @@ export default function AdminFixMenusPage() {
                         <>
                           <Upload className="w-6 h-6" style={{ color: "var(--dut-purple)" }} />
                           <span className="text-xs font-bold" style={{ color: "var(--dut-text)" }}>
-                            {editingDay.dayName.tr} Günü Banner Görselini Yükle
+                            {editingDay?.dayName.tr} Günü Banner Görselini Yükle
                           </span>
-                          <span className="text-[10px] opacity-60">Yüksek kalite WebP'ye otomatik dönüştürülür (max 1200px)</span>
+                          <span className="text-[11px] font-semibold" style={{ color: "var(--dut-warning)" }}>
+                            Önerilen İdeal Ölçü: 1920 × 1080 px (16:9 Yatay Banner)
+                          </span>
+                          <span className="text-[10px] opacity-60">Yüksek kalite WebP&apos;ye otomatik optimize edilir</span>
                         </>
                       )}
                     </button>

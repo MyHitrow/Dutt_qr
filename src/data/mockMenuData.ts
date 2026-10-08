@@ -11,6 +11,11 @@ export const mockVenueSettings: VenueSettings = {
   },
   "isOpen": true,
   "closingTime": "02:00",
+  "closedMessage": {
+    "tr": "Değerli misafirlerimiz, restoranımız şu anda hizmet vermemektedir. Servis hazırlıklarımızın ardından en kısa sürede tekrar sizlerle buluşacağız.",
+    "en": "Dear guests, our restaurant is currently closed. We will be back in service shortly after our preparations."
+  },
+  "contactPhone": "+90 252 000 00 00",
   "defaultTheme": "dark",
   "defaultLanguage": "tr",
   "currencySymbol": "₺",

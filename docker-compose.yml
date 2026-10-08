@@ -1,0 +1,15 @@
+services:
+  dutt-qr-menu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dutt-qr-menu
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - ADMIN_USERNAMES=admin,dutt,duttmeyhane
+      - ADMIN_PASSWORDS=dutt123,123456
+    volumes:
+      - ./src/data:/app/src/data

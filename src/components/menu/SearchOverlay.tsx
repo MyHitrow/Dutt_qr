@@ -36,24 +36,45 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ lang, onClose, onP
   const showEmpty = query.trim().length > 0 && results.length === 0;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#101011] flex flex-col animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex flex-col animate-fade-in transition-colors"
+      style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}
+    >
       {/* Search header */}
-      <div className="flex items-center gap-3 px-4 pt-[max(16px,env(safe-area-inset-top))] pb-3 border-b border-white/[0.06]">
-        <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#1D1D1F] border border-white/[0.06] flex items-center justify-center text-[#96969D] hover:text-[#F7F7F8] transition-colors flex-shrink-0">
+      <div
+        className="flex items-center gap-3 px-4 pt-[max(16px,env(safe-area-inset-top))] pb-3 border-b"
+        style={{ borderColor: "var(--dut-divider)" }}
+      >
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full border flex items-center justify-center transition-colors flex-shrink-0"
+          style={{
+            background: "var(--dut-card)",
+            borderColor: "var(--dut-divider)",
+            color: "var(--dut-text2)",
+          }}
+        >
           <ArrowLeft className="w-4 h-4" />
         </button>
-        <div className="flex-1 flex items-center gap-2 bg-[#1D1D1F] border border-white/[0.06] rounded-2xl px-3.5 py-2.5">
-          <Search className="w-4 h-4 text-[#68686E] flex-shrink-0" />
+        <div
+          className="flex-1 flex items-center gap-2 border rounded-2xl px-3.5 py-2.5 transition-colors"
+          style={{
+            background: "var(--dut-card)",
+            borderColor: "var(--dut-divider)",
+          }}
+        >
+          <Search className="w-4 h-4 flex-shrink-0" style={{ color: "var(--dut-text3)" }} />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder={lang === "tr" ? "Yemek veya içecek ara…" : "Search food or drink…"}
-            className="flex-1 bg-transparent text-[#F7F7F8] text-sm placeholder:text-[#68686E] outline-none"
+            className="flex-1 bg-transparent text-sm outline-none"
+            style={{ color: "var(--dut-text)" }}
           />
           {query && (
-            <button onClick={() => setQuery("")} className="text-[#68686E] hover:text-[#F7F7F8]">
+            <button onClick={() => setQuery("")} className="transition-opacity hover:opacity-75" style={{ color: "var(--dut-text3)" }}>
               <X className="w-4 h-4" />
             </button>
           )}
@@ -66,10 +87,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ lang, onClose, onP
         {!query && (
           <div className="py-16 text-center space-y-2">
             <div className="text-4xl mb-3">🍽️</div>
-            <p className="text-[#F7F7F8] font-semibold">
+            <p className="font-semibold" style={{ color: "var(--dut-text)" }}>
               {lang === "tr" ? "Ne arıyorsunuz?" : "What are you looking for?"}
             </p>
-            <p className="text-[#68686E] text-sm">
+            <p className="text-sm" style={{ color: "var(--dut-text3)" }}>
               {lang === "tr" ? "Tavuk, makarna, vegan, kahve…" : "chicken, pasta, vegan, coffee…"}
             </p>
           </div>
@@ -79,16 +100,16 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ lang, onClose, onP
         {showEmpty && (
           <div className="py-16 text-center space-y-2">
             <div className="text-4xl mb-3">🔍</div>
-            <p className="text-[#F7F7F8] font-semibold">
-              "{query}" {lang === "tr" ? "bulunamadı" : "not found"}
+            <p className="font-semibold" style={{ color: "var(--dut-text)" }}>
+              &ldquo;{query}&rdquo; {lang === "tr" ? "bulunamadı" : "not found"}
             </p>
-            <p className="text-[#68686E] text-sm max-w-xs mx-auto">
+            <p className="text-sm max-w-xs mx-auto" style={{ color: "var(--dut-text3)" }}>
               {lang === "tr"
                 ? "Farklı anahtar kelime deneyin veya kategorilere göz atın."
                 : "Try another keyword or browse categories."
               }
             </p>
-            <button onClick={() => setQuery("")} className="mt-3 text-sm text-[#A66CFF] font-semibold">
+            <button onClick={() => setQuery("")} className="mt-3 text-sm font-semibold" style={{ color: "var(--dut-purple)" }}>
               {lang === "tr" ? "Aramayı Temizle" : "Clear Search"}
             </button>
           </div>
@@ -97,32 +118,46 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ lang, onClose, onP
         {/* Results list */}
         {results.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[11px] text-[#68686E] font-semibold uppercase tracking-wider mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--dut-text3)" }}>
               {results.length} {lang === "tr" ? "sonuç bulundu" : "results found"}
             </p>
             {results.map(product => (
               <button
                 key={product.id}
                 onClick={() => { onProductOpen(product); onClose(); }}
-                className="w-full flex items-center gap-3 bg-[#1D1D1F] rounded-2xl p-3 border border-white/[0.04] active:scale-[0.98] transition-transform text-left hover:border-[#A66CFF]/20"
+                className="w-full flex items-center gap-3 rounded-2xl p-3 border active:scale-[0.98] transition-all text-left"
+                style={{
+                  background: "var(--dut-card)",
+                  borderColor: "var(--dut-divider)",
+                }}
               >
                 {/* Thumbnail */}
                 {product.imageUrl ? (
-                  <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-                    <Image src={product.imageUrl} alt={product.name[lang]} fill sizes="56px" className="object-cover" />
+                  <div
+                    className="relative w-14 h-14 rounded-xl flex items-center justify-center p-1 flex-shrink-0"
+                    style={{ background: "var(--dut-elevated)" }}
+                  >
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.name[lang]}
+                      fill
+                      sizes="56px"
+                      className="object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]"
+                      unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+                    />
                   </div>
                 ) : (
-                  <div className="w-14 h-14 rounded-xl bg-[#222224] flex items-center justify-center flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--dut-elevated)" }}>
                     <span className="text-xl">🍽️</span>
                   </div>
                 )}
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[#F7F7F8] text-sm font-semibold truncate">{product.name[lang]}</h3>
-                  <p className="text-[#68686E] text-xs line-clamp-1 mt-0.5">{product.description[lang]}</p>
+                  <h3 className="text-sm font-semibold truncate" style={{ color: "var(--dut-text)" }}>{product.name[lang]}</h3>
+                  <p className="text-xs line-clamp-1 mt-0.5" style={{ color: "var(--dut-text3)" }}>{product.description[lang]}</p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-[#A66CFF] text-xs font-bold">{product.price} ₺</span>
+                    <span className="text-xs font-bold font-mono" style={{ color: "var(--dut-purple)" }}>{product.price} {product.currency || "₺"}</span>
                     {!product.isAvailable && <DietaryBadge type="soldOut" lang={lang} />}
                     {product.dietary?.isVegan && <DietaryBadge type="vegan" lang={lang} />}
                   </div>

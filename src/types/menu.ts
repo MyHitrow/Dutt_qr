@@ -143,6 +143,8 @@ export interface VenueSettings {
   logoLightUrl?: string; // Light theme logo (dark colored/black icon)
   isOpen: boolean;
   closingTime?: string; // "23:30"
+  closedMessage?: { tr: string; en: string }; // Custom closed message shown to customers
+  contactPhone?: string; // Contact or reservation phone
   defaultTheme: ThemeMode;
   defaultLanguage: Language;
   currencySymbol: string;

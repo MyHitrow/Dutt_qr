@@ -15,13 +15,16 @@ const AUTH_KEY = "dut_admin_session_auth";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { venue, theme, toggleTheme } = useMenu();
+  const { venue, updateVenue, theme, toggleTheme } = useMenu();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusMessageTr, setStatusMessageTr] = useState("");
+  const [statusMessageEn, setStatusMessageEn] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
@@ -37,32 +40,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
+    setIsLoggingIn(true);
 
-    // Accepted default credentials: admin / dutt123 or admin / 123456 or dutt / dutt123
-    const validUsernames = ["admin", "dutt", "duttmeyhane"];
-    const validPasswords = ["dutt123", "123456", "admin123", "admin"];
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const isUserValid = validUsernames.includes(username.trim().toLowerCase());
-    const isPassValid = validPasswords.includes(password.trim());
+      const data = await res.json().catch(() => ({}));
 
-    if (isUserValid && isPassValid) {
-      setIsAuthenticated(true);
-      try {
-        sessionStorage.setItem(AUTH_KEY, "true");
-        localStorage.setItem(AUTH_KEY, "true");
-      } catch {}
-    } else {
-      setErrorMsg("Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        try {
+          sessionStorage.setItem(AUTH_KEY, "true");
+          localStorage.setItem(AUTH_KEY, "true");
+        } catch {}
+      } else {
+        setErrorMsg(data.message || "Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
+      }
+    } catch {
+      // Fallback check if server endpoint unreachable
+      const validUsernames = ["admin", "dutt", "duttmeyhane"];
+      const validPasswords = ["dutt123", "123456", "admin123", "admin"];
+      if (
+        validUsernames.includes(username.trim().toLowerCase()) &&
+        validPasswords.includes(password.trim())
+      ) {
+        setIsAuthenticated(true);
+        try {
+          sessionStorage.setItem(AUTH_KEY, "true");
+          localStorage.setItem(AUTH_KEY, "true");
+        } catch {}
+      } else {
+        setErrorMsg("Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsAuthenticated(false);
     setUsername("");
     setPassword("");
+    fetch("/api/admin/auth", { method: "DELETE" }).catch(() => {});
     try {
       sessionStorage.removeItem(AUTH_KEY);
       localStorage.removeItem(AUTH_KEY);
@@ -114,15 +142,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
                 Kullanıcı Adı
               </label>
-              <div className="relative">
-                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--dut-text3)" }} />
+              <div className="relative flex items-center">
+                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ color: "var(--dut-text3)" }} />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="admin"
                   required
-                  className="admin-input pl-10"
+                  className="admin-input has-icon-left"
+                  style={{ paddingLeft: "42px" }}
                 />
               </div>
             </div>
@@ -132,21 +161,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
                 Şifre
               </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--dut-text3)" }} />
+              <div className="relative flex items-center">
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ color: "var(--dut-text3)" }} />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="admin-input pl-10 pr-10"
+                  className="admin-input has-icon-left has-icon-right"
+                  style={{ paddingLeft: "42px", paddingRight: "42px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors p-1 z-10"
                   style={{ color: "var(--dut-text3)" }}
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -163,9 +194,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
 
             {/* Default info note */}
-            <div className="pt-2 text-center">
+            <div className="pt-2 text-center space-y-1">
               <p className="text-[11px]" style={{ color: "var(--dut-text3)" }}>
                 Varsayılan Kullanıcı Adı: <span className="font-mono text-[#A66CFF]">admin</span> | Şifre: <span className="font-mono text-[#A66CFF]">dutt123</span>
+              </p>
+              <p className="text-[10px] font-mono pt-1" style={{ color: "var(--dut-text3)", opacity: 0.65 }}>
+                Yönetim Portalı Altyapısı · <strong className="font-semibold text-white/80">Moka Creative</strong>
               </p>
             </div>
           </form>
@@ -181,6 +215,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Kategoriler",    href: "/management-portal-secure/categories",  icon: FolderTree      },
     { name: "Ayarlar",        href: "/management-portal-secure/settings",    icon: Settings        },
   ];
+
+  const openStatusModal = () => {
+    setStatusMessageTr(venue.closedMessage?.tr || "Değerli misafirlerimiz, restoranımız şu anda hizmet vermemektedir. Servis hazırlıklarımızın ardından en kısa sürede tekrar sizlerle buluşacağız.");
+    setStatusMessageEn(venue.closedMessage?.en || "Dear guests, our restaurant is currently closed. We will be back in service shortly after our preparations.");
+    setIsStatusModalOpen(true);
+  };
+
+  const handleConfirmToggleStatus = () => {
+    const nextIsOpen = !venue.isOpen;
+    updateVenue({
+      isOpen: nextIsOpen,
+      closedMessage: {
+        tr: statusMessageTr,
+        en: statusMessageEn,
+      },
+    });
+    setIsStatusModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col transition-colors" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
@@ -206,6 +258,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Restaurant Open / Closed Emergency Toggle */}
+            <button
+              onClick={openStatusModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95"
+              style={{
+                background: venue.isOpen ? "rgba(99,211,145,0.14)" : "rgba(255,107,107,0.18)",
+                border: venue.isOpen ? "1px solid rgba(99,211,145,0.35)" : "1px solid rgba(255,107,107,0.45)",
+                color: venue.isOpen ? "var(--dut-success)" : "var(--dut-danger)",
+              }}
+              title={venue.isOpen ? "Restoranı Kapat ve QR Erişimini Kilitle" : "Restoranı Aç ve Menüyü Yayına Al"}
+            >
+              <span className={`w-2 h-2 rounded-full ${venue.isOpen ? "bg-emerald-400" : "bg-rose-500 animate-pulse"}`} />
+              <span>{venue.isOpen ? "Restoran Açık" : "Restoran Kapalı"}</span>
+              <span className="hidden md:inline text-[10px] opacity-75 font-normal ml-0.5">
+                {venue.isOpen ? "(Kapat)" : "(Aç)"}
+              </span>
+            </button>
+
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
@@ -290,11 +360,123 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {children}
       </main>
 
+      {/* Admin Footer */}
+      <footer className="border-t py-4 px-6 text-xs mt-auto" style={{ borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span className="font-mono text-[11px]">
+            © {new Date().getFullYear()} {venue.name} Yönetim Portalı
+          </span>
+          <span className="text-[11px] font-mono">
+            Yazılım & Tasarım: <strong className="font-semibold text-[var(--dut-purple-lt)] tracking-wide">Moka Creative</strong>
+          </span>
+        </div>
+      </footer>
+
       <QRCodeModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
         venueName={venue.name}
       />
+
+      {/* Emergency Restaurant Status Modal */}
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div
+            className="w-full max-w-md rounded-3xl p-6 sm:p-7 space-y-5 border shadow-2xl transition-all"
+            style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)" }}
+          >
+            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: "var(--dut-divider)" }}>
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: venue.isOpen ? "rgba(255,107,107,0.14)" : "rgba(99,211,145,0.14)",
+                    color: venue.isOpen ? "var(--dut-danger)" : "var(--dut-success)",
+                  }}
+                >
+                  {venue.isOpen ? <Lock className="w-5 h-5 text-rose-400" /> : <ShieldCheck className="w-5 h-5 text-emerald-400" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm" style={{ color: "var(--dut-text)" }}>
+                    {venue.isOpen ? "Restoranı Kapat & QR Menüyü Kilitle" : "Restoranı Aç & Menüyü Yayına Al"}
+                  </h3>
+                  <p className="text-[11px]" style={{ color: "var(--dut-text3)" }}>
+                    {venue.isOpen ? "Müşteriler kapalı ekranı ile karşılaşacaktır." : "Tüm masalar menüye erişebilecektir."}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsStatusModalOpen(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {venue.isOpen ? (
+              <div className="space-y-3">
+                <div
+                  className="p-3.5 rounded-xl text-xs leading-relaxed border"
+                  style={{ background: "rgba(255,107,107,0.08)", borderColor: "rgba(255,107,107,0.25)", color: "var(--dut-text)" }}
+                >
+                  <p className="font-semibold text-rose-400 mb-1">⚠️ Acil Durum / Kapanış Uyarısı:</p>
+                  <p className="text-xs" style={{ color: "var(--dut-text2)" }}>
+                    Restoranı kapattığınızda müşteriler masadaki QR kodu okutsalar dahi menüye veya ürünlere erişemez. Müşteriye aşağıdaki bildirim mesajı gösterilir.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
+                    Kapanış Mesajı (Müşteriye Gösterilecek):
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={statusMessageTr}
+                    onChange={(e) => setStatusMessageTr(e.target.value)}
+                    className="admin-input text-xs"
+                    placeholder="Örn: Özel bir davet sebebiyle bu akşam kapalıyız..."
+                  />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="p-3.5 rounded-xl text-xs leading-relaxed border space-y-2"
+                style={{ background: "rgba(99,211,145,0.08)", borderColor: "rgba(99,211,145,0.25)", color: "var(--dut-text)" }}
+              >
+                <p className="font-semibold text-emerald-400">✓ Canlı Servise Geçiş:</p>
+                <p className="text-xs" style={{ color: "var(--dut-text2)" }}>
+                  Restoranı açtığınızda tüm dijital QR menü, kategoriler ve fiyatlar anında müşterilerin erişimine açılacaktır.
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t" style={{ borderColor: "var(--dut-divider)" }}>
+              <button
+                type="button"
+                onClick={() => setIsStatusModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
+                style={{ background: "var(--dut-bg)", border: "1px solid var(--dut-divider)", color: "var(--dut-text2)" }}
+              >
+                Vazgeç
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmToggleStatus}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg"
+                style={{
+                  background: venue.isOpen ? "var(--dut-danger)" : "var(--dut-success)",
+                  boxShadow: venue.isOpen
+                    ? "0 4px 16px rgba(255,107,107,0.35)"
+                    : "0 4px 16px rgba(99,211,145,0.35)",
+                }}
+              >
+                {venue.isOpen ? "Evet, Restoranı Kapat" : "Evet, Restoranı Aç"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

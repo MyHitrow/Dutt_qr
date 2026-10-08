@@ -19,6 +19,9 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "Dutt Meyhane — Dijital QR Menü",
   description: "Modern İstanbul Meyhanesi Dijital QR Menüsü. Mezeler, ara sıcaklar, ızgaralar ve seçkin içecekler.",
+  authors: [{ name: "Moka Creative" }],
+  creator: "Moka Creative",
+  publisher: "Moka Creative",
   openGraph: {
     title: "Dutt Meyhane — Dijital QR Menü",
     description: "Modern İstanbul Meyhanesi Dijital QR Menüsü.",

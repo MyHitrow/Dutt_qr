@@ -12,10 +12,8 @@ export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({ dailyFix
   if (!dailyFixMenus || dailyFixMenus.length === 0) return null;
 
   const todayOfWeek = new Date().getDay();
-  // Automatically select today's fix menu if active, or the first active fix menu
-  const currentMenu = dailyFixMenus.find(m => m.dayOfWeek === todayOfWeek && m.isActive)
-                   || dailyFixMenus.find(m => m.isActive)
-                   || dailyFixMenus[0];
+  // Only display today's fix menu if it is actively enabled
+  const currentMenu = dailyFixMenus.find(m => m.dayOfWeek === todayOfWeek && m.isActive);
 
   if (!currentMenu || !currentMenu.imageUrl) return null;
 

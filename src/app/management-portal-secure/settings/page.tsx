@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useMenu } from "@/context/MenuContext";
-import { Save, CheckCircle2, Upload, X, Moon, Sun } from "lucide-react";
+import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone } from "lucide-react";
 
 async function optimizeLogoImage(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -34,22 +34,55 @@ export default function AdminSettingsPage() {
 
   const darkInputRef = useRef<HTMLInputElement>(null);
   const lightInputRef = useRef<HTMLInputElement>(null);
+  const isDirtyRef = useRef(false);
 
   const [formData, setFormData] = useState({
     name: venue.name,
-    sloganTr: venue.slogan.tr,
-    sloganEn: venue.slogan.en,
-    currencySymbol: venue.currencySymbol,
-    noticeTr: venue.serviceNotice.tr,
-    noticeEn: venue.serviceNotice.en,
+    sloganTr: venue.slogan?.tr || "",
+    sloganEn: venue.slogan?.en || "",
+    currencySymbol: venue.currencySymbol || "₺",
+    noticeTr: venue.serviceNotice?.tr || "",
+    noticeEn: venue.serviceNotice?.en || "",
     logoDarkUrl: venue.logoDarkUrl || "",
     logoLightUrl: venue.logoLightUrl || "",
+    isOpen: venue.isOpen !== false,
+    closedMessageTr: venue.closedMessage?.tr || "",
+    closedMessageEn: venue.closedMessage?.en || "",
+    contactPhone: venue.contactPhone || "",
+    closingTime: venue.closingTime || "02:00",
   });
+
+  // Sync formData if venue is loaded or updated asynchronously, but ONLY if the user has not made unsaved changes
+  React.useEffect(() => {
+    if (!isDirtyRef.current) {
+      setFormData({
+        name: venue.name || "",
+        sloganTr: venue.slogan?.tr || "",
+        sloganEn: venue.slogan?.en || "",
+        currencySymbol: venue.currencySymbol || "₺",
+        noticeTr: venue.serviceNotice?.tr || "",
+        noticeEn: venue.serviceNotice?.en || "",
+        logoDarkUrl: venue.logoDarkUrl || "",
+        logoLightUrl: venue.logoLightUrl || "",
+        isOpen: venue.isOpen !== false,
+        closedMessageTr: venue.closedMessage?.tr || "",
+        closedMessageEn: venue.closedMessage?.en || "",
+        contactPhone: venue.contactPhone || "",
+        closingTime: venue.closingTime || "02:00",
+      });
+    }
+  }, [venue]);
+
+  const updateField = (key: keyof typeof formData, value: any) => {
+    isDirtyRef.current = true;
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
 
   const handleDarkLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploadingDark(true);
+    isDirtyRef.current = true;
     try {
       const optimized = await optimizeLogoImage(file);
       setFormData(f => ({ ...f, logoDarkUrl: optimized }));
@@ -62,6 +95,7 @@ export default function AdminSettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploadingLight(true);
+    isDirtyRef.current = true;
     try {
       const optimized = await optimizeLogoImage(file);
       setFormData(f => ({ ...f, logoLightUrl: optimized }));
@@ -72,6 +106,7 @@ export default function AdminSettingsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    isDirtyRef.current = false;
     updateVenue({
       name: formData.name,
       slogan: { tr: formData.sloganTr, en: formData.sloganEn },
@@ -79,6 +114,10 @@ export default function AdminSettingsPage() {
       serviceNotice: { tr: formData.noticeTr, en: formData.noticeEn },
       logoDarkUrl: formData.logoDarkUrl || undefined,
       logoLightUrl: formData.logoLightUrl || undefined,
+      isOpen: formData.isOpen,
+      closingTime: formData.closingTime,
+      closedMessage: { tr: formData.closedMessageTr, en: formData.closedMessageEn },
+      contactPhone: formData.contactPhone || undefined,
     });
 
     setSavedSuccess(true);
@@ -118,6 +157,129 @@ export default function AdminSettingsPage() {
         className="rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl"
         style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}
       >
+        {/* Restaurant Status & QR Access Lock Section */}
+        <div
+          className="p-5 sm:p-6 rounded-2xl border space-y-4 transition-all"
+          style={{
+            background: formData.isOpen ? "rgba(99,211,145,0.06)" : "rgba(255,107,107,0.08)",
+            borderColor: formData.isOpen ? "rgba(99,211,145,0.25)" : "rgba(255,107,107,0.35)",
+          }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{
+                  background: formData.isOpen ? "rgba(99,211,145,0.15)" : "rgba(255,107,107,0.18)",
+                  color: formData.isOpen ? "var(--dut-success)" : "var(--dut-danger)",
+                }}
+              >
+                {formData.isOpen ? <ShieldCheck className="w-5 h-5 text-emerald-400" /> : <Lock className="w-5 h-5 text-rose-400" />}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold" style={{ color: "var(--dut-text)" }}>
+                    Restoran Çalışma & Müşteri QR Erişim Durumu
+                  </h3>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                    style={{
+                      background: formData.isOpen ? "rgba(99,211,145,0.2)" : "rgba(255,107,107,0.2)",
+                      color: formData.isOpen ? "var(--dut-success)" : "var(--dut-danger)",
+                    }}
+                  >
+                    {formData.isOpen ? "Servis Açık" : "Servis Kapalı / Kilitli"}
+                  </span>
+                </div>
+                <p className="text-xs mt-1" style={{ color: "var(--dut-text3)" }}>
+                  {formData.isOpen
+                    ? "Müşteriler masalardan QR kodu okutarak tüm menüye erişebilir ve sipariş verebilir."
+                    : "Müşteriler menüye erişemez; bunun yerine 'Restoranımız Kapalıdır' bilgilendirme kartı gösterilir."}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => updateField("isOpen", !formData.isOpen)}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex-shrink-0 flex items-center justify-center gap-2 shadow-md"
+              style={{
+                background: formData.isOpen ? "var(--dut-danger)" : "var(--dut-success)",
+                boxShadow: formData.isOpen ? "0 4px 14px rgba(255,107,107,0.3)" : "0 4px 14px rgba(99,211,145,0.3)",
+              }}
+            >
+              {formData.isOpen ? (
+                <>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Restoranı Kapat & QR Menüyü Kilitle</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Restoranı Aç & Menüyü Yayına Al</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Additional closed details */}
+          <div className="pt-3 border-t grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ borderColor: "var(--dut-divider)" }}>
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "var(--dut-text2)" }}>
+                Kapanış Bildirim Mesajı (Türkçe)
+              </label>
+              <textarea
+                rows={2}
+                value={formData.closedMessageTr}
+                onChange={(e) => updateField("closedMessageTr", e.target.value)}
+                placeholder="Örn: Değerli misafirlerimiz, restoranımız şu anda hizmet vermemektedir..."
+                className="admin-input text-xs"
+                style={{ resize: "none" }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "var(--dut-text2)" }}>
+                Closed Notice (English)
+              </label>
+              <textarea
+                rows={2}
+                value={formData.closedMessageEn}
+                onChange={(e) => updateField("closedMessageEn", e.target.value)}
+                placeholder="e.g. Dear guests, our restaurant is currently closed..."
+                className="admin-input text-xs"
+                style={{ resize: "none" }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "var(--dut-text2)" }}>
+                İletişim / Rezervasyon Telefonu (Müşteriye Gösterilir)
+              </label>
+              <input
+                type="text"
+                value={formData.contactPhone}
+                onChange={(e) => updateField("contactPhone", e.target.value)}
+                placeholder="+90 252 000 00 00"
+                className="admin-input text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "var(--dut-text2)" }}>
+                Mutfak Kapanış Saati
+              </label>
+              <input
+                type="text"
+                value={formData.closingTime}
+                onChange={(e) => updateField("closingTime", e.target.value)}
+                placeholder="02:00"
+                className="admin-input text-xs font-mono"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Name & Currency */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="sm:col-span-2">
@@ -125,7 +287,7 @@ export default function AdminSettingsPage() {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => updateField("name", e.target.value)}
                 className="admin-input font-bold"
                 required
               />
@@ -137,7 +299,7 @@ export default function AdminSettingsPage() {
               <input
                 type="text"
                 value={formData.currencySymbol}
-                onChange={(e) => setFormData({ ...formData, currencySymbol: e.target.value })}
+                onChange={(e) => updateField("currencySymbol", e.target.value)}
                 className="admin-input font-mono"
                 required
               />
@@ -190,7 +352,10 @@ export default function AdminSettingsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setFormData(f => ({ ...f, logoDarkUrl: "" }))}
+                    onClick={() => {
+                      isDirtyRef.current = true;
+                      setFormData(f => ({ ...f, logoDarkUrl: "" }));
+                    }}
                     className="p-1 text-rose-400 hover:text-rose-300"
                   >
                     <X className="w-4 h-4" />
@@ -211,7 +376,7 @@ export default function AdminSettingsPage() {
               <input
                 type="url"
                 value={formData.logoDarkUrl}
-                onChange={e => setFormData({ ...formData, logoDarkUrl: e.target.value })}
+                onChange={e => updateField("logoDarkUrl", e.target.value)}
                 placeholder="veya URL girin: https://..."
                 className="admin-input text-xs"
               />
@@ -250,7 +415,10 @@ export default function AdminSettingsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setFormData(f => ({ ...f, logoLightUrl: "" }))}
+                    onClick={() => {
+                      isDirtyRef.current = true;
+                      setFormData(f => ({ ...f, logoLightUrl: "" }));
+                    }}
                     className="p-1 text-rose-500 hover:text-rose-700"
                   >
                     <X className="w-4 h-4" />
@@ -271,7 +439,7 @@ export default function AdminSettingsPage() {
               <input
                 type="url"
                 value={formData.logoLightUrl}
-                onChange={e => setFormData({ ...formData, logoLightUrl: e.target.value })}
+                onChange={e => updateField("logoLightUrl", e.target.value)}
                 placeholder="veya URL girin: https://..."
                 className="admin-input text-xs text-gray-900 bg-white"
               />
@@ -285,7 +453,7 @@ export default function AdminSettingsPage() {
             <input
               type="text"
               value={formData.sloganTr}
-              onChange={(e) => setFormData({ ...formData, sloganTr: e.target.value })}
+              onChange={(e) => updateField("sloganTr", e.target.value)}
               className="admin-input"
             />
           )}
@@ -294,7 +462,7 @@ export default function AdminSettingsPage() {
             <input
               type="text"
               value={formData.sloganEn}
-              onChange={(e) => setFormData({ ...formData, sloganEn: e.target.value })}
+              onChange={(e) => updateField("sloganEn", e.target.value)}
               className="admin-input"
             />
           )}
@@ -306,7 +474,7 @@ export default function AdminSettingsPage() {
             <textarea
               rows={3}
               value={formData.noticeTr}
-              onChange={(e) => setFormData({ ...formData, noticeTr: e.target.value })}
+              onChange={(e) => updateField("noticeTr", e.target.value)}
               className="admin-input"
               style={{ resize: "none" }}
             />
@@ -316,7 +484,7 @@ export default function AdminSettingsPage() {
             <textarea
               rows={3}
               value={formData.noticeEn}
-              onChange={(e) => setFormData({ ...formData, noticeEn: e.target.value })}
+              onChange={(e) => updateField("noticeEn", e.target.value)}
               className="admin-input"
               style={{ resize: "none" }}
             />
@@ -347,6 +515,25 @@ export default function AdminSettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Developer Credit Info Card */}
+      <div
+        className="p-5 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md"
+        style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
+      >
+        <div className="space-y-0.5">
+          <span className="font-bold text-xs" style={{ color: "var(--dut-text)" }}>Sistem & Yazılım Geliştirici</span>
+          <p className="text-[11px]">
+            Dijital QR Menü ve Yönetim Portalı Altyapısı: <strong className="text-[var(--dut-purple-lt)] font-bold">Moka Creative</strong>
+          </p>
+        </div>
+        <span
+          className="font-mono text-[10px] px-3 py-1 rounded-full border self-start sm:self-auto font-semibold"
+          style={{ background: "rgba(166,108,255,0.1)", borderColor: "rgba(166,108,255,0.25)", color: "var(--dut-purple-lt)" }}
+        >
+          Moka Creative Engine v2.4
+        </span>
+      </div>
     </div>
   );
 }

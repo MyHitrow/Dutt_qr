@@ -13,12 +13,13 @@ import { LanguageSelector }        from "@/components/menu/LanguageSelector";
 import { AllergenFilter }          from "@/components/menu/AllergenFilter";
 import { SearchOverlay }           from "@/components/menu/SearchOverlay";
 import { SkeletonCard, SkeletonHero, SkeletonCategoryRow } from "@/components/menu/SkeletonCard";
+import { RestaurantClosedScreen } from "@/components/menu/RestaurantClosedScreen";
 import { SlidersHorizontal } from "lucide-react";
 
 type ActiveSheet = null | "language" | "filter" | "search";
 
 export default function Home() {
-  const { venue, categories, dailyFixMenus, filteredProducts, activeFilterCount, lang, theme } = useMenu();
+  const { venue, categories, dailyFixMenus, filteredProducts, activeFilterCount, lang, setLang, theme, toggleTheme } = useMenu();
 
   const [isLoading, setIsLoading]       = useState(true);
   const [activeSheet, setActiveSheet]   = useState<ActiveSheet>(null);
@@ -37,6 +38,12 @@ export default function Home() {
     document.documentElement.className = theme;
   }, [theme]);
 
+  // Sadece aktif kategoriler
+  const activeCategories = useMemo(() =>
+    categories.filter(c => c.isActive !== false),
+    [categories]
+  );
+
   // Seçili kategoriye göre ürünleri filtrele
   const displayedProducts = useMemo(() => {
     if (!activeCategoryId) return filteredProducts;
@@ -46,14 +53,14 @@ export default function Home() {
   // Seçili kategori veya tüm kategorilerin ürünleri (kategori bölümleri için)
   const productsByCategory = useMemo(() => {
     const map = new Map<string, Product[]>();
-    categories.forEach(c => map.set(c.id, []));
+    activeCategories.forEach(c => map.set(c.id, []));
     displayedProducts.forEach(p => {
       const list = map.get(p.categoryId) ?? [];
       list.push(p);
       map.set(p.categoryId, list);
     });
     return map;
-  }, [displayedProducts, categories]);
+  }, [displayedProducts, activeCategories]);
 
   // Popüler ürünler (sadece tüm kategoriler modunda gösterilecek)
   const popularProducts = useMemo(() =>
@@ -72,26 +79,54 @@ export default function Home() {
 
   // Aktif kategorinin bilgisi
   const activeCategory = activeCategoryId
-    ? categories.find(c => c.id === activeCategoryId)
+    ? activeCategories.find(c => c.id === activeCategoryId)
     : null;
+
+  // Restoran kapalıysa veya servis acil durdurulduysa müşteriye menü erişimini kilitle
+  if (!isLoading && venue.isOpen === false) {
+    return (
+      <RestaurantClosedScreen
+        venue={venue}
+        lang={lang}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        setLang={setLang}
+      />
+    );
+  }
 
   return (
     <>
-      <div className="min-h-screen pb-10 transition-colors" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
+      <div className="min-h-screen pb-10 transition-colors relative overflow-hidden" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
+        {/* ── Loş Meyhane Atmosfer Işıkları (Silky Smooth Ambient Aura) ── */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          {/* Top-right subtle purple aura */}
+          <div
+            className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-[120px] opacity-25 pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(166,108,255,0.22) 0%, transparent 70%)" }}
+          />
+          {/* Mid-left warm candlelight amber aura */}
+          <div
+            className="absolute top-1/3 -left-36 w-80 h-80 rounded-full blur-[120px] opacity-20 pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(240,180,90,0.18) 0%, transparent 70%)" }}
+          />
+        </div>
 
-        {/* Header */}
-        <DutHeader
-          venue={venue}
-          lang={lang}
-          onSearchOpen={() => open("search")}
-          onLangOpen={() => open("language")}
-        />
+        {/* Content wrapper */}
+        <div className="relative z-10">
+          {/* Header */}
+          <DutHeader
+            venue={venue}
+            lang={lang}
+            onSearchOpen={() => open("search")}
+            onLangOpen={() => open("language")}
+          />
 
         {isLoading ? (
           <div className="space-y-0">
             <SkeletonHero />
             <SkeletonCategoryRow />
-            <div className="px-4 grid grid-cols-2 gap-3 pt-6">
+            <div className="px-4 grid grid-cols-2 gap-3.5 gap-y-6 pt-6">
               {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
             </div>
           </div>
@@ -156,7 +191,7 @@ export default function Home() {
                   {activeCategory && (
                     <div className="mb-1">
                       <div className="flex items-center gap-2 mb-3">
-                        <h2 className="text-xl font-bold" style={{ color: "var(--dut-text)" }}>
+                        <h2 className="font-editorial text-2xl font-bold tracking-wide" style={{ color: "var(--dut-text)" }}>
                           {activeCategory.name[lang]}
                         </h2>
                         <span className="text-xs font-mono ml-auto" style={{ color: "var(--dut-text3)" }}>
@@ -166,7 +201,7 @@ export default function Home() {
                       <div className="h-px" style={{ background: "var(--dut-divider)" }} />
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-2 gap-3.5 gap-y-6 pt-2">
                     {displayedProducts.map(product => (
                       <ProductCard
                         key={product.id}
@@ -186,19 +221,19 @@ export default function Home() {
                 </>
               ) : (
                 // Tümü modu — tüm kategoriler bölümler halinde
-                categories.map(cat => {
+                activeCategories.map(cat => {
                   const products = productsByCategory.get(cat.id) ?? [];
                   if (products.length === 0) return null;
                   return (
                     <section key={cat.id} id={`cat-section-${cat.id}`} className="scroll-mt-28">
                       <div className="mb-5">
                         <div className="flex items-center gap-2">
-                          <h2 className="text-xl font-bold" style={{ color: "var(--dut-text)" }}>{cat.name[lang]}</h2>
+                          <h2 className="font-editorial text-2xl font-bold tracking-wide" style={{ color: "var(--dut-text)" }}>{cat.name[lang]}</h2>
                           <span className="text-xs font-mono ml-auto" style={{ color: "var(--dut-text3)" }}>({products.length})</span>
                         </div>
                         <div className="h-px mt-3" style={{ background: "var(--dut-divider)" }} />
                       </div>
-                      <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="grid grid-cols-2 gap-3.5 gap-y-6 pt-2">
                         {products.map(product => (
                           <ProductCard
                             key={product.id}
@@ -215,14 +250,19 @@ export default function Home() {
             </main>
 
             {/* Footer */}
-            <div className="px-4 pb-8 text-center space-y-1">
-              <p className="text-[11px] leading-relaxed" style={{ color: "var(--dut-text3)" }}>
+            <div className="px-4 pb-10 text-center space-y-2">
+              <p className="text-[11px] leading-relaxed max-w-sm mx-auto" style={{ color: "var(--dut-text3)" }}>
                 {venue.serviceNotice[lang] ?? venue.serviceNotice.tr}
               </p>
-              <p className="text-[10px] font-mono" style={{ color: "var(--dut-text3)", opacity: 0.5 }}>DUT QR Menu · {venue.name}</p>
+              <div className="pt-2 flex items-center justify-center gap-2 text-[10px] font-mono" style={{ color: "var(--dut-text3)", opacity: 0.65 }}>
+                <span>{venue.name}</span>
+                <span>•</span>
+                <span>Geliştirici: <strong className="font-semibold tracking-wide" style={{ color: "var(--dut-text2)" }}>Moka Creative</strong></span>
+              </div>
             </div>
           </>
         )}
+        </div>
       </div>
 
       {/* Modals */}

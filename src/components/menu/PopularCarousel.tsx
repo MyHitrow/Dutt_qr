@@ -41,17 +41,26 @@ export const PopularCarousel: React.FC<PopularCarouselProps> = ({ products, lang
               boxShadow: "var(--dut-shadow)",
             }}
           >
-            {/* Food photo */}
-            <div className="relative w-full h-28 overflow-hidden flex items-center justify-center" style={{ background: "var(--dut-elevated)" }}>
+            {/* Product photo / PNG showcase */}
+            <div className="relative w-full h-32 flex items-center justify-center p-2.5 overflow-hidden" style={{ background: "var(--dut-elevated)" }}>
+              {/* Soft spotlight behind PNG */}
+              <div
+                className="absolute inset-0 opacity-40 pointer-events-none"
+                style={{
+                  background: "radial-gradient(circle at center, rgba(166,108,255,0.2) 0%, transparent 70%)"
+                }}
+              />
               {product.imageUrl ? (
-                <Image
-                  src={product.imageUrl}
-                  alt={product.name[lang]}
-                  fill
-                  sizes="176px"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
-                />
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.name[lang]}
+                    fill
+                    sizes="176px"
+                    className="object-contain group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-300 drop-shadow-[0_8px_16px_rgba(0,0,0,0.38)]"
+                    unoptimized={product.imageUrl.startsWith("data:") || product.imageUrl.startsWith("blob:")}
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="text-3xl">🍽️</span>

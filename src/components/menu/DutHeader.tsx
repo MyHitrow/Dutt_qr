@@ -24,7 +24,7 @@ export const DutHeader: React.FC<DutHeaderProps> = ({ venue, lang, onSearchOpen,
       className="w-full px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 z-30 relative transition-colors"
       style={{ backgroundColor: "var(--dut-bg)" }}
     >
-      <div className="flex items-center gap-3 max-w-md mx-auto">
+      <div className="flex items-center gap-3 max-w-lg mx-auto">
         {/* Venue Logo (Dark & Light support) */}
         {activeLogo ? (
           <div
@@ -49,7 +49,7 @@ export const DutHeader: React.FC<DutHeaderProps> = ({ venue, lang, onSearchOpen,
         {/* Venue name & status (Table badge removed) */}
         <div className="flex-1 min-w-0">
           <h1
-            className="font-bold text-base truncate leading-none transition-colors"
+            className="font-editorial text-xl font-bold tracking-wide truncate leading-none transition-colors"
             style={{ color: "var(--dut-text)" }}
           >
             {venue.name}

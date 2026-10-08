@@ -60,7 +60,7 @@ export const CartPage: React.FC<CartPageProps> = ({ lang, onClose, onOrderSent }
                     </p>
                   )}
                   {item.specialNote && (
-                    <p className="text-[#A66CFF]/70 text-[11px] mt-0.5 italic">"{item.specialNote}"</p>
+                    <p className="text-[#A66CFF]/70 text-[11px] mt-0.5 italic">&ldquo;{item.specialNote}&rdquo;</p>
                   )}
                 </div>
                 <button

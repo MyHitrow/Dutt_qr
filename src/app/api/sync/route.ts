@@ -1,74 +1,143 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+import path from "path";
+import {
+  mockVenueSettings,
+  mockCategories,
+  mockProducts,
+  mockDailyFixMenus,
+} from "@/data/mockMenuData";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bwdvwtpqgynudsxujigf.supabase.co";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+// Primary and fallback database file paths
+const PRIMARY_DB_PATH = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.join(process.cwd(), "src", "data", "db.json");
+const FALLBACK_DB_PATH = path.join("/tmp", "dutt_qr_db.json");
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// In-memory cache for sub-millisecond response times across requests
+let memoryCache: any = null;
 
-const VENUE_ROW_ID = "cc890a36-95df-4be5-a4f1-a8110c61047f";
+function getInitialData() {
+  return {
+    venue: mockVenueSettings,
+    categories: mockCategories,
+    products: mockProducts,
+    dailyFixMenus: mockDailyFixMenus,
+  };
+}
+
+async function readDatabase(): Promise<any> {
+  if (memoryCache) {
+    return memoryCache;
+  }
+
+  // 1. Try reading primary src/data/db.json
+  try {
+    if (fs.existsSync(PRIMARY_DB_PATH)) {
+      const content = await fs.promises.readFile(PRIMARY_DB_PATH, "utf8");
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === "object") {
+        memoryCache = parsed;
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not read from PRIMARY_DB_PATH:", err);
+  }
+
+  // 2. Try reading fallback /tmp/dutt_qr_db.json
+  try {
+    if (fs.existsSync(FALLBACK_DB_PATH)) {
+      const content = await fs.promises.readFile(FALLBACK_DB_PATH, "utf8");
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === "object") {
+        memoryCache = parsed;
+        return parsed;
+      }
+    }
+  } catch {}
+
+  // 3. If neither exists, initialize with mockMenuData and save to disk
+  const initial = getInitialData();
+  memoryCache = initial;
+  await writeDatabase(initial).catch(() => {});
+  return initial;
+}
+
+async function writeDatabase(data: any): Promise<boolean> {
+  memoryCache = data;
+  const jsonStr = JSON.stringify(data, null, 2);
+
+  // 1. Try writing to primary path
+  try {
+    const dir = path.dirname(PRIMARY_DB_PATH);
+    if (!fs.existsSync(dir)) {
+      await fs.promises.mkdir(dir, { recursive: true });
+    }
+    await fs.promises.writeFile(PRIMARY_DB_PATH, jsonStr, "utf8");
+    return true;
+  } catch (err) {
+    console.warn("Could not write to PRIMARY_DB_PATH, trying fallback:", err);
+  }
+
+  // 2. Try writing to fallback /tmp path
+  try {
+    await fs.promises.writeFile(FALLBACK_DB_PATH, jsonStr, "utf8");
+    return true;
+  } catch (err) {
+    console.error("Could not write to FALLBACK_DB_PATH either:", err);
+    return false;
+  }
+}
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from("venue_settings")
-      .select("service_notice_tr")
-      .eq("id", VENUE_ROW_ID)
-      .single();
-
-    if (error || !data?.service_notice_tr) {
-      return NextResponse.json({ success: true, data: null });
-    }
-
-    try {
-      const parsed = JSON.parse(data.service_notice_tr);
-      if (parsed && typeof parsed === "object") {
-        return NextResponse.json({ success: true, data: parsed });
-      }
-    } catch {}
-
-    return NextResponse.json({ success: true, data: null });
+    const data = await readDatabase();
+    return NextResponse.json({ success: true, data, source: "local-file-db" });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, data: getInitialData(), error: err.message },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const payloadStr = JSON.stringify(body);
 
-    const { data, error } = await supabase
-      .from("venue_settings")
-      .update({
-        service_notice_tr: payloadStr,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", VENUE_ROW_ID)
-      .select();
-
-    if (error) {
-      console.error("Supabase write error:", error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { success: false, error: "Invalid payload" },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ success: true, data: body });
+    const currentData = await readDatabase();
+    const mergedData = {
+      venue: body.venue ? { ...currentData.venue, ...body.venue } : currentData.venue,
+      categories: body.categories !== undefined ? body.categories : currentData.categories,
+      products: body.products !== undefined ? body.products : currentData.products,
+      dailyFixMenus: body.dailyFixMenus !== undefined ? body.dailyFixMenus : currentData.dailyFixMenus,
+    };
+
+    const saved = await writeDatabase(mergedData);
+    return NextResponse.json({ success: true, data: mergedData, saved });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE() {
   try {
-    await supabase
-      .from("venue_settings")
-      .update({
-        service_notice_tr: "",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", VENUE_ROW_ID);
-
-    return NextResponse.json({ success: true });
+    const initial = getInitialData();
+    await writeDatabase(initial);
+    return NextResponse.json({ success: true, message: "Database reset to initial defaults." });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
