@@ -129,7 +129,15 @@ const safeLocalStorageSet = (key: string, value: string) => {
       const sCart = localStorage.getItem(LS.CART);
       const sLang = localStorage.getItem(LS.LANG);
       const sTheme = localStorage.getItem(LS.THEME);
-      if (sv)    setVenue(JSON.parse(sv));
+      if (sv) {
+        const parsedV = JSON.parse(sv);
+        if (parsedV && typeof parsedV === "object") {
+          if (!parsedV.license) parsedV.license = {};
+          parsedV.license.agencyWhatsapp = "905535891629";
+          parsedV.license.agencyPhone = "+90 553 589 16 29";
+        }
+        setVenue(parsedV);
+      }
       if (sc)    setCategories(JSON.parse(sc));
       if (sp)    setProducts(JSON.parse(sp));
       if (sfm)   setDailyFixMenus(JSON.parse(sfm));

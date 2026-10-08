@@ -11,12 +11,17 @@ interface LicenseBannerProps {
 
 export const LicenseBanner: React.FC<LicenseBannerProps> = ({ license, venueName }) => {
   const licenseData: LicenseInfo = useMemo(() => {
-    return license || {
+    const base = license || {
       status: "active",
       planName: "Yıllık Kurumsal Lisans",
       expiresAt: "2027-10-15T00:00:00.000Z",
       licenseKey: "MOKA-DUTT-2026-X889",
       agencyName: "Moka Works",
+      agencyWhatsapp: "905535891629",
+      agencyPhone: "+90 553 589 16 29",
+    };
+    return {
+      ...base,
       agencyWhatsapp: "905535891629",
       agencyPhone: "+90 553 589 16 29",
     };

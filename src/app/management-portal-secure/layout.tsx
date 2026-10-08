@@ -309,8 +309,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Moka Destek WhatsApp */}
             <a
-              href={`https://wa.me/${venue.license?.agencyWhatsapp || "905535891629"}?text=${encodeURIComponent(
-                `Merhaba, ${venue.name} QR Menü destek talebimiz bulunmaktadır.`
+              href={`https://wa.me/905535891629?text=${encodeURIComponent(
+                `Merhaba Moka ekibi, ${venue.name || "Dutt Meyhane"} QR Menü destek talebimiz bulunmaktadır.`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -319,7 +319,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
                 boxShadow: "0 2px 10px rgba(37,211,102,0.25)",
               }}
-              title="Ajans Destek Hattı"
+              title="Moka Ajans Destek Hattı (0553 589 16 29)"
             >
               <MessageCircle className="w-3.5 h-3.5 fill-white" />
               <span>Destek</span>
