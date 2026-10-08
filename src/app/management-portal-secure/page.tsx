@@ -20,135 +20,214 @@ export default function AdminDashboard() {
   const imageProductsCount = products.filter((p) => p.hasImage).length;
   const noImageProductsCount = products.filter((p) => !p.hasImage).length;
 
+  const license = venue.license;
+  const expiresAt = license?.expiresAt ? new Date(license.expiresAt) : null;
+  const now = new Date();
+  const daysLeft = expiresAt ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 365;
+  const isLicenseActive = license?.status !== "expired";
+  const agencyPhone = license?.agencyWhatsapp || "905300000000";
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* License Status & Countdown Banner */}
-      <LicenseBanner license={venue.license} venueName={venue.name} />
-      {/* Restaurant Live Status Banner */}
-      {venue.isOpen ? (
+      {/* ── 3'lü Sütun Üst Panel: Lisans · Restoran Durumu · Hızlı Eylemler ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 1. Sütun: Aktif Lisans Durumu */}
         <div
-          className="p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 border shadow-sm transition-all"
-          style={{
-            background: "rgba(99,211,145,0.08)",
-            borderColor: "rgba(99,211,145,0.25)",
-          }}
+          className="p-5 rounded-3xl border flex flex-col justify-between space-y-3.5 transition-all shadow-lg dut-glass-card"
+          style={{ borderColor: "rgba(166,108,255,0.25)" }}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-emerald-500/20 text-emerald-400">
-              <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-400">Restoran Açık & QR Menü Canlı Yayında</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">AKTİF</span>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-purple-500/15 text-purple-300 border border-purple-500/20">
+                <ShieldCheck className="w-5 h-5 text-[#C7A8FF]" />
               </div>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--dut-text3)" }}>
-                Müşteriler masalardan QR kodu okutarak menüyü, lezzetleri ve fiyatları görüntüleyebilir.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm("DİKKAT: Restoranı kapatmak ve müşteri QR menü erişimini kilitlemek istediğinize emin misiniz? Müşteriler 'Restoranımız Kapalıdır' ekranı ile karşılaşacaktır.")) {
-                updateVenue({ isOpen: false });
-              }
-            }}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-white active:scale-95 flex-shrink-0 flex items-center justify-center gap-1.5 shadow-md hover:opacity-90"
-            style={{ background: "var(--dut-danger)", boxShadow: "0 4px 14px rgba(255,107,107,0.3)" }}
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Acil Durum: Restoranı Kapat</span>
-          </button>
-        </div>
-      ) : (
-        <div
-          className="p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 border shadow-xl transition-all"
-          style={{
-            background: "rgba(255,107,107,0.12)",
-            borderColor: "rgba(255,107,107,0.35)",
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-rose-500/20 text-rose-400">
-              <Lock className="w-5 h-5 text-rose-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-rose-400">🚨 DİKKAT: Restoran Kapalı & Müşteri QR Erişimi Kilitli!</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold">KİLİTLİ</span>
+              <div>
+                <span className="text-[11px] block font-semibold text-purple-300">
+                  {license?.planName || "Kurumsal Lisans"}
+                </span>
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  Aktif Lisans
+                </h3>
               </div>
-              <p className="text-[11px] mt-0.5 text-rose-200/80">
-                Müşteriler şu anda QR menüye erişemez. Müşteri ekranında kapalı bildirim kartı gösterilmektedir.
-              </p>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              updateVenue({ isOpen: true });
-            }}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-white active:scale-95 flex-shrink-0 flex items-center justify-center gap-1.5 shadow-lg"
-            style={{ background: "var(--dut-success)", boxShadow: "0 4px 14px rgba(99,211,145,0.4)" }}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Restoranı Aç & Menüyü Yayına Al</span>
-          </button>
-        </div>
-      )}
-
-      {/* Welcome Hero Banner */}
-      <div
-        className="relative overflow-hidden rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-xl"
-        style={{
-          background: "linear-gradient(135deg, rgba(166,108,255,0.12) 0%, var(--dut-card) 60%)",
-          border: "1px solid rgba(166,108,255,0.25)",
-        }}
-      >
-        {/* Ambient background glow */}
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#A66CFF]/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-1.5 max-w-xl">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#A66CFF]/20 text-[#C7A8FF] border border-[#A66CFF]/30">
-              DUT Kitchen Dashboard
+            <span
+              className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                isLicenseActive
+                  ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                  : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
+              }`}
+            >
+              {isLicenseActive ? "AKTİF" : "SÜRESİ DOLDU"}
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: "var(--dut-text)" }}>
-            Hoş Geldiniz, {venue.name}
-          </h2>
-          <p className="text-xs sm:text-sm leading-relaxed" style={{ color: "var(--dut-text2)" }}>
-            Menünüzdeki lezzetleri, fiyatları, kategorileri ve stok durumlarını anlık yönetin.
-          </p>
+
+          <div className="space-y-1 py-0.5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-black font-mono text-white">
+                {daysLeft} <span className="text-xs font-normal text-white/50">Gün Kaldı</span>
+              </span>
+              <span className="text-[10px] text-white/40 font-mono">
+                {expiresAt ? expiresAt.toLocaleDateString("tr-TR") : "Süresiz"}
+              </span>
+            </div>
+            {/* Mini Progress Bar */}
+            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all bg-gradient-to-r from-[#A66CFF] to-emerald-400"
+                style={{ width: `${Math.min(100, Math.max(10, Math.round((daysLeft / 365) * 100)))}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="pt-2 border-t flex items-center justify-between" style={{ borderColor: "var(--dut-divider)" }}>
+            <span className="text-[10px] text-white/40">Sağlayıcı: {license?.agencyName || "Moka Works"}</span>
+            <a
+              href={`https://wa.me/${agencyPhone}?text=${encodeURIComponent(`Merhaba Moka ekibi, ${venue.name} işletmemizin lisansı hakkında görüşmek istiyorum.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-semibold text-purple-300 hover:text-purple-200 transition-colors flex items-center gap-1"
+            >
+              <span>Destek & Yenile</span>
+              <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
         </div>
 
-        <div className="relative z-10 flex-shrink-0 flex items-center gap-2.5">
-          <Link
-            href="/management-portal-secure/analytics"
-            className="flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold transition-all active:scale-95 border"
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              borderColor: "var(--dut-divider)",
-              color: "var(--dut-text)",
-            }}
-          >
-            <BarChart3 className="w-4 h-4 text-purple-400" />
-            <span>Trafik & Analiz</span>
-          </Link>
+        {/* 2. Sütun: Restoran Açma / Kapama (Müşteri QR Menü Kilidi) */}
+        <div
+          className="p-5 rounded-3xl border flex flex-col justify-between space-y-3.5 transition-all shadow-lg"
+          style={{
+            background: venue.isOpen
+              ? "linear-gradient(135deg, rgba(99,211,145,0.08) 0%, var(--dut-card) 100%)"
+              : "linear-gradient(135deg, rgba(255,107,107,0.1) 0%, var(--dut-card) 100%)",
+            borderColor: venue.isOpen ? "rgba(99,211,145,0.3)" : "rgba(255,107,107,0.35)",
+          }}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: venue.isOpen ? "rgba(99,211,145,0.18)" : "rgba(255,107,107,0.2)",
+                  color: venue.isOpen ? "var(--dut-success)" : "var(--dut-danger)",
+                }}
+              >
+                {venue.isOpen ? (
+                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-pulse" />
+                ) : (
+                  <Lock className="w-5 h-5 text-rose-400" />
+                )}
+              </div>
+              <div>
+                <span className="text-[11px] block font-semibold" style={{ color: venue.isOpen ? "#6ee7b7" : "#fca5a5" }}>
+                  {venue.isOpen ? "Canlı Yayında" : "Servis Kilitli"}
+                </span>
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  Restoran Durumu
+                </h3>
+              </div>
+            </div>
 
-          <Link
-            href="/management-portal-secure/products"
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg"
+            <span
+              className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase"
+              style={{
+                background: venue.isOpen ? "rgba(99,211,145,0.2)" : "rgba(255,107,107,0.2)",
+                color: venue.isOpen ? "var(--dut-success)" : "var(--dut-danger)",
+              }}
+            >
+              {venue.isOpen ? "AÇIK" : "KAPALI"}
+            </span>
+          </div>
+
+          <p className="text-[11px] leading-relaxed" style={{ color: "var(--dut-text3)" }}>
+            {venue.isOpen
+              ? "Masalardan QR kodu okutan misafirler menüyü tam yetkiyle inceleyebilir."
+              : "Müşteri ekranında 'Restoranımız Kapalıdır' uyarısı gösterilmektedir."}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (venue.isOpen) {
+                if (confirm("Restoranı kapatmak ve müşteri QR menü erişimini kilitlemek istediğinize emin misiniz?")) {
+                  updateVenue({ isOpen: false });
+                }
+              } else {
+                updateVenue({ isOpen: true });
+              }
+            }}
+            className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md hover:opacity-95"
             style={{
-              background: "var(--dut-purple)",
-              boxShadow: "0 8px 24px rgba(166,108,255,0.35)",
+              background: venue.isOpen ? "var(--dut-danger)" : "var(--dut-success)",
+              boxShadow: venue.isOpen ? "0 4px 14px rgba(255,107,107,0.3)" : "0 4px 14px rgba(99,211,145,0.3)",
             }}
           >
-            <Plus className="w-4 h-4" />
-            <span>Yeni Ürün Ekle</span>
-          </Link>
+            {venue.isOpen ? (
+              <>
+                <Lock className="w-3.5 h-3.5" />
+                <span>Restoranı Kapat & Menüyü Kilitle</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Restoranı Aç & Yayına Al</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* 3. Sütun: Hızlı Eylemler (Yeni Ürün Ekle & Trafik & Analiz) */}
+        <div
+          className="p-5 rounded-3xl border flex flex-col justify-between space-y-3.5 transition-all shadow-lg dut-glass-card"
+          style={{ borderColor: "rgba(166,108,255,0.2)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-purple-500/15 text-purple-300 border border-purple-500/20">
+              <Sparkles className="w-5 h-5 text-purple-300" />
+            </div>
+            <div>
+              <span className="text-[11px] block font-semibold text-purple-300">
+                Hızlı Yönetim
+              </span>
+              <h3 className="text-sm font-bold text-white tracking-tight">
+                İşlem Kısayolları
+              </h3>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Link
+              href="/management-portal-secure/products"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+              style={{
+                background: "var(--dut-purple)",
+                boxShadow: "0 6px 20px rgba(166,108,255,0.35)",
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Yeni Ürün Ekle</span>
+            </Link>
+
+            <Link
+              href="/management-portal-secure/analytics"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 border text-white/90 hover:text-white"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                borderColor: "var(--dut-divider)",
+              }}
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-purple-300" />
+              <span>Trafik & Menü Analitiği</span>
+            </Link>
+          </div>
+
+          <div className="pt-2 border-t flex items-center justify-between text-[10px]" style={{ borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}>
+            <span>Toplam {totalProducts} Ürün Kayıtlı</span>
+            <Link href="/management-portal-secure/settings" className="hover:text-purple-300 transition-colors">
+              Mekan Ayarları →
+            </Link>
+          </div>
         </div>
       </div>
 

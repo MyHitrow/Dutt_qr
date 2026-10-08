@@ -125,7 +125,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
           </button>
 
           <p className="text-[10px] font-mono text-content-muted/70">
-            Altyapı & Tasarım: <strong className="font-semibold text-content-secondary">Moka Creative</strong>
+            Powered by <strong className="font-semibold text-content-secondary">MOKA WORKS</strong> · Enterprise Hospitality
           </p>
         </div>
       </div>

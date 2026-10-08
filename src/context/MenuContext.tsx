@@ -34,6 +34,7 @@ interface MenuContextType {
   addCategory: (c: Omit<Category, "id">) => void;
   updateCategory: (id: string, c: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  reorderCategories: (newCategories: Category[]) => void;
 
   /* ── Filtering ── */
   filters: ActiveFilters;
@@ -298,9 +299,16 @@ const safeLocalStorageSet = (key: string, value: string) => {
     const t = products.find(x => x.id === id);
     if (t) updateProduct(id, { isAvailable: !t.isAvailable });
   };
-  const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` }]);
+  const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, sortOrder: categories.length + 1 }]);
   const updateCategory = (id: string, c: Partial<Category>) => persistCategories(categories.map(x => x.id === id ? { ...x, ...c } : x));
   const deleteCategory = (id: string) => { persistCategories(categories.filter(x => x.id !== id)); persistProducts(products.filter(x => x.categoryId !== id)); };
+  const reorderCategories = (newCategories: Category[]) => {
+    const updated = newCategories.map((c, index) => ({
+      ...c,
+      sortOrder: index + 1,
+    }));
+    persistCategories(updated);
+  };
 
   /* ── Filtered products (with diet/allergen filters) ── */
   const filteredProducts = products.filter(p => {
@@ -400,7 +408,7 @@ const safeLocalStorageSet = (key: string, value: string) => {
       theme, toggleTheme,
       getCurrentDayFixMenu, updateDailyFixMenu, updateVenue,
       addProduct, updateProduct, deleteProduct, toggleProductAvailability,
-      addCategory, updateCategory, deleteCategory,
+      addCategory, updateCategory, deleteCategory, reorderCategories,
       filters, setFilters, filteredProducts, activeFilterCount,
       cartItems, cartCount, cartSubtotal, cartTotal, serviceFee,
       addToCart, updateCartItemQty, removeFromCart, clearCart,

@@ -325,27 +325,10 @@ export default function AdminAnalyticsPage() {
                 </div>
               </div>
 
-              {/* Masa Dağılımı Özeti */}
-              <div className="pt-2 border-t" style={{ borderColor: "var(--dut-divider)" }}>
-                <span className="text-xs font-semibold block mb-2" style={{ color: "var(--dut-text2)" }}>
-                  En Çok Okutan Masalar
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {data.tableVisits.length > 0 ? (
-                    data.tableVisits.slice(0, 5).map((t) => (
-                      <span
-                        key={t.table}
-                        className="text-[11px] px-2.5 py-1 rounded-lg border font-mono flex items-center gap-1.5"
-                        style={{ background: "rgba(255,255,255,0.03)", borderColor: "var(--dut-divider)" }}
-                      >
-                        <strong className="text-white/90">{t.table}:</strong>
-                        <span className="text-purple-400 font-bold">{t.count}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs opacity-60" style={{ color: "var(--dut-text3)" }}>Genel Menü (Masa belirtilmemiş)</span>
-                  )}
-                </div>
+              {/* Misafir Ziyaret Özeti */}
+              <div className="pt-2 border-t flex items-center justify-between text-xs" style={{ borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}>
+                <span>Toplam Ziyaret Kaydı:</span>
+                <strong className="font-mono text-purple-300 font-bold">{totalVisitsCount} Okutma</strong>
               </div>
             </div>
           </div>

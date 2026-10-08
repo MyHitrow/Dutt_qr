@@ -24,6 +24,7 @@
     "googleMapsUrl": "https://maps.google.com/?q=Dutt+Mersin",
     "contactPhone": "+90 532 123 45 67",
     "whatsappNumber": "905321234567",
+    "cardStyle": "floating",
     "closedMessage": {
       "tr": "Değerli misafirlerimiz, restoranımız şu anda hizmet vermemektedir. Servis hazırlıklarımızın ardından en kısa sürede tekrar sizlerle buluşacağız.",
       "en": "Dear guests, our restaurant is currently closed. We will be back in service shortly after our preparations."

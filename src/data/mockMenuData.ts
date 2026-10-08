@@ -32,6 +32,7 @@ export const mockVenueSettings: VenueSettings = {
   "googleMapsUrl": "https://maps.google.com/?q=Dutt+Mersin",
   "contactPhone": "+90 532 123 45 67",
   "whatsappNumber": "905321234567",
+  "cardStyle": "floating",
   "license": {
     "status": "active",
     "planName": "Yıllık Kurumsal Lisans",

@@ -170,4 +170,5 @@ export interface VenueSettings {
   address?: string;
   googleMapsUrl?: string;
   whatsappNumber?: string;
+  cardStyle?: "floating" | "cover" | "list";
 }

@@ -69,9 +69,11 @@ export default function Home() {
     document.documentElement.className = theme;
   }, [theme]);
 
-  // Sadece aktif kategoriler
+  // Sadece aktif kategoriler (sortOrder'a göre sıralı)
   const activeCategories = useMemo(() =>
-    categories.filter(c => c.isActive !== false),
+    [...categories]
+      .filter(c => c.isActive !== false)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [categories]
   );
 
@@ -237,16 +239,17 @@ export default function Home() {
                       <div className="h-px" style={{ background: "var(--dut-divider)" }} />
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-3.5 gap-y-6 pt-2">
-                    {displayedProducts.map(product => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        lang={lang}
-                        onOpen={handleProductOpen}
-                      />
-                    ))}
-                  </div>
+                    <div className="grid grid-cols-2 gap-3.5 gap-y-6 pt-2">
+                      {displayedProducts.map(product => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          lang={lang}
+                          onOpen={handleProductOpen}
+                          cardStyle={venue.cardStyle}
+                        />
+                      ))}
+                    </div>
                   {displayedProducts.length === 0 && (
                     <div className="text-center py-12">
                       <p className="text-sm" style={{ color: "var(--dut-text3)" }}>
@@ -276,6 +279,7 @@ export default function Home() {
                             product={product}
                             lang={lang}
                             onOpen={handleProductOpen}
+                            cardStyle={venue.cardStyle}
                           />
                         ))}
                       </div>
@@ -285,15 +289,30 @@ export default function Home() {
               )}
             </main>
 
-            {/* Footer */}
-            <div className="px-4 pb-10 text-center space-y-2">
+            {/* Footer & Kurumsal Markalama */}
+            <div className="px-4 pb-12 pt-4 text-center space-y-3">
               <p className="text-[11px] leading-relaxed max-w-sm mx-auto" style={{ color: "var(--dut-text3)" }}>
                 {venue.serviceNotice[lang] ?? venue.serviceNotice.tr}
               </p>
-              <div className="pt-2 flex items-center justify-center gap-2 text-[10px] font-mono" style={{ color: "var(--dut-text3)", opacity: 0.65 }}>
-                <span>{venue.name}</span>
-                <span>•</span>
-                <span>Geliştirici: <strong className="font-semibold tracking-wide" style={{ color: "var(--dut-text2)" }}>Moka Creative</strong></span>
+              
+              <div className="pt-2 flex items-center justify-center">
+                <a
+                  href="https://mokaworks.tr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-mono tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    color: "var(--dut-text3)",
+                  }}
+                >
+                  <span className="opacity-50 uppercase tracking-widest text-[9px]">Powered by</span>
+                  <span className="font-bold tracking-wider text-white/90 group-hover:text-purple-300 transition-colors">
+                    MOKA WORKS
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 opacity-60 group-hover:opacity-100 group-hover:scale-125 transition-all" />
+                </a>
               </div>
             </div>
           </>

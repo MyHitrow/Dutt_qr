@@ -198,8 +198,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="text-[11px]" style={{ color: "var(--dut-text3)" }}>
                 Varsayılan Kullanıcı Adı: <span className="font-mono text-[#A66CFF]">admin</span> | Şifre: <span className="font-mono text-[#A66CFF]">dutt123</span>
               </p>
-              <p className="text-[10px] font-mono pt-1" style={{ color: "var(--dut-text3)", opacity: 0.65 }}>
-                Yönetim Portalı Altyapısı · <strong className="font-semibold text-white/80">Moka Creative</strong>
+              <p className="text-[10px] font-mono pt-1 text-white/40">
+                Powered by <strong className="font-semibold text-white/70">MOKA WORKS</strong> · Enterprise Hospitality Cloud
               </p>
             </div>
           </form>
@@ -385,8 +385,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="font-mono text-[11px]">
             © {new Date().getFullYear()} {venue.name} Yönetim Portalı
           </span>
-          <span className="text-[11px] font-mono">
-            Yazılım & Tasarım: <strong className="font-semibold text-[var(--dut-purple-lt)] tracking-wide">Moka Creative</strong>
+          <span className="text-[11px] font-mono flex items-center gap-1.5 text-white/50">
+            <span>Platform:</span>
+            <a href="https://mokaworks.tr" target="_blank" rel="noopener noreferrer" className="hover:text-purple-300 transition-colors font-bold text-white/80">
+              MOKA WORKS
+            </a>
+            <span className="text-white/30">•</span>
+            <span className="text-purple-300 font-semibold">Gastronomy v2.5 Enterprise</span>
           </span>
         </div>
       </footer>

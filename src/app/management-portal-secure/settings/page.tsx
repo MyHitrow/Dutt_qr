@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useMenu } from "@/context/MenuContext";
-import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone, Wifi, MapPin, MessageCircle, Ban, AlertCircle } from "lucide-react";
+import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone, Wifi, MapPin, MessageCircle, Ban, AlertCircle, Sparkles } from "lucide-react";
 import { LicenseBanner } from "@/components/admin/LicenseBanner";
 
 async function optimizeLogoImage(file: File): Promise<string> {
@@ -67,6 +67,7 @@ export default function AdminSettingsPage() {
     address: venue.address || "",
     googleMapsUrl: venue.googleMapsUrl || "",
     whatsappNumber: venue.whatsappNumber || "",
+    cardStyle: (venue.cardStyle as "floating" | "cover" | "list") || "floating",
   });
 
   // Sync formData if venue is loaded or updated asynchronously, but ONLY if the user has not made unsaved changes
@@ -92,6 +93,7 @@ export default function AdminSettingsPage() {
         address: venue.address || "",
         googleMapsUrl: venue.googleMapsUrl || "",
         whatsappNumber: venue.whatsappNumber || "",
+        cardStyle: (venue.cardStyle as "floating" | "cover" | "list") || "floating",
       });
     }
   }, [venue]);
@@ -156,6 +158,7 @@ export default function AdminSettingsPage() {
       address: formData.address || undefined,
       googleMapsUrl: formData.googleMapsUrl || undefined,
       whatsappNumber: formData.whatsappNumber || undefined,
+      cardStyle: formData.cardStyle,
     });
 
     setSavedSuccess(true);
@@ -426,6 +429,118 @@ export default function AdminSettingsPage() {
                   className="admin-input text-xs font-mono"
                 />
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Menü Kartı & Fotoğraf Tasarım Modu (3 Farklı İşletme Konsepti) */}
+        <div
+          className="p-5 sm:p-6 rounded-2xl border space-y-4 shadow-sm"
+          style={{ background: "rgba(166,108,255,0.04)", borderColor: "rgba(166,108,255,0.2)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-300">
+              <Sparkles className="w-5 h-5 text-purple-300" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: "var(--dut-text)" }}>
+                Menü Kartı & Fotoğraf Tasarım Tarzı (3 Farklı İşletme Formatı)
+              </h3>
+              <p className="text-xs" style={{ color: "var(--dut-text3)" }}>
+                İşletmenizin konseptine ve elinizdeki fotoğraf türüne en uygun kart stilini seçin.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+            {/* 1. Seçenek: Lüks Dekupe / Yüzen Tabak (Floating PNG) */}
+            <div
+              onClick={() => updateField("cardStyle", "floating")}
+              className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
+                formData.cardStyle === "floating"
+                  ? "bg-purple-500/15 border-purple-400 shadow-purple-glow"
+                  : "bg-white/5 border-white/10 hover:border-white/20"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xl">🍽️</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  formData.cardStyle === "floating" ? "bg-purple-500/30 text-purple-200" : "bg-white/5 text-white/40"
+                }`}>
+                  {formData.cardStyle === "floating" ? "Seçili ✓" : "Seç"}
+                </span>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white mb-1">
+                  Lüks Dekupe / Yüzen Tabak
+                </h4>
+                <p className="text-[11px] leading-relaxed text-white/60">
+                  Arka planı silinmiş şeffaf PNG tabaklar için. Görsel kartın üst kenarından taşarak lüks meyhane/fine-dining havası verir.
+                </p>
+              </div>
+              <span className="text-[9px] font-mono text-purple-300/80 block pt-1">
+                Örnek: Dutt Meyhane, Meze Evleri
+              </span>
+            </div>
+
+            {/* 2. Seçenek: Klasik Kapak Fotoğraflı Kart (Cover Grid) */}
+            <div
+              onClick={() => updateField("cardStyle", "cover")}
+              className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
+                formData.cardStyle === "cover"
+                  ? "bg-purple-500/15 border-purple-400 shadow-purple-glow"
+                  : "bg-white/5 border-white/10 hover:border-white/20"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xl">🖼️</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  formData.cardStyle === "cover" ? "bg-purple-500/30 text-purple-200" : "bg-white/5 text-white/40"
+                }`}>
+                  {formData.cardStyle === "cover" ? "Seçili ✓" : "Seç"}
+                </span>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white mb-1">
+                  Kapak Fotoğraflı Kart
+                </h4>
+                <p className="text-[11px] leading-relaxed text-white/60">
+                  Normal telefonla veya fotoğraf makinesiyle çekilmiş arka planlı kare/dikdörtgen fotoğraflar kartın üst yarısına tam oturur.
+                </p>
+              </div>
+              <span className="text-[9px] font-mono text-purple-300/80 block pt-1">
+                Örnek: Kafe, Burger, Kebapçı, Tatlıcı
+              </span>
+            </div>
+
+            {/* 3. Seçenek: Bistro Yatay Liste (Compact Row) */}
+            <div
+              onClick={() => updateField("cardStyle", "list")}
+              className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
+                formData.cardStyle === "list"
+                  ? "bg-purple-500/15 border-purple-400 shadow-purple-glow"
+                  : "bg-white/5 border-white/10 hover:border-white/20"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xl">📋</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  formData.cardStyle === "list" ? "bg-purple-500/30 text-purple-200" : "bg-white/5 text-white/40"
+                }`}>
+                  {formData.cardStyle === "list" ? "Seçili ✓" : "Seç"}
+                </span>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white mb-1">
+                  Bistro Yatay Liste
+                </h4>
+                <p className="text-[11px] leading-relaxed text-white/60">
+                  Solunda küçük kare fotoğraf, yanında açıklama olan kompakt satırlar. Sayfayı uzatmaz, hızlı taranır ve sipariş kolaylığı sağlar.
+                </p>
+              </div>
+              <span className="text-[9px] font-mono text-purple-300/80 block pt-1">
+                Örnek: Bar & Kokteyl, Şarap Menüsü
+              </span>
             </div>
           </div>
         </div>

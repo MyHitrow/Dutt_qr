@@ -243,9 +243,25 @@ export const RestaurantClosedScreen: React.FC<RestaurantClosedScreenProps> = ({
           {venue.serviceNotice?.[lang] ?? venue.serviceNotice?.tr}
         </p>
 
-        <p className="text-[10px] font-mono" style={{ color: "var(--dut-text3)", opacity: 0.65 }}>
-          Dijital Menü Altyapısı · <strong className="font-semibold" style={{ color: "var(--dut-text2)" }}>Moka Creative</strong>
-        </p>
+        <div className="pt-1 flex items-center justify-center">
+          <a
+            href="https://mokaworks.tr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono tracking-wider transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{
+              background: "rgba(255, 255, 255, 0.03)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              color: "var(--dut-text3)",
+            }}
+          >
+            <span className="opacity-50 uppercase tracking-widest text-[9px]">Powered by</span>
+            <span className="font-bold tracking-wider text-white/90 group-hover:text-purple-300 transition-colors">
+              MOKA WORKS
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 opacity-60" />
+          </a>
+        </div>
 
         <div className="flex items-center justify-center gap-3 pt-0.5">
           <Link
