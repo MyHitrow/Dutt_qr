@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useMenu } from "@/context/MenuContext";
-import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone, Wifi, MapPin, MessageCircle, Ban, AlertCircle, Sparkles } from "lucide-react";
+import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone, Wifi, MapPin, MessageCircle, Ban, AlertCircle, Sparkles, Database, Download, RotateCcw, Archive, HardDrive, RefreshCw } from "lucide-react";
 import { LicenseBanner } from "@/components/admin/LicenseBanner";
+import { BackupItem } from "@/lib/backup";
 
 async function optimizeLogoImage(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -69,6 +70,82 @@ export default function AdminSettingsPage() {
     whatsappNumber: venue.whatsappNumber || "",
     cardStyle: (venue.cardStyle as "floating" | "cover" | "list") || "floating",
   });
+
+  // Backups state
+  const [backups, setBackups] = useState<BackupItem[]>([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [backupActionLoading, setBackupActionLoading] = useState(false);
+  const [backupMsg, setBackupMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const fetchBackups = async () => {
+    try {
+      setLoadingBackups(true);
+      const res = await fetch("/api/backup");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.backups)) {
+        setBackups(json.backups);
+      }
+    } catch (err) {
+      console.warn("Failed to load backups", err);
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBackups();
+  }, []);
+
+  const handleCreateManualBackup = async () => {
+    try {
+      setBackupActionLoading(true);
+      setBackupMsg(null);
+      const res = await fetch("/api/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create" }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setBackupMsg({ type: "success", text: "Yeni veritabanı yedeği başarıyla alındı!" });
+        await fetchBackups();
+      } else {
+        setBackupMsg({ type: "error", text: json.error || "Yedek alınamadı." });
+      }
+    } catch (err: any) {
+      setBackupMsg({ type: "error", text: err.message || "Bağlantı hatası." });
+    } finally {
+      setBackupActionLoading(false);
+    }
+  };
+
+  const handleRestoreBackup = async (filename: string) => {
+    if (!confirm(`DİKKAT: "${filename}" yedeğine geri dönmek istediğinizden emin misiniz?\n\nMevcut veritabanı bu yedeğin içeriğiyle değiştirilecektir.`)) {
+      return;
+    }
+    try {
+      setBackupActionLoading(true);
+      setBackupMsg(null);
+      const res = await fetch("/api/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "restore", filename }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setBackupMsg({ type: "success", text: "Yedek başarıyla geri yüklendi! Sayfa yenileniyor..." });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setBackupMsg({ type: "error", text: json.error || "Geri yükleme başarısız." });
+      }
+    } catch (err: any) {
+      setBackupMsg({ type: "error", text: err.message || "Bağlantı hatası." });
+    } finally {
+      setBackupActionLoading(false);
+    }
+  };
 
   // Sync formData if venue is loaded or updated asynchronously, but ONLY if the user has not made unsaved changes
   React.useEffect(() => {
@@ -781,22 +858,198 @@ export default function AdminSettingsPage() {
         </div>
       </form>
 
+      {/* ── Database Backup & Restore Center ── */}
+      <div
+        className="rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl"
+        style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{
+                background: "rgba(166,108,255,0.15)",
+                color: "var(--dut-purple-lt)",
+              }}
+            >
+              <Database className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold" style={{ color: "var(--dut-text)" }}>
+                  Veritabanı Güvenliği & Otomatik Yedekleme Arşivi
+                </h3>
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                  style={{
+                    background: "rgba(99,211,145,0.15)",
+                    color: "var(--dut-success)",
+                  }}
+                >
+                  Otomatik Koruma Aktif
+                </span>
+              </div>
+              <p className="text-xs mt-1" style={{ color: "var(--dut-text3)" }}>
+                Sistem her gün yapılan ilk menü işleminde otomatik olarak tarihli güvenli snapshot alır (son 30 gün saklanır).
+                Dilediğiniz an tek tıkla anlık yedek alabilir veya geçmiş bir yedeğe geri dönebilirsiniz.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={fetchBackups}
+              disabled={loadingBackups}
+              className="p-2.5 rounded-xl border transition-all active:scale-95 shadow-sm"
+              style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text2)" }}
+              title="Yedek Listesini Yenile"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingBackups ? "animate-spin" : ""}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCreateManualBackup}
+              disabled={backupActionLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 shadow-md disabled:opacity-50"
+              style={{ background: "var(--dut-purple)", boxShadow: "0 4px 14px rgba(166,108,255,0.25)" }}
+            >
+              <Archive className="w-3.5 h-3.5" />
+              <span>{backupActionLoading ? "İşleniyor..." : "Şimdi Manuel Yedek Al"}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Status Message Banner */}
+        {backupMsg && (
+          <div
+            className="p-3.5 rounded-xl text-xs flex items-center gap-2 border animate-fadeIn"
+            style={{
+              background: backupMsg.type === "success" ? "rgba(99,211,145,0.1)" : "rgba(255,107,107,0.1)",
+              borderColor: backupMsg.type === "success" ? "rgba(99,211,145,0.3)" : "rgba(255,107,107,0.3)",
+              color: backupMsg.type === "success" ? "var(--dut-success)" : "var(--dut-danger)",
+            }}
+          >
+            {backupMsg.type === "success" ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
+            <span className="font-semibold">{backupMsg.text}</span>
+          </div>
+        )}
+
+        {/* Backups List Table */}
+        <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "var(--dut-divider)" }}>
+          <div
+            className="px-4 py-3 border-b flex items-center justify-between text-[11px] font-bold uppercase tracking-wider"
+            style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
+          >
+            <span>Kayıtlı Yedek Dosyaları ({backups.length})</span>
+            <span className="text-[10px] font-mono">storage/backups</span>
+          </div>
+
+          {loadingBackups ? (
+            <div className="p-8 text-center text-xs" style={{ color: "var(--dut-text3)" }}>
+              <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-purple-400" />
+              Yedek kayıtları taranıyor...
+            </div>
+          ) : backups.length === 0 ? (
+            <div className="p-8 text-center text-xs space-y-1" style={{ color: "var(--dut-text3)" }}>
+              <HardDrive className="w-6 h-6 mx-auto mb-2 opacity-40" />
+              <p className="font-semibold">Henüz arşivlenmiş yedek bulunmuyor.</p>
+              <p className="text-[11px] opacity-75">Yukarıdaki &quot;Şimdi Manuel Yedek Al&quot; butonuna basarak ilk anlık yedeğinizi oluşturabilirsiniz.</p>
+            </div>
+          ) : (
+            <div className="divide-y" style={{ borderColor: "var(--dut-divider)" }}>
+              {backups.map((b) => {
+                const dateObj = new Date(b.date);
+                const formattedDate = dateObj.toLocaleDateString("tr-TR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
+                  <div
+                    key={b.filename}
+                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors hover:bg-white/[0.02]"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase"
+                          style={{
+                            background: b.type === "daily" ? "rgba(166,108,255,0.15)" : "rgba(240,180,90,0.15)",
+                            color: b.type === "daily" ? "var(--dut-purple-lt)" : "#F0B45A",
+                            border: `1px solid ${b.type === "daily" ? "rgba(166,108,255,0.3)" : "rgba(240,180,90,0.3)"}`,
+                          }}
+                        >
+                          {b.type === "daily" ? "📅 Günlük Otomatik" : "⚡ Manuel Anlık"}
+                        </span>
+                        <span className="font-mono text-xs font-semibold" style={{ color: "var(--dut-text)" }}>
+                          {b.filename}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[11px]" style={{ color: "var(--dut-text3)" }}>
+                        <span>{formattedDate}</span>
+                        <span>•</span>
+                        <span className="font-mono">{b.sizeFormatted}</span>
+                        {b.productCount !== undefined && (
+                          <>
+                            <span>•</span>
+                            <span>{b.productCount} Ürün</span>
+                          </>
+                        )}
+                        {b.categoryCount !== undefined && (
+                          <>
+                            <span>•</span>
+                            <span>{b.categoryCount} Kategori</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleRestoreBackup(b.filename)}
+                        disabled={backupActionLoading}
+                        className="px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-95 active:scale-90"
+                        style={{
+                          background: "rgba(255,107,107,0.1)",
+                          borderColor: "rgba(255,107,107,0.3)",
+                          color: "var(--dut-danger)",
+                        }}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Bu Yedeğe Geri Dön</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Developer Credit Info Card */}
       <div
         className="p-5 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md"
         style={{ background: "var(--dut-card)", borderColor: "var(--dut-divider)", color: "var(--dut-text3)" }}
       >
         <div className="space-y-0.5">
-          <span className="font-bold text-xs" style={{ color: "var(--dut-text)" }}>Sistem & Yazılım Geliştirici</span>
+          <span className="font-bold text-xs" style={{ color: "var(--dut-text)" }}>Sistem & Yazılım Altyapısı</span>
           <p className="text-[11px]">
-            Dijital QR Menü ve Yönetim Portalı Altyapısı: <strong className="text-[var(--dut-purple-lt)] font-bold">Moka Creative</strong>
+            Kurumsal QR Menü & Restoran Yönetim Sistemi: <strong className="text-[var(--dut-purple-lt)] font-bold">Powered by MOKA WORKS</strong>
           </p>
         </div>
         <span
           className="font-mono text-[10px] px-3 py-1 rounded-full border self-start sm:self-auto font-semibold"
           style={{ background: "rgba(166,108,255,0.1)", borderColor: "rgba(166,108,255,0.25)", color: "var(--dut-purple-lt)" }}
         >
-          Moka Creative Engine v2.4
+          Moka Gastronomy v2.5 Enterprise
         </span>
       </div>
     </div>

@@ -19,6 +19,8 @@ const PRIMARY_DB_PATH = process.env.DB_PATH
   : path.join(process.cwd(), "src", "data", "db.json");
 const FALLBACK_DB_PATH = path.join("/tmp", "dutt_qr_db.json");
 
+import { createDailyBackupIfNeeded } from "@/lib/backup";
+
 // In-memory cache for sub-millisecond response times across requests
 let memoryCache: any = null;
 
@@ -43,6 +45,8 @@ async function readDatabase(): Promise<any> {
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === "object") {
         memoryCache = parsed;
+        // Background auto-backup check
+        createDailyBackupIfNeeded(parsed).catch(() => {});
         return parsed;
       }
     }
@@ -97,6 +101,8 @@ async function writeDatabase(data: any): Promise<boolean> {
       await fs.promises.mkdir(dir, { recursive: true });
     }
     await fs.promises.writeFile(PRIMARY_DB_PATH, jsonStr, "utf8");
+    // Background auto-backup on save
+    createDailyBackupIfNeeded(data).catch(() => {});
     return true;
   } catch (err) {
     console.warn("Could not write to PRIMARY_DB_PATH, trying fallback:", err);
