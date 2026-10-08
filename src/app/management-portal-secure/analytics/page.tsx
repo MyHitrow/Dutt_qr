@@ -60,9 +60,10 @@ export default function AdminAnalyticsPage() {
 
   const topProduct = data?.topProducts?.[0];
 
-  const totalLang = (data?.languages.tr || 0) + (data?.languages.en || 0) || 1;
-  const trPercent = Math.round(((data?.languages.tr || 0) / totalLang) * 100);
-  const enPercent = 100 - trPercent;
+  const totalVisitsCount = (data?.languages.tr || 0) + (data?.languages.en || 0);
+  const trPercent = totalVisitsCount > 0 ? Math.round(((data?.languages.tr || 0) / totalVisitsCount) * 100) : 0;
+  const enPercent = totalVisitsCount > 0 ? 100 - trPercent : 0;
+  const hasDailyTraffic = (data?.dailyVisits || []).some((d) => d.count > 0);
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
@@ -247,18 +248,21 @@ export default function AdminAnalyticsPage() {
               <div className="pt-6 pb-2">
                 <div className="h-48 flex items-end gap-2 sm:gap-4 justify-between border-b" style={{ borderColor: "var(--dut-divider)" }}>
                   {data.dailyVisits.map((day) => {
-                    const heightPercent = Math.max(12, Math.round((day.count / maxDailyCount) * 100));
+                    const isZero = day.count === 0;
+                    const heightPercent = isZero ? 4 : Math.max(16, Math.round((day.count / maxDailyCount) * 100));
                     return (
                       <div key={day.date} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                        <span className="text-[10px] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity text-purple-300">
+                        <span className={`text-[10px] font-mono font-bold transition-opacity ${isZero ? "opacity-30 text-white/40" : "opacity-0 group-hover:opacity-100 text-purple-300"}`}>
                           {day.count}
                         </span>
                         <div
-                          className="w-full max-w-[42px] rounded-t-lg transition-all duration-300 relative group-hover:brightness-125"
+                          className={`w-full max-w-[42px] rounded-t-lg transition-all duration-300 relative ${isZero ? "bg-white/5 group-hover:bg-white/10" : "group-hover:brightness-125"}`}
                           style={{
-                            height: `${heightPercent}%`,
-                            background: "linear-gradient(180deg, #A66CFF 0%, rgba(166,108,255,0.3) 100%)",
-                            boxShadow: "0 0 14px rgba(166,108,255,0.25)",
+                            height: isZero ? "4px" : `${heightPercent}%`,
+                            background: isZero
+                              ? "rgba(255,255,255,0.08)"
+                              : "linear-gradient(180deg, #A66CFF 0%, rgba(166,108,255,0.3) 100%)",
+                            boxShadow: isZero ? "none" : "0 0 14px rgba(166,108,255,0.25)",
                           }}
                         />
                         <span className="text-[11px] font-medium tracking-tight mt-1" style={{ color: "var(--dut-text3)" }}>
@@ -288,8 +292,14 @@ export default function AdminAnalyticsPage() {
               <div className="space-y-4 py-2">
                 {/* Visual Ratio Bar */}
                 <div className="w-full h-3 rounded-full overflow-hidden flex bg-white/5">
-                  <div className="bg-[#A66CFF] h-full transition-all" style={{ width: `${trPercent}%` }} />
-                  <div className="bg-[#60A5FA] h-full transition-all" style={{ width: `${enPercent}%` }} />
+                  {totalVisitsCount > 0 ? (
+                    <>
+                      <div className="bg-[#A66CFF] h-full transition-all" style={{ width: `${trPercent}%` }} />
+                      <div className="bg-[#60A5FA] h-full transition-all" style={{ width: `${enPercent}%` }} />
+                    </>
+                  ) : (
+                    <div className="bg-white/10 h-full w-full" />
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
