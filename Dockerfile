@@ -15,6 +15,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+RUN mkdir -p public
+
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -33,7 +35,7 @@ RUN adduser --system --uid 1001 nextjs
 # Set up data directory with write permissions
 RUN mkdir -p /app/src/data && chown -R nextjs:nodejs /app/src/data
 
-COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/src/data ./src/data
