@@ -5,11 +5,25 @@ services:
       dockerfile: Dockerfile
     container_name: dutt-qr-menu
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       - PORT=3000
       - ADMIN_USERNAMES=admin,dutt,duttmeyhane
       - ADMIN_PASSWORDS=dutt123,123456
     volumes:
       - ./src/data:/app/src/data
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dutt-http.entrypoints=http"
+      - "traefik.http.routers.dutt-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.dutt-http.rule=Host(`dutt.mokaworks.tr`)"
+      - "traefik.http.routers.dutt-https.entrypoints=https"
+      - "traefik.http.routers.dutt-https.rule=Host(`dutt.mokaworks.tr`)"
+      - "traefik.http.routers.dutt-https.tls=true"
+      - "traefik.http.routers.dutt-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dutt.loadbalancer.server.port=3000"
+
+networks:
+  coolify:
+    external: true
