@@ -11,8 +11,11 @@ import {
 } from "@/data/mockMenuData";
 
 // Primary and fallback database file paths
+const PERSISTENT_STORAGE_PATH = path.join(process.cwd(), "storage", "db.json");
 const PRIMARY_DB_PATH = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)
+  : fs.existsSync(path.dirname(PERSISTENT_STORAGE_PATH))
+  ? PERSISTENT_STORAGE_PATH
   : path.join(process.cwd(), "src", "data", "db.json");
 const FALLBACK_DB_PATH = path.join("/tmp", "dutt_qr_db.json");
 
@@ -33,7 +36,7 @@ async function readDatabase(): Promise<any> {
     return memoryCache;
   }
 
-  // 1. Try reading primary src/data/db.json
+  // 1. Try reading primary database path (e.g. /app/storage/db.json or src/data/db.json)
   try {
     if (fs.existsSync(PRIMARY_DB_PATH)) {
       const content = await fs.promises.readFile(PRIMARY_DB_PATH, "utf8");
@@ -47,7 +50,24 @@ async function readDatabase(): Promise<any> {
     console.warn("Could not read from PRIMARY_DB_PATH:", err);
   }
 
-  // 2. Try reading fallback /tmp/dutt_qr_db.json
+  // 2. If primary doesn't exist yet, try to seed from src/data/db.json
+  const seedPath = path.join(process.cwd(), "src", "data", "db.json");
+  if (PRIMARY_DB_PATH !== seedPath && fs.existsSync(seedPath)) {
+    try {
+      const content = await fs.promises.readFile(seedPath, "utf8");
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === "object") {
+        memoryCache = parsed;
+        // Write to primary path immediately so future updates persist
+        await writeDatabase(parsed).catch(() => {});
+        return parsed;
+      }
+    } catch (err) {
+      console.warn("Could not seed from src/data/db.json:", err);
+    }
+  }
+
+  // 3. Try reading fallback /tmp/dutt_qr_db.json
   try {
     if (fs.existsSync(FALLBACK_DB_PATH)) {
       const content = await fs.promises.readFile(FALLBACK_DB_PATH, "utf8");
@@ -59,7 +79,7 @@ async function readDatabase(): Promise<any> {
     }
   } catch {}
 
-  // 3. If neither exists, initialize with mockMenuData and save to disk
+  // 4. If nothing exists, initialize with mockMenuData and save to disk
   const initial = getInitialData();
   memoryCache = initial;
   await writeDatabase(initial).catch(() => {});

@@ -5,8 +5,11 @@ import fs from "fs";
 import path from "path";
 import { AnalyticsEvent, AnalyticsSummary } from "@/types/analytics";
 
+const PERSISTENT_ANALYTICS_PATH = path.join(process.cwd(), "storage", "analytics.json");
 const ANALYTICS_FILE_PATH = process.env.ANALYTICS_PATH
   ? path.resolve(process.env.ANALYTICS_PATH)
+  : fs.existsSync(path.dirname(PERSISTENT_ANALYTICS_PATH))
+  ? PERSISTENT_ANALYTICS_PATH
   : path.join(process.cwd(), "src", "data", "analytics.json");
 
 async function readEvents(): Promise<AnalyticsEvent[]> {

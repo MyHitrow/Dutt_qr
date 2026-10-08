@@ -9,7 +9,10 @@ services:
       - PORT=3000
       - ADMIN_USERNAMES=admin,dutt,duttmeyhane
       - ADMIN_PASSWORDS=dutt123,123456
+      - DB_PATH=/app/storage/db.json
+      - ANALYTICS_PATH=/app/storage/analytics.json
     volumes:
+      - ./storage:/app/storage
       - ./src/data:/app/src/data
     networks:
       - coolify

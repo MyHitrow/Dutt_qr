@@ -32,8 +32,8 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Set up data directory with full write permissions
-RUN mkdir -p /app/src/data && chmod -R 777 /app/src/data && chown -R nextjs:nodejs /app/src/data
+# Set up data & persistent storage directory with full write permissions
+RUN mkdir -p /app/src/data /app/storage && chmod -R 777 /app/src/data /app/storage && chown -R nextjs:nodejs /app/src/data /app/storage
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
