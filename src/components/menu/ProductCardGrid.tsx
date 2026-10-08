@@ -21,10 +21,10 @@ export const ProductCardGrid: React.FC<ProductCardGridProps> = ({
   return (
     <article
       onClick={() => onSelectProduct(product)}
-      className="w-full bg-[#1C1C1E] border border-menuBorder rounded-3xl p-4 pt-14 text-center cursor-pointer hover:border-brand-purple/50 transition-all active:scale-[0.98] group relative flex flex-col justify-between shadow-card mt-10"
+      className="w-full bg-[#1C1C1E] border border-menuBorder rounded-3xl p-4 pt-14 text-center cursor-pointer hover:border-brand-purple/50 transition-all active:scale-[0.98] group relative flex flex-col justify-between shadow-card mt-12"
     >
       {/* Overlapping Circular Plate Photo (Üst kenara yarım bindirilmiş tabak görseli) */}
-      <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-background shadow-plate overflow-hidden bg-[#222224] flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
+      <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-background shadow-plate overflow-hidden bg-[#222224] flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
         {product.hasImage && product.imageUrl && !imageError ? (
           <Image
             src={product.imageUrl}

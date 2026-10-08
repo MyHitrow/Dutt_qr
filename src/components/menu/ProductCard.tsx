@@ -30,7 +30,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
   return (
     <article
       onClick={() => onOpen(product)}
-      className={`relative rounded-[22px] p-3.5 pt-13 flex flex-col justify-between cursor-pointer mt-11 dut-glass-card active:scale-[0.97] group ${isSoldOut ? "opacity-55" : ""}`}
+      className={`relative rounded-[22px] p-3.5 pt-13 flex flex-col justify-between cursor-pointer mt-12 dut-glass-card active:scale-[0.97] group ${isSoldOut ? "opacity-55" : ""}`}
     >
       {/* ── Realistic Contact Shadow on Top Card Surface ── */}
       {product.hasImage && product.imageUrl && !imgErr && (
@@ -44,7 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, lang, onOpen 
 
       {/* ── Frameless Floating PNG Product Image ── */}
       <div
-        className={`absolute -top-12 left-1/2 -translate-x-1/2 w-[94px] h-[94px] z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ${
+        className={`absolute -top-14 left-1/2 -translate-x-1/2 w-[94px] h-[94px] z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ${
           !isSoldOut ? "group-hover:scale-110 group-hover:-translate-y-2" : ""
         }`}
       >
