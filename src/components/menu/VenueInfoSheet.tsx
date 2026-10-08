@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { VenueSettings, Language } from "@/types/menu";
+import { formatWhatsAppNumber, formatTelUri } from "@/lib/phone";
 import {
   MoreHorizontal,
   Wifi,
@@ -38,8 +39,8 @@ export const VenueInfoSheet: React.FC<VenueInfoSheetProps> = ({ venue, lang }) =
       `${venue.name || "Dutt Meyhane"} ${address}`
     )}`;
 
-  const cleanPhone = phone.replace(/[^0-9+]/g, "");
-  const whatsappNum = (venue.whatsappNumber || venue.contactPhone || "905321234567").replace(/[^0-9]/g, "");
+  const cleanPhone = formatTelUri(phone);
+  const whatsappNum = formatWhatsAppNumber(venue.contactPhone, venue.whatsappNumber);
 
   // Standart Wi-Fi Otomatik Bağlantı QR Kodu (WPA/WPA2 protokolü)
   const wifiQrData = `WIFI:T:WPA;S:${wifiSsid};P:${wifiPass};;`;

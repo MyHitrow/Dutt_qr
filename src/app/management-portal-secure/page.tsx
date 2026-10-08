@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   const now = new Date();
   const daysLeft = expiresAt ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 365;
   const isLicenseActive = license?.status !== "expired";
-  const agencyPhone = license?.agencyWhatsapp || "905300000000";
+  const agencyPhone = license?.agencyWhatsapp || "905535891629";
 
   return (
     <div className="space-y-6 animate-fade-in">

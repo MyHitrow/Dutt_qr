@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { VenueSettings, Language } from "@/types/menu";
-import { Lock, Phone, RefreshCw, Sun, Moon, Globe, ShieldCheck, Clock } from "lucide-react";
+import { Lock, Phone, RefreshCw, Sun, Moon, Globe, ShieldCheck, Clock, MessageCircle } from "lucide-react";
+import { formatWhatsAppNumber, formatTelUri } from "@/lib/phone";
 
 interface RestaurantClosedScreenProps {
   venue: VenueSettings;
@@ -33,6 +34,8 @@ export const RestaurantClosedScreen: React.FC<RestaurantClosedScreenProps> = ({
       window.location.reload();
     }, 600);
   };
+
+  const whatsappNum = formatWhatsAppNumber(venue.contactPhone, venue.whatsappNumber);
 
   const defaultClosedMessage = {
     tr: "Değerli misafirlerimiz, şu anda servisimize kısa bir ara vermiş bulunmaktayız. En kısa sürede lezzet dolu soframızda yeniden buluşmak dileğiyle.",
@@ -218,21 +221,42 @@ export const RestaurantClosedScreen: React.FC<RestaurantClosedScreenProps> = ({
               </span>
             </button>
 
-            {/* Contact phone button if configured */}
-            {venue.contactPhone && (
-              <a
-                href={`tel:${venue.contactPhone.replace(/\s+/g, "")}`}
-                className="w-full py-3 px-4 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all border hover:scale-[0.99]"
-                style={{
-                  background: "var(--dut-card)",
-                  borderColor: "var(--dut-divider)",
-                  color: "var(--dut-text)",
-                }}
-              >
-                <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{lang === "tr" ? "Mekanı Ara / Rezervasyon" : "Call Venue / Reservation"}</span>
-              </a>
-            )}
+            {/* Contact phone and WhatsApp reservation buttons */}
+            <div className={`grid ${venue.contactPhone && whatsappNum ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-2 w-full`}>
+              {venue.contactPhone && (
+                <a
+                  href={`tel:${formatTelUri(venue.contactPhone)}`}
+                  className="py-3 px-4 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all border hover:scale-[0.99]"
+                  style={{
+                    background: "var(--dut-card)",
+                    borderColor: "var(--dut-divider)",
+                    color: "var(--dut-text)",
+                  }}
+                >
+                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{lang === "tr" ? "Mekanı Ara" : "Call Venue"}</span>
+                </a>
+              )}
+
+              {whatsappNum && (
+                <a
+                  href={`https://wa.me/${whatsappNum}?text=${encodeURIComponent(
+                    lang === "tr"
+                      ? `Merhaba ${venue.name || "Dutt"}, rezervasyon ve bilgi almak istiyorum.`
+                      : `Hello, I would like to make a reservation.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 px-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 text-white transition-all hover:scale-[0.99] shadow-md"
+                  style={{
+                    background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                  }}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>{lang === "tr" ? "WhatsApp Rezervasyon" : "WhatsApp"}</span>
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </main>

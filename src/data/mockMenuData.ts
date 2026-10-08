@@ -39,8 +39,8 @@ export const mockVenueSettings: VenueSettings = {
     "expiresAt": "2027-10-15T00:00:00.000Z",
     "licenseKey": "MOKA-DUTT-2026-X889",
     "agencyName": "Moka Works",
-    "agencyWhatsapp": "905300000000",
-    "agencyPhone": "+90 530 000 00 00"
+    "agencyWhatsapp": "905535891629",
+    "agencyPhone": "+90 553 589 16 29"
   }
 };
 

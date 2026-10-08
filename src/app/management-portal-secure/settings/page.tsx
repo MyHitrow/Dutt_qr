@@ -6,6 +6,7 @@ import { useMenu } from "@/context/MenuContext";
 import { Save, CheckCircle2, Upload, X, Moon, Sun, Lock, ShieldCheck, Clock, Phone, Wifi, MapPin, MessageCircle, Ban, AlertCircle, Sparkles, Database, Download, RotateCcw, Archive, HardDrive, RefreshCw } from "lucide-react";
 import { LicenseBanner } from "@/components/admin/LicenseBanner";
 import { BackupItem } from "@/lib/backup";
+import { formatWhatsAppNumber } from "@/lib/phone";
 
 async function optimizeLogoImage(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -234,7 +235,7 @@ export default function AdminSettingsPage() {
       wifiPassword: formData.wifiPassword || undefined,
       address: formData.address || undefined,
       googleMapsUrl: formData.googleMapsUrl || undefined,
-      whatsappNumber: formData.whatsappNumber || undefined,
+      whatsappNumber: formatWhatsAppNumber(formData.contactPhone, formData.whatsappNumber) || undefined,
       cardStyle: formData.cardStyle,
     });
 
@@ -497,15 +498,30 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              {field("WhatsApp Rezervasyon Numarası",
-                <input
-                  type="text"
-                  value={formData.whatsappNumber}
-                  onChange={(e) => updateField("whatsappNumber", e.target.value)}
-                  placeholder="Örn: 905321234567"
-                  className="admin-input text-xs font-mono"
-                />
-              )}
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold" style={{ color: "var(--dut-text2)" }}>
+                  WhatsApp Rezervasyon Numarası
+                </label>
+                {formData.contactPhone && (
+                  <button
+                    type="button"
+                    onClick={() => updateField("whatsappNumber", formData.contactPhone)}
+                    className="text-[10px] text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                  >
+                    Telefonla Aynı Yap
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                value={formData.whatsappNumber}
+                onChange={(e) => updateField("whatsappNumber", e.target.value)}
+                placeholder={formData.contactPhone ? `Otomatik: ${formData.contactPhone}` : "Örn: 0553 589 16 29"}
+                className="admin-input text-xs font-mono"
+              />
+              <p className="text-[10px] mt-1" style={{ color: "var(--dut-text3)" }}>
+                Boş bırakılırsa yukarıdaki iletişim telefonu otomatik olarak WhatsApp butonu için kullanılır.
+              </p>
             </div>
           </div>
         </div>

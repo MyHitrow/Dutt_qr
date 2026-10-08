@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch {
       // Fallback check if server endpoint unreachable
       const validUsernames = ["admin", "dutt", "duttmeyhane"];
-      const validPasswords = ["dutt123", "123456", "admin123", "admin"];
+      const validPasswords = ["dutt123", "DuttMersin.2026!"];
       if (
         validUsernames.includes(username.trim().toLowerCase()) &&
         validPasswords.includes(password.trim())
@@ -193,13 +193,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span>Güvenli Giriş Yap</span>
             </button>
 
-            {/* Default info note */}
-            <div className="pt-2 text-center space-y-1">
-              <p className="text-[11px]" style={{ color: "var(--dut-text3)" }}>
-                Varsayılan Kullanıcı Adı: <span className="font-mono text-[#A66CFF]">admin</span> | Şifre: <span className="font-mono text-[#A66CFF]">dutt123</span>
-              </p>
-              <p className="text-[10px] font-mono pt-1 text-white/40">
-                Powered by <strong className="font-semibold text-white/70">MOKA WORKS</strong> · Enterprise Hospitality Cloud
+            {/* Security badge note */}
+            <div className="pt-3 text-center space-y-2 border-t" style={{ borderColor: "var(--dut-divider)" }}>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>256-Bit SSL Şifreli Güvenli Yönetici Girişi</span>
+              </div>
+              <p className="text-[10px] font-mono text-white/40">
+                Powered by <strong className="font-semibold text-white/70">MOKA WORKS</strong> · Enterprise Hospitality Platform
               </p>
             </div>
           </form>
@@ -308,7 +309,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Moka Destek WhatsApp */}
             <a
-              href={`https://wa.me/${venue.license?.agencyWhatsapp || "905300000000"}?text=${encodeURIComponent(
+              href={`https://wa.me/${venue.license?.agencyWhatsapp || "905535891629"}?text=${encodeURIComponent(
                 `Merhaba, ${venue.name} QR Menü destek talebimiz bulunmaktadır.`
               )}`}
               target="_blank"
