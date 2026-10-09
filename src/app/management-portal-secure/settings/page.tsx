@@ -255,19 +255,22 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleToggleClosedDay = (dayIndex: number) => {
+  const handleToggleClosedDay = async (dayIndex: number) => {
     isDirtyRef.current = true;
     const current = formData.closedDays || [];
     const updated = current.includes(dayIndex)
       ? current.filter((d) => d !== dayIndex)
       : [...current, dayIndex];
     setFormData((prev) => ({ ...prev, closedDays: updated }));
+    await updateVenue({ closedDays: updated });
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     isDirtyRef.current = false;
-    updateVenue({
+    await updateVenue({
       name: formData.name,
       slogan: { tr: formData.sloganTr, en: formData.sloganEn },
       currencySymbol: formData.currencySymbol,
@@ -361,7 +364,13 @@ export default function AdminSettingsPage() {
 
             <button
               type="button"
-              onClick={() => updateField("isOpen", !formData.isOpen)}
+              onClick={async () => {
+                const nextOpen = !formData.isOpen;
+                updateField("isOpen", nextOpen);
+                await updateVenue({ isOpen: nextOpen });
+                setSavedSuccess(true);
+                setTimeout(() => setSavedSuccess(false), 2500);
+              }}
               className="px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex-shrink-0 flex items-center justify-center gap-2 shadow-md"
               style={{
                 background: formData.isOpen ? "var(--dut-danger)" : "var(--dut-success)",
@@ -596,7 +605,12 @@ export default function AdminSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
             {/* 1. Seçenek: Lüks Dekupe / Yüzen Tabak (Floating PNG) */}
             <div
-              onClick={() => updateField("cardStyle", "floating")}
+              onClick={async () => {
+                updateField("cardStyle", "floating");
+                await updateVenue({ cardStyle: "floating" });
+                setSavedSuccess(true);
+                setTimeout(() => setSavedSuccess(false), 2500);
+              }}
               className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
                 formData.cardStyle === "floating"
                   ? "bg-purple-500/15 border-purple-400 shadow-purple-glow"
@@ -626,7 +640,12 @@ export default function AdminSettingsPage() {
 
             {/* 2. Seçenek: Klasik Kapak Fotoğraflı Kart (Cover Grid) */}
             <div
-              onClick={() => updateField("cardStyle", "cover")}
+              onClick={async () => {
+                updateField("cardStyle", "cover");
+                await updateVenue({ cardStyle: "cover" });
+                setSavedSuccess(true);
+                setTimeout(() => setSavedSuccess(false), 2500);
+              }}
               className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
                 formData.cardStyle === "cover"
                   ? "bg-purple-500/15 border-purple-400 shadow-purple-glow"
@@ -656,7 +675,12 @@ export default function AdminSettingsPage() {
 
             {/* 3. Seçenek: Bistro Yatay Liste (Compact Row) */}
             <div
-              onClick={() => updateField("cardStyle", "list")}
+              onClick={async () => {
+                updateField("cardStyle", "list");
+                await updateVenue({ cardStyle: "list" });
+                setSavedSuccess(true);
+                setTimeout(() => setSavedSuccess(false), 2500);
+              }}
               className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
                 formData.cardStyle === "list"
                   ? "bg-purple-500/15 border-purple-400 shadow-purple-glow"

@@ -148,13 +148,13 @@ export default function AdminDashboard() {
 
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (venue.isOpen) {
                 if (confirm("Restoranı kapatmak ve müşteri QR menü erişimini kilitlemek istediğinize emin misiniz?")) {
-                  updateVenue({ isOpen: false });
+                  await updateVenue({ isOpen: false });
                 }
               } else {
-                updateVenue({ isOpen: true });
+                await updateVenue({ isOpen: true });
               }
             }}
             className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md hover:opacity-95"

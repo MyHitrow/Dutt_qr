@@ -23,18 +23,18 @@ interface MenuContextType {
 
   /* ── Fix Menu ── */
   getCurrentDayFixMenu: () => DailyFixMenu | undefined;
-  updateDailyFixMenu: (day: number, data: Partial<DailyFixMenu>) => void;
+  updateDailyFixMenu: (day: number, data: Partial<DailyFixMenu>) => Promise<boolean>;
 
   /* ── Venue / Product / Category CRUD ── */
-  updateVenue: (v: Partial<VenueSettings>) => void;
-  addProduct: (p: Omit<Product, "id">) => void;
-  updateProduct: (id: string, p: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  toggleProductAvailability: (id: string) => void;
-  addCategory: (c: Omit<Category, "id">) => void;
-  updateCategory: (id: string, c: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
-  reorderCategories: (newCategories: Category[]) => void;
+  updateVenue: (v: Partial<VenueSettings>) => Promise<boolean>;
+  addProduct: (p: Omit<Product, "id">) => Promise<boolean>;
+  updateProduct: (id: string, p: Partial<Product>) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
+  toggleProductAvailability: (id: string) => Promise<boolean>;
+  addCategory: (c: Omit<Category, "id">) => Promise<boolean>;
+  updateCategory: (id: string, c: Partial<Category>) => Promise<boolean>;
+  deleteCategory: (id: string) => Promise<boolean>;
+  reorderCategories: (newCategories: Category[]) => Promise<boolean>;
 
   /* ── Filtering ── */
   filters: ActiveFilters;
@@ -160,41 +160,22 @@ const safeLocalStorageSet = (key: string, value: string) => {
           parsedV.license.agencyPhone = "+90 553 589 16 29";
         }
         setVenue(parsedV);
+        venueRef.current = parsedV;
       }
-      if (sc)    setCategories(JSON.parse(sc));
+      if (sc) {
+        const parsedC = JSON.parse(sc);
+        setCategories(parsedC);
+        categoriesRef.current = parsedC;
+      }
       if (sp) {
         const parsedP: Product[] = JSON.parse(sp);
-        // Automatically purge any sample, placeholder or external images from localStorage
-        const sanitizedP = parsedP.map(p => {
-          if (
-            p.imageUrl?.includes("googleusercontent") ||
-            p.imageUrl?.includes("dutt-plate") ||
-            p.imageUrl?.includes("tuborg") ||
-            p.imageUrl?.includes("carlsberg") ||
-            p.imageUrl?.startsWith("data:")
-          ) {
-            const { imageUrl, ...rest } = p;
-            return { ...rest, hasImage: false };
-          }
-          return p;
-        });
-        setProducts(sanitizedP);
-        safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(sanitizedP));
+        setProducts(parsedP);
+        productsRef.current = parsedP;
       }
       if (sfm) {
         const parsedFm: DailyFixMenu[] = JSON.parse(sfm);
-        const sanitizedFm = parsedFm.map(m => {
-          if (
-            m.imageUrl?.includes("googleusercontent") ||
-            m.imageUrl?.includes("dutt-plate") ||
-            m.imageUrl?.startsWith("data:")
-          ) {
-            const { imageUrl, ...rest } = m;
-            return rest as DailyFixMenu;
-          }
-          return m;
-        });
-        setDailyFixMenus(sanitizedFm);
+        setDailyFixMenus(parsedFm);
+        dailyFixMenusRef.current = parsedFm;
       }
       if (sLang) setLangState(sLang as Language);
       const t = (sTheme as "dark" | "light") || "dark";
@@ -251,6 +232,7 @@ const safeLocalStorageSet = (key: string, value: string) => {
           if (json.version) serverVersionRef.current = json.version;
 
           if (d.venue) {
+            venueRef.current = d.venue;
             setVenue(prev => {
               if (JSON.stringify(prev) === JSON.stringify(d.venue)) return prev;
               safeLocalStorageSet(LS.VENUE, JSON.stringify(d.venue));
@@ -258,6 +240,7 @@ const safeLocalStorageSet = (key: string, value: string) => {
             });
           }
           if (d.categories) {
+            categoriesRef.current = d.categories;
             setCategories(prev => {
               if (JSON.stringify(prev) === JSON.stringify(d.categories)) return prev;
               safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(d.categories));
@@ -265,10 +248,12 @@ const safeLocalStorageSet = (key: string, value: string) => {
             });
           }
           if (d.products) {
+            productsRef.current = d.products;
             setProducts(d.products);
             safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(d.products));
           }
           if (d.dailyFixMenus) {
+            dailyFixMenusRef.current = d.dailyFixMenus;
             setDailyFixMenus(d.dailyFixMenus);
             safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus));
           }
@@ -333,33 +318,33 @@ const safeLocalStorageSet = (key: string, value: string) => {
   };
 
   /* ── Persist helpers ── */
-  const persistVenue = (v: VenueSettings) => {
+  const persistVenue = (v: VenueSettings): Promise<boolean> => {
     lastLocalSaveTimeRef.current = Date.now();
     venueRef.current = v;
     setVenue(v);
     safeLocalStorageSet(LS.VENUE, JSON.stringify(v));
-    void syncToServer(v, categoriesRef.current, productsRef.current, dailyFixMenusRef.current);
+    return syncToServer(v, categoriesRef.current, productsRef.current, dailyFixMenusRef.current);
   };
-  const persistCategories = (c: Category[]) => {
+  const persistCategories = (c: Category[]): Promise<boolean> => {
     lastLocalSaveTimeRef.current = Date.now();
     categoriesRef.current = c;
     setCategories(c);
     safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(c));
-    void syncToServer(venueRef.current, c, productsRef.current, dailyFixMenusRef.current);
+    return syncToServer(venueRef.current, c, productsRef.current, dailyFixMenusRef.current);
   };
-  const persistProducts = (p: Product[]) => {
+  const persistProducts = (p: Product[]): Promise<boolean> => {
     lastLocalSaveTimeRef.current = Date.now();
     productsRef.current = p;
     setProducts(p);
     safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(p));
-    void syncToServer(venueRef.current, categoriesRef.current, p, dailyFixMenusRef.current);
+    return syncToServer(venueRef.current, categoriesRef.current, p, dailyFixMenusRef.current);
   };
-  const persistFixMenus = (fm: DailyFixMenu[]) => {
+  const persistFixMenus = (fm: DailyFixMenu[]): Promise<boolean> => {
     lastLocalSaveTimeRef.current = Date.now();
     dailyFixMenusRef.current = fm;
     setDailyFixMenus(fm);
     safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(fm));
-    void syncToServer(venueRef.current, categoriesRef.current, productsRef.current, fm);
+    return syncToServer(venueRef.current, categoriesRef.current, productsRef.current, fm);
   };
 
   const setLang = (l: Language) => { setLangState(l); safeLocalStorageSet(LS.LANG, l); };
@@ -367,38 +352,81 @@ const safeLocalStorageSet = (key: string, value: string) => {
   /* ── Fix Menu ── */
   const getCurrentDayFixMenu = () => {
     const day = new Date().getDay();
-    return dailyFixMenus.find(m => m.dayOfWeek === day && m.isActive);
+    return (dailyFixMenusRef.current || dailyFixMenus).find(m => m.dayOfWeek === day && m.isActive);
   };
-  const updateDailyFixMenu = (day: number, data: Partial<DailyFixMenu>) =>
-    persistFixMenus(dailyFixMenus.map(m => m.dayOfWeek === day ? { ...m, ...data } : m));
+  const updateDailyFixMenu = (day: number, data: Partial<DailyFixMenu>): Promise<boolean> => {
+    const current = dailyFixMenusRef.current || dailyFixMenus;
+    const updated = current.map(m => m.dayOfWeek === day ? { ...m, ...data } : m);
+    return persistFixMenus(updated);
+  };
 
   /* ── Venue / Product / Category CRUD ── */
-  const updateVenue = (v: Partial<VenueSettings>) => persistVenue({ ...venue, ...v });
-  const addProduct = (p: Omit<Product, "id">) => persistProducts([{ ...p, id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` }, ...products]);
-  const updateProduct = (id: string, p: Partial<Product>) => persistProducts(products.map(x => x.id === id ? { ...x, ...p } : x));
-  const deleteProduct = (id: string) => persistProducts(products.filter(x => x.id !== id));
-  const toggleProductAvailability = (id: string) => {
-    const t = products.find(x => x.id === id);
-    if (t) updateProduct(id, { isAvailable: !t.isAvailable });
+  const updateVenue = (v: Partial<VenueSettings>): Promise<boolean> => {
+    const current = venueRef.current || venue;
+    const updated = { ...current, ...v };
+    return persistVenue(updated);
   };
-  const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, sortOrder: categories.length + 1 }]);
-  const updateCategory = (id: string, c: Partial<Category>) => persistCategories(categories.map(x => x.id === id ? { ...x, ...c } : x));
-  const deleteCategory = (id: string) => {
+
+  const addProduct = (p: Omit<Product, "id">): Promise<boolean> => {
+    const current = productsRef.current || products;
+    const newId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const updated = [{ ...p, id: newId }, ...current];
+    return persistProducts(updated);
+  };
+
+  const updateProduct = (id: string, p: Partial<Product>): Promise<boolean> => {
+    const current = productsRef.current || products;
+    const updated = current.map(x => x.id === id ? { ...x, ...p } : x);
+    return persistProducts(updated);
+  };
+
+  const deleteProduct = (id: string): Promise<boolean> => {
+    const current = productsRef.current || products;
+    const updated = current.filter(x => x.id !== id);
+    return persistProducts(updated);
+  };
+
+  const toggleProductAvailability = (id: string): Promise<boolean> => {
+    const current = productsRef.current || products;
+    const t = current.find(x => x.id === id);
+    if (t) return updateProduct(id, { isAvailable: !t.isAvailable });
+    return Promise.resolve(false);
+  };
+
+  const addCategory = (c: Omit<Category, "id">): Promise<boolean> => {
+    const current = categoriesRef.current || categories;
+    const newId = `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const updated = [...current, { ...c, id: newId, sortOrder: current.length + 1 }];
+    return persistCategories(updated);
+  };
+
+  const updateCategory = (id: string, c: Partial<Category>): Promise<boolean> => {
+    const current = categoriesRef.current || categories;
+    const updated = current.map(x => x.id === id ? { ...x, ...c } : x);
+    return persistCategories(updated);
+  };
+
+  const deleteCategory = (id: string): Promise<boolean> => {
     lastLocalSaveTimeRef.current = Date.now();
-    const newCategories = categories.filter((x) => x.id !== id);
-    const newProducts = products.filter((x) => x.categoryId !== id);
+    const curCats = categoriesRef.current || categories;
+    const curProds = productsRef.current || products;
+    const newCategories = curCats.filter((x) => x.id !== id);
+    const newProducts = curProds.filter((x) => x.categoryId !== id);
+    categoriesRef.current = newCategories;
+    productsRef.current = newProducts;
     setCategories(newCategories);
     setProducts(newProducts);
     safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(newCategories));
     safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(newProducts));
-    void syncToServer(venue, newCategories, newProducts, dailyFixMenus);
+    return syncToServer(venueRef.current, newCategories, newProducts, dailyFixMenusRef.current);
   };
-  const reorderCategories = (newCategories: Category[]) => {
+
+  const reorderCategories = (newCategories: Category[]): Promise<boolean> => {
     const updated = newCategories.map((c, index) => ({
       ...c,
       sortOrder: index + 1,
     }));
-    persistCategories(updated);
+    return persistCategories(updated);
   };
 
   /* ── Filtered products (with diet/allergen filters) ── */

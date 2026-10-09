@@ -51,6 +51,8 @@ export default function AdminProductsPage() {
   const [imgMode, setImgMode] = useState<"url" | "upload">("url");
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -143,8 +145,9 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     const selectedAllergens = allergens.filter(a => formData.allergenIds.includes(a.id));
     const payload: Partial<Product> = {
       categoryId: formData.categoryId,
@@ -164,9 +167,16 @@ export default function AdminProductsPage() {
       chefNote: formData.chefNoteTr ? { tr: formData.chefNoteTr, en: formData.chefNoteEn } : undefined,
       servingSuggestion: formData.servingSuggestionTr ? { tr: formData.servingSuggestionTr, en: formData.servingSuggestionEn } : undefined,
     };
-    if (editingProduct?.id) updateProduct(editingProduct.id, payload);
-    else addProduct(payload as Omit<Product, "id">);
+    if (editingProduct?.id) {
+      await updateProduct(editingProduct.id, payload);
+      setSaveToast(`"${payload.name?.tr || "Ürün"}" güncellendi ve kaydedildi.`);
+    } else {
+      await addProduct(payload as Omit<Product, "id">);
+      setSaveToast(`"${payload.name?.tr || "Ürün"}" eklendi ve kaydedildi.`);
+    }
+    setIsSaving(false);
     setIsModalOpen(false);
+    setTimeout(() => setSaveToast(null), 3000);
   };
 
   const field = (label: string, children: React.ReactNode) => (
@@ -178,6 +188,14 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      {saveToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-2xl backdrop-blur-xl animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span className="text-xs font-semibold">{saveToast}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -278,7 +296,11 @@ export default function AdminProductsPage() {
               {/* Actions */}
               <div className="pt-2 flex items-center justify-between" style={{ borderTop: "1px solid var(--dut-divider)" }}>
                 <button
-                  onClick={() => toggleProductAvailability(prod.id)}
+                  onClick={async () => {
+                    await toggleProductAvailability(prod.id);
+                    setSaveToast(`"${prod.name.tr}" stok durumu güncellendi.`);
+                    setTimeout(() => setSaveToast(null), 2500);
+                  }}
                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all"
                   style={prod.isAvailable
                     ? { background: "rgba(99,211,145,0.1)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.2)" }
@@ -300,7 +322,13 @@ export default function AdminProductsPage() {
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => { if (confirm(`"${prod.name.tr}" ürününü silmek istediğinize emin misiniz?`)) deleteProduct(prod.id); }}
+                    onClick={async () => {
+                      if (confirm(`"${prod.name.tr}" ürününü silmek istediğinize emin misiniz?`)) {
+                        await deleteProduct(prod.id);
+                        setSaveToast(`"${prod.name.tr}" silindi.`);
+                        setTimeout(() => setSaveToast(null), 2500);
+                      }
+                    }}
                     className="p-1.5 rounded-lg transition-all"
                     style={{ background: "var(--dut-elevated)", border: "1px solid var(--dut-divider)", color: "var(--dut-text3)" }}
                     title="Sil"

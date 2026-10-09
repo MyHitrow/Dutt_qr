@@ -18,12 +18,24 @@ export interface DatabaseSchema {
   lastModified?: string;
 }
 
-const PERSISTENT_STORAGE_PATH = path.join(process.cwd(), "storage", "db.json");
+const STORAGE_DIR = path.join(process.cwd(), "storage");
+if (!fs.existsSync(STORAGE_DIR)) {
+  try {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+  } catch {}
+}
+
+const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) {
+  try {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  } catch {}
+}
+
+const PERSISTENT_STORAGE_PATH = path.join(STORAGE_DIR, "db.json");
 export const PRIMARY_DB_PATH = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)
-  : fs.existsSync(path.dirname(PERSISTENT_STORAGE_PATH))
-  ? PERSISTENT_STORAGE_PATH
-  : path.join(process.cwd(), "src", "data", "db.json");
+  : PERSISTENT_STORAGE_PATH;
 const FALLBACK_DB_PATH = path.join("/tmp", "dutt_qr_db.json");
 
 /* ── DAT-001: OS-Level File Lock for Multi-Pod Concurrency ── */
@@ -127,24 +139,81 @@ export function getInitialDatabaseData(): DatabaseSchema {
 }
 
 /**
- * Enforces relational integrity: cascades category deletions and cleans up orphaned products.
+ * Automatically extracts base64 data URIs into physical files under public/uploads
+ * to prevent db.json bloating and client localStorage QuotaExceededError.
+ */
+function extractAndSaveBase64(dataUri: string): string {
+  if (!dataUri || typeof dataUri !== "string" || !dataUri.startsWith("data:")) return dataUri;
+  try {
+    const matches = dataUri.match(/^data:image\/([a-zA-Z0-9\+\-]+);base64,(.+)$/);
+    if (!matches || matches.length < 3) return dataUri;
+    const rawExt = matches[1].toLowerCase().replace("jpeg", "jpg").replace("+xml", "");
+    const ext = rawExt === "png" ? "png" : "webp";
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, "base64");
+
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadDir)) {
+      try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      } catch {}
+    }
+    const filename = `up-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+    return `/uploads/${filename}`;
+  } catch (err) {
+    console.error("[db] Base64 extraction failed:", err);
+    return dataUri;
+  }
+}
+
+/**
+ * Enforces relational integrity: cascades category deletions, cleans up orphaned products,
+ * and extracts any inline base64 images to physical storage.
  */
 export function enforceIntegrity(data: Partial<DatabaseSchema>): DatabaseSchema {
   const currentInitial = getInitialDatabaseData();
-  const venue = data.venue || currentInitial.venue;
+  const rawVenue = data.venue || currentInitial.venue;
   const categories = Array.isArray(data.categories) ? data.categories : currentInitial.categories;
-  let products = Array.isArray(data.products) ? data.products : currentInitial.products;
-  const dailyFixMenus = Array.isArray(data.dailyFixMenus) ? data.dailyFixMenus : currentInitial.dailyFixMenus;
+  let rawProducts = Array.isArray(data.products) ? data.products : currentInitial.products;
+  let rawDailyFixMenus = Array.isArray(data.dailyFixMenus) ? data.dailyFixMenus : currentInitial.dailyFixMenus;
+
+  // Sanitize venue logos
+  const venue: VenueSettings = {
+    ...rawVenue,
+    logoDarkUrl: rawVenue.logoDarkUrl ? extractAndSaveBase64(rawVenue.logoDarkUrl) : rawVenue.logoDarkUrl,
+    logoLightUrl: rawVenue.logoLightUrl ? extractAndSaveBase64(rawVenue.logoLightUrl) : rawVenue.logoLightUrl,
+  };
 
   const validCatIds = new Set(categories.map((c) => c.id));
   const fallbackCatId = categories.length > 0 ? categories[0].id : "cat-genel";
 
-  // Re-assign or sanitize products with deleted categories to avoid orphan records
-  products = products.map((p) => {
-    if (!validCatIds.has(p.categoryId)) {
-      return { ...p, categoryId: fallbackCatId };
+  // Re-assign or sanitize products with deleted categories to avoid orphan records, and extract base64 images
+  const products: Product[] = rawProducts.map((p) => {
+    let imgUrl = p.imageUrl;
+    if (imgUrl && imgUrl.startsWith("data:")) {
+      imgUrl = extractAndSaveBase64(imgUrl);
     }
-    return p;
+    const fixedCatId = validCatIds.has(p.categoryId) ? p.categoryId : fallbackCatId;
+    return {
+      ...p,
+      categoryId: fixedCatId,
+      imageUrl: imgUrl,
+      hasImage: !!imgUrl && p.hasImage !== false,
+    };
+  });
+
+  // Sanitize daily fix menus and extract base64 images
+  const dailyFixMenus: DailyFixMenu[] = rawDailyFixMenus.map((m) => {
+    let imgUrl = m.imageUrl;
+    if (imgUrl && imgUrl.startsWith("data:")) {
+      imgUrl = extractAndSaveBase64(imgUrl);
+    }
+    return {
+      ...m,
+      imageUrl: imgUrl,
+    };
   });
 
   return {

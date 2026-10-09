@@ -95,10 +95,26 @@ export async function POST(req: Request) {
     const currentData = await readDatabase();
     const newVersion = Date.now().toString(36);
 
+    const mergedVenue = body.venue
+      ? {
+          ...currentData.venue,
+          ...body.venue,
+          license: currentData.venue?.license || body.venue.license
+            ? {
+                ...(currentData.venue?.license || {}),
+                ...(body.venue.license || {}),
+                licenseKey:
+                  body.venue.license?.licenseKey ||
+                  currentData.venue?.license?.licenseKey,
+              }
+            : undefined,
+        }
+      : currentData.venue;
+
     const mergedData = {
       ...currentData,
       version: newVersion,
-      venue: body.venue ? { ...currentData.venue, ...body.venue } : currentData.venue,
+      venue: mergedVenue,
       categories: body.categories !== undefined ? body.categories : currentData.categories,
       products: body.products !== undefined ? body.products : currentData.products,
       dailyFixMenus:

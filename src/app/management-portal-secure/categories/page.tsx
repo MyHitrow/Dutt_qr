@@ -24,6 +24,7 @@ export default function AdminCategoriesPage() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [orderNotice, setOrderNotice] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     nameTr: "",
@@ -79,7 +80,7 @@ export default function AdminCategoriesPage() {
       .replace(/^-+|-+$/g, "");
   };
 
-  const handleSaveForm = (e: React.FormEvent) => {
+  const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
     const slugified = formData.slug || generateSlug(formData.nameTr);
     const payload: Partial<Category> = {
@@ -90,12 +91,15 @@ export default function AdminCategoriesPage() {
     };
 
     if (editingCategory?.id) {
-      updateCategory(editingCategory.id, payload);
+      await updateCategory(editingCategory.id, payload);
+      setSaveToast(`"${payload.name?.tr || "Kategori"}" güncellendi ve kaydedildi.`);
     } else {
-      addCategory(payload as Omit<Category, "id">);
+      await addCategory(payload as Omit<Category, "id">);
+      setSaveToast(`"${payload.name?.tr || "Kategori"}" eklendi ve kaydedildi.`);
     }
 
     setIsModalOpen(false);
+    setTimeout(() => setSaveToast(null), 3000);
   };
 
   // ── Drag & Drop Handlers ──
@@ -112,7 +116,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === targetIndex) {
       setDraggedIndex(null);
@@ -124,11 +128,15 @@ export default function AdminCategoriesPage() {
     const [movedItem] = updated.splice(draggedIndex, 1);
     updated.splice(targetIndex, 0, movedItem);
 
-    reorderCategories(updated);
+    await reorderCategories(updated);
     setDraggedIndex(null);
     setDragOverIndex(null);
     setOrderNotice(true);
-    setTimeout(() => setOrderNotice(false), 2500);
+    setSaveToast("Kategori sıralaması güncellendi ve kaydedildi.");
+    setTimeout(() => {
+      setOrderNotice(false);
+      setSaveToast(null);
+    }, 2500);
   };
 
   const handleDragEnd = () => {
@@ -137,7 +145,7 @@ export default function AdminCategoriesPage() {
   };
 
   // ── Move Up / Down Buttons ──
-  const handleMove = (index: number, direction: "up" | "down") => {
+  const handleMove = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= sortedCategories.length) return;
 
@@ -145,9 +153,13 @@ export default function AdminCategoriesPage() {
     const [movedItem] = updated.splice(index, 1);
     updated.splice(targetIndex, 0, movedItem);
 
-    reorderCategories(updated);
+    await reorderCategories(updated);
     setOrderNotice(true);
-    setTimeout(() => setOrderNotice(false), 2500);
+    setSaveToast("Kategori sıralaması güncellendi ve kaydedildi.");
+    setTimeout(() => {
+      setOrderNotice(false);
+      setSaveToast(null);
+    }, 2500);
   };
 
   const field = (label: string, children: React.ReactNode) => (
@@ -183,6 +195,13 @@ export default function AdminCategoriesPage() {
       </div>
 
       {/* Success Notification */}
+      {saveToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-2xl backdrop-blur-xl animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span className="text-xs font-semibold">{saveToast}</span>
+        </div>
+      )}
+
       {orderNotice && (
         <div
           className="p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-fadeIn"
@@ -293,7 +312,12 @@ export default function AdminCategoriesPage() {
                   {/* Toggle Visibility */}
                   <button
                     type="button"
-                    onClick={() => updateCategory(cat.id, { isActive: !cat.isActive })}
+                    onClick={async () => {
+                      const nextState = !cat.isActive;
+                      await updateCategory(cat.id, { isActive: nextState });
+                      setSaveToast(`"${cat.name.tr}" ${nextState ? "görünür yapıldı" : "gizlendi"}.`);
+                      setTimeout(() => setSaveToast(null), 2500);
+                    }}
                     className="p-2 sm:p-2.5 rounded-xl transition-all text-xs font-semibold active:scale-95"
                     style={
                       cat.isActive
@@ -319,9 +343,11 @@ export default function AdminCategoriesPage() {
                   {/* Delete */}
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm(`"${cat.name.tr}" kategorisini ve altındaki ${productCount} ürünü silmek istediğinize emin misiniz?`)) {
-                        deleteCategory(cat.id);
+                        await deleteCategory(cat.id);
+                        setSaveToast(`"${cat.name.tr}" silindi.`);
+                        setTimeout(() => setSaveToast(null), 2500);
                       }
                     }}
                     className="p-2 sm:p-2.5 rounded-xl transition-all text-rose-400 hover:text-rose-300 active:scale-95"

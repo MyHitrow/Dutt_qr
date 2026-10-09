@@ -234,9 +234,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsStatusModalOpen(true);
   };
 
-  const handleConfirmToggleStatus = () => {
+  const handleConfirmToggleStatus = async () => {
     const nextIsOpen = !venue.isOpen;
-    updateVenue({
+    await updateVenue({
       isOpen: nextIsOpen,
       closedMessage: {
         tr: statusMessageTr,

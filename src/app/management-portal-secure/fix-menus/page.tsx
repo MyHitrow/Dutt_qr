@@ -52,17 +52,17 @@ export default function AdminFixMenusPage() {
   const closedDays = venue.closedDays || [];
   const isTodayClosed = closedDays.includes(currentDayOfWeek);
 
-  const handleToggleBanner = () => {
-    updateVenue({ showFixMenuBanner: !isBannerActive });
+  const handleToggleBanner = async () => {
+    await updateVenue({ showFixMenuBanner: !isBannerActive });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
   };
 
-  const handleToggleClosedDay = (dayIndex: number) => {
+  const handleToggleClosedDay = async (dayIndex: number) => {
     const updated = closedDays.includes(dayIndex)
       ? closedDays.filter((d) => d !== dayIndex)
       : [...closedDays, dayIndex];
-    updateVenue({ closedDays: updated });
+    await updateVenue({ closedDays: updated });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
   };
@@ -118,11 +118,11 @@ export default function AdminFixMenusPage() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDay) return;
 
-    updateDailyFixMenu(editingDay.dayOfWeek, {
+    await updateDailyFixMenu(editingDay.dayOfWeek, {
       title: { tr: formData.titleTr, en: formData.titleEn || formData.titleTr },
       subtitle: { tr: formData.subtitleTr, en: formData.subtitleEn || formData.subtitleTr },
       price: Number(formData.price),
