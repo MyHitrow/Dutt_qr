@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 const JWT_SECRET =
   process.env.ADMIN_JWT_SECRET ||
@@ -9,16 +11,72 @@ interface TokenPayload {
   role: "admin";
   username: string;
   exp: number; // timestamp in ms
+  jti: string; // unique token ID for revocation
+}
+
+/* ── Token Revocation Store ── */
+const REVOKED_TOKENS_FILE = path.join(process.cwd(), "storage", "revoked_tokens.json");
+const revokedJtis = new Set<string>();
+
+// Load revoked tokens from disk on startup
+try {
+  if (fs.existsSync(REVOKED_TOKENS_FILE)) {
+    const raw = fs.readFileSync(REVOKED_TOKENS_FILE, "utf8");
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) {
+      arr.forEach((id: string) => revokedJtis.add(id));
+    }
+  }
+} catch {
+  // Ignore startup read errors
+}
+
+async function persistRevokedJtis(): Promise<void> {
+  try {
+    const dir = path.dirname(REVOKED_TOKENS_FILE);
+    if (!fs.existsSync(dir)) {
+      await fs.promises.mkdir(dir, { recursive: true });
+    }
+    await fs.promises.writeFile(
+      REVOKED_TOKENS_FILE,
+      JSON.stringify(Array.from(revokedJtis)),
+      "utf8"
+    );
+  } catch (err) {
+    console.warn("[auth] Failed to persist revoked tokens:", err);
+  }
+}
+
+/**
+ * Revoke an admin token by marking its jti as revoked.
+ */
+export async function revokeAdminToken(token?: string | null): Promise<void> {
+  if (!token || typeof token !== "string") return;
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return;
+    const raw = Buffer.from(parts[0], "base64url").toString("utf8");
+    const payload = JSON.parse(raw);
+    if (payload?.jti) {
+      revokedJtis.add(payload.jti);
+      await persistRevokedJtis();
+    }
+  } catch {
+    // ignore parsing failure
+  }
 }
 
 /**
  * Generate a cryptographically signed HMAC-SHA256 admin session token.
+ * Default expiration is 8 hours (0.33 days).
  */
-export function signAdminToken(username: string, expiresInDays = 7): string {
+export function signAdminToken(username: string, expiresInDays = 0.33): string {
+  const jti = crypto.randomUUID();
   const payload: TokenPayload = {
     role: "admin",
     username: username.toLowerCase().trim(),
-    exp: Date.now() + expiresInDays * 24 * 60 * 60 * 1000,
+    exp: Date.now() + Math.round(expiresInDays * 24 * 60 * 60 * 1000),
+    jti,
   };
 
   const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -31,7 +89,7 @@ export function signAdminToken(username: string, expiresInDays = 7): string {
 }
 
 /**
- * Verify HMAC-SHA256 admin token and check expiration.
+ * Verify HMAC-SHA256 admin token, check expiration and revocation list.
  */
 export function verifyAdminToken(token?: string | null): TokenPayload | null {
   if (!token || typeof token !== "string") return null;
@@ -46,7 +104,7 @@ export function verifyAdminToken(token?: string | null): TokenPayload | null {
     .update(payloadBase64)
     .digest("base64url");
 
-  // Constant-time comparison to prevent timing attacks
+  // Constant-time signature comparison to prevent timing attacks
   try {
     const isSigValid = crypto.timingSafeEqual(
       Buffer.from(providedSig),
@@ -65,6 +123,10 @@ export function verifyAdminToken(token?: string | null): TokenPayload | null {
       return null;
     }
 
+    if (payload.jti && revokedJtis.has(payload.jti)) {
+      return null;
+    }
+
     return payload;
   } catch {
     return null;
@@ -72,27 +134,46 @@ export function verifyAdminToken(token?: string | null): TokenPayload | null {
 }
 
 /**
- * Verify admin credentials against environment or secure defaults.
+ * Constant-time string comparison using SHA256 hashes.
+ */
+function safeStringCompare(a: string, b: string): boolean {
+  const hashA = crypto.createHash("sha256").update(a).digest();
+  const hashB = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+/**
+ * Verify admin credentials strictly from environment variables without hardcoded fallbacks.
+ * Employs constant-time comparison to prevent timing attacks.
  */
 export function checkAdminCredentials(username?: string, password?: string): boolean {
   if (!username || !password) return false;
 
-  const validUsernames = (
-    process.env.ADMIN_USERNAMES || "admin,dutt,duttmeyhane"
-  )
-    .split(",")
-    .map((u) => u.trim().toLowerCase());
+  const rawUsernames = process.env.ADMIN_USERNAMES;
+  const rawPasswords = process.env.ADMIN_PASSWORDS;
 
-  const validPasswords = (
-    process.env.ADMIN_PASSWORDS || "dutt123,DuttMersin.2026!"
-  )
+  if (!rawUsernames || !rawPasswords) {
+    console.error("[auth] ADMIN_USERNAMES veya ADMIN_PASSWORDS tanımlı değil! Erişim reddedildi.");
+    return false;
+  }
+
+  const validUsernames = rawUsernames
     .split(",")
-    .map((p) => p.trim());
+    .map((u) => u.trim().toLowerCase())
+    .filter(Boolean);
+
+  const validPasswords = rawPasswords
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   const u = username.trim().toLowerCase();
   const p = password.trim();
 
-  return validUsernames.includes(u) && validPasswords.includes(p);
+  const isUserValid = validUsernames.some((vu) => safeStringCompare(u, vu));
+  const isPassValid = validPasswords.some((vp) => safeStringCompare(p, vp));
+
+  return isUserValid && isPassValid;
 }
 
 /**

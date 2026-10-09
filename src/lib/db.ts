@@ -19,16 +19,79 @@ export interface DatabaseSchema {
 }
 
 const PERSISTENT_STORAGE_PATH = path.join(process.cwd(), "storage", "db.json");
-const PRIMARY_DB_PATH = process.env.DB_PATH
+export const PRIMARY_DB_PATH = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)
   : fs.existsSync(path.dirname(PERSISTENT_STORAGE_PATH))
   ? PERSISTENT_STORAGE_PATH
   : path.join(process.cwd(), "src", "data", "db.json");
 const FALLBACK_DB_PATH = path.join("/tmp", "dutt_qr_db.json");
 
-let memoryCache: DatabaseSchema | null = null;
+/* ── DAT-001: OS-Level File Lock for Multi-Pod Concurrency ── */
+const LOCK_FILE = path.join(process.cwd(), "storage", "db.lock");
+const LOCK_TIMEOUT_MS = 6000;
 
-// Sequential write queue to guarantee ACID concurrency & prevent race conditions
+export async function withFileLock<T>(fn: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  const lockDir = path.dirname(LOCK_FILE);
+  if (!fs.existsSync(lockDir)) {
+    try {
+      fs.mkdirSync(lockDir, { recursive: true });
+    } catch {}
+  }
+
+  while (true) {
+    try {
+      // 'wx' flag opens for writing; fails atomically if file already exists
+      const fd = fs.openSync(LOCK_FILE, "wx");
+      fs.writeFileSync(fd, `${process.pid}:${Date.now()}`);
+      fs.closeSync(fd);
+      break;
+    } catch {
+      if (Date.now() - start > LOCK_TIMEOUT_MS) {
+        // Stale lock recovery: If lock is older than timeout, remove it
+        try {
+          const stat = fs.statSync(LOCK_FILE);
+          if (Date.now() - stat.mtimeMs > LOCK_TIMEOUT_MS) {
+            fs.unlinkSync(LOCK_FILE);
+            continue;
+          }
+        } catch {}
+        console.warn("[db] Lock timeout reached, continuing after clearing stale lock.");
+        try {
+          fs.unlinkSync(LOCK_FILE);
+        } catch {}
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 40));
+    }
+  }
+
+  try {
+    return await fn();
+  } finally {
+    try {
+      if (fs.existsSync(LOCK_FILE)) {
+        fs.unlinkSync(LOCK_FILE);
+      }
+    } catch {}
+  }
+}
+
+/* ── DAT-002: In-Memory Cache with TTL & Disk Desync Invalidation ── */
+interface CacheEntry {
+  data: DatabaseSchema;
+  loadedAt: number;
+  mtimeMs: number;
+}
+
+let memoryCache: CacheEntry | null = null;
+const CACHE_TTL_MS = 15_000; // 15 seconds max memory cache TTL
+
+export function invalidateCache(): void {
+  memoryCache = null;
+}
+
+// Sequential write queue to guarantee order within the same Node.js process
 let writeQueuePromise = Promise.resolve<any>(null);
 
 export function getInitialDatabaseData(): DatabaseSchema {
@@ -74,20 +137,37 @@ export function enforceIntegrity(data: Partial<DatabaseSchema>): DatabaseSchema 
 }
 
 /**
- * Reads database with caching and multi-tier fallbacks.
+ * Reads database with caching, TTL checks, and multi-tier fallbacks.
  */
 export async function readDatabase(): Promise<DatabaseSchema> {
-  if (memoryCache) {
-    return memoryCache;
+  const now = Date.now();
+
+  // If memory cache exists, check both TTL and disk mtime
+  if (memoryCache && now - memoryCache.loadedAt < CACHE_TTL_MS) {
+    try {
+      if (fs.existsSync(PRIMARY_DB_PATH)) {
+        const stat = await fs.promises.stat(PRIMARY_DB_PATH);
+        if (stat.mtimeMs <= memoryCache.mtimeMs) {
+          return memoryCache.data;
+        }
+      } else {
+        return memoryCache.data;
+      }
+    } catch {
+      return memoryCache.data;
+    }
   }
 
   // 1. Primary path
   try {
     if (fs.existsSync(PRIMARY_DB_PATH)) {
-      const content = await fs.promises.readFile(PRIMARY_DB_PATH, "utf8");
+      const [content, stat] = await Promise.all([
+        fs.promises.readFile(PRIMARY_DB_PATH, "utf8"),
+        fs.promises.stat(PRIMARY_DB_PATH),
+      ]);
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === "object") {
-        memoryCache = parsed;
+        memoryCache = { data: parsed, loadedAt: now, mtimeMs: stat.mtimeMs };
         createDailyBackupIfNeeded(parsed).catch(() => {});
         return parsed;
       }
@@ -103,7 +183,7 @@ export async function readDatabase(): Promise<DatabaseSchema> {
       const content = await fs.promises.readFile(seedPath, "utf8");
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === "object") {
-        memoryCache = parsed;
+        memoryCache = { data: parsed, loadedAt: now, mtimeMs: now };
         await writeDatabase(parsed).catch(() => {});
         return parsed;
       }
@@ -116,7 +196,7 @@ export async function readDatabase(): Promise<DatabaseSchema> {
       const content = await fs.promises.readFile(FALLBACK_DB_PATH, "utf8");
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === "object") {
-        memoryCache = parsed;
+        memoryCache = { data: parsed, loadedAt: now, mtimeMs: now };
         return parsed;
       }
     }
@@ -124,14 +204,14 @@ export async function readDatabase(): Promise<DatabaseSchema> {
 
   // 4. Fallback defaults
   const initial = getInitialDatabaseData();
-  memoryCache = initial;
+  memoryCache = { data: initial, loadedAt: now, mtimeMs: now };
   await writeDatabase(initial).catch(() => {});
   return initial;
 }
 
 /**
  * Atomic write helper: writes to a temporary file and atomically renames it.
- * This guarantees zero corruption even on abrupt process exits or power cuts.
+ * Guarantees zero corruption even on abrupt process exits or power cuts.
  */
 async function atomicWrite(targetPath: string, content: string): Promise<void> {
   const dir = path.dirname(targetPath);
@@ -145,40 +225,44 @@ async function atomicWrite(targetPath: string, content: string): Promise<void> {
 }
 
 /**
- * Thread-safe, queued atomic database write.
+ * Thread-safe, cross-process queued atomic database write.
+ * Protects against race conditions across multiple pods/instances.
  */
 export async function writeDatabase(data: Partial<DatabaseSchema>): Promise<DatabaseSchema> {
-  // Execute via mutex queue to eliminate race conditions
   const task = async (): Promise<DatabaseSchema> => {
-    const validated = enforceIntegrity(data);
-    memoryCache = validated;
-    const jsonStr = JSON.stringify(validated, null, 2);
+    return withFileLock(async () => {
+      const validated = enforceIntegrity(data);
+      const jsonStr = JSON.stringify(validated, null, 2);
 
-    let writeSucceeded = false;
+      let writeSucceeded = false;
 
-    // 1. Try atomic write to primary
-    try {
-      await atomicWrite(PRIMARY_DB_PATH, jsonStr);
-      writeSucceeded = true;
-    } catch (err) {
-      console.warn("[db] Primary atomic write failed, trying fallback:", err);
-    }
-
-    // 2. Try fallback if primary failed
-    if (!writeSucceeded) {
+      // 1. Try atomic write to primary
       try {
-        await atomicWrite(FALLBACK_DB_PATH, jsonStr);
+        await atomicWrite(PRIMARY_DB_PATH, jsonStr);
         writeSucceeded = true;
       } catch (err) {
-        console.error("[db] Critical: Fallback atomic write failed:", err);
+        console.warn("[db] Primary atomic write failed, trying fallback:", err);
       }
-    }
 
-    if (writeSucceeded) {
-      createDailyBackupIfNeeded(validated).catch(() => {});
-    }
+      // 2. Try fallback if primary failed
+      if (!writeSucceeded) {
+        try {
+          await atomicWrite(FALLBACK_DB_PATH, jsonStr);
+          writeSucceeded = true;
+        } catch (err) {
+          console.error("[db] Critical: Fallback atomic write failed:", err);
+        }
+      }
 
-    return validated;
+      // Update in-memory cache
+      memoryCache = { data: validated, loadedAt: Date.now(), mtimeMs: Date.now() };
+
+      if (writeSucceeded) {
+        createDailyBackupIfNeeded(validated).catch(() => {});
+      }
+
+      return validated;
+    });
   };
 
   writeQueuePromise = writeQueuePromise.then(task, task);

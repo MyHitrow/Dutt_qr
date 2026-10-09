@@ -13,16 +13,15 @@ export async function GET(req: Request) {
     const data = await readDatabase();
     const currentVersion = data.version || "v1";
 
+    // PERF-001: True HTTP 304 Not Modified — saves server CPU and mobile bandwidth
     if (clientVersion && clientVersion === currentVersion) {
-      return NextResponse.json(
-        { success: true, unchanged: true, version: currentVersion },
-        {
-          headers: {
-            ETag: `"${currentVersion}"`,
-            "Cache-Control": "public, max-age=10, stale-while-revalidate=60",
-          },
-        }
-      );
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          ETag: `"${currentVersion}"`,
+          "Cache-Control": "public, max-age=5, stale-while-revalidate=30",
+        },
+      });
     }
 
     return NextResponse.json(
@@ -30,13 +29,14 @@ export async function GET(req: Request) {
       {
         headers: {
           ETag: `"${currentVersion}"`,
-          "Cache-Control": "public, max-age=10, stale-while-revalidate=60",
+          "Cache-Control": "public, max-age=5, stale-while-revalidate=30",
         },
       }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Sync read error";
     return NextResponse.json(
-      { success: false, data: getInitialDatabaseData(), error: err.message },
+      { success: false, data: getInitialDatabaseData(), error },
       { status: 500 }
     );
   }
@@ -81,9 +81,10 @@ export async function POST(req: Request) {
 
     const saved = await writeDatabase(mergedData);
     return NextResponse.json({ success: true, data: saved, version: newVersion });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Sync write error";
     return NextResponse.json(
-      { success: false, error: err.message },
+      { success: false, error },
       { status: 500 }
     );
   }
@@ -103,7 +104,8 @@ export async function DELETE(req: Request) {
     const initial = getInitialDatabaseData();
     await writeDatabase(initial);
     return NextResponse.json({ success: true, message: "Veritabanı güvenle varsayılana sıfırlandı." });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Sync delete error";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }

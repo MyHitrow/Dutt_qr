@@ -113,8 +113,9 @@ export default function AdminSettingsPage() {
       } else {
         setBackupMsg({ type: "error", text: json.error || "Yedek alınamadı." });
       }
-    } catch (err: any) {
-      setBackupMsg({ type: "error", text: err.message || "Bağlantı hatası." });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Bağlantı hatası.";
+      setBackupMsg({ type: "error", text: msg });
     } finally {
       setBackupActionLoading(false);
     }
@@ -141,8 +142,9 @@ export default function AdminSettingsPage() {
       } else {
         setBackupMsg({ type: "error", text: json.error || "Geri yükleme başarısız." });
       }
-    } catch (err: any) {
-      setBackupMsg({ type: "error", text: err.message || "Bağlantı hatası." });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Bağlantı hatası.";
+      setBackupMsg({ type: "error", text: msg });
     } finally {
       setBackupActionLoading(false);
     }

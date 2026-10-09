@@ -1,5 +1,5 @@
 // Service Worker for Dutt QR Menu - Offline & Basement resilience
-const CACHE_NAME = "dutt-qr-cache-v1";
+const CACHE_NAME = "dutt-qr-cache-v2";
 
 const STATIC_ASSETS = [
   "/",
@@ -34,16 +34,17 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Do NOT cache admin routes or mutations
+  // [UX-002 / PERF-002] Do NOT intercept or cache API endpoints, admin routes, or non-GET requests.
+  // Data caching is handled reliably by client-side LocalStorage in MenuContext.
   if (
-    url.pathname.startsWith("/api/admin") ||
+    url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/management-portal-secure") ||
     event.request.method !== "GET"
   ) {
     return;
   }
 
-  // Network-first with cache fallback for customer views and APIs
+  // Network-first with cache fallback for static customer views/assets
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
@@ -65,9 +66,7 @@ self.addEventListener("fetch", (event) => {
         if (event.request.mode === "navigate") {
           return caches.match("/");
         }
-        return new Response(JSON.stringify({ offline: true, message: "Çevrimdışı Mod" }), {
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response("Çevrimdışı Mod", { status: 503 });
       })
   );
 });

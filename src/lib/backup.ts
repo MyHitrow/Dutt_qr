@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import type { DatabaseSchema } from "@/lib/db";
 
 export interface BackupItem {
   filename: string;
@@ -49,7 +50,7 @@ function formatBytes(bytes: number): string {
  * Creates an automatic daily backup if one doesn't exist for today.
  * Rotates and removes backups older than 30 days.
  */
-export async function createDailyBackupIfNeeded(data: any): Promise<boolean> {
+export async function createDailyBackupIfNeeded(data: DatabaseSchema): Promise<boolean> {
   try {
     const backupDir = await ensureBackupDir();
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
@@ -78,7 +79,7 @@ export async function createDailyBackupIfNeeded(data: any): Promise<boolean> {
 /**
  * Creates a manual backup on demand.
  */
-export async function createManualBackup(data: any): Promise<string> {
+export async function createManualBackup(data: DatabaseSchema): Promise<string> {
   const backupDir = await ensureBackupDir();
   const now = new Date();
   const dateStr = now.toISOString().replace(/[:.]/g, "-");
@@ -139,7 +140,7 @@ export async function listBackups(): Promise<BackupItem[]> {
 /**
  * Restores a backup file to current active database.
  */
-export async function restoreBackup(filename: string): Promise<any> {
+export async function restoreBackup(filename: string): Promise<DatabaseSchema> {
   const backupDir = await ensureBackupDir();
   const safeFilename = path.basename(filename);
   const sourcePath = path.join(backupDir, safeFilename);

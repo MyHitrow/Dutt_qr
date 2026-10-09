@@ -15,7 +15,7 @@ export default function AdminAnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       setIsRefreshing(true);
-      const res = await fetch("/api/analytics");
+      const res = await fetch("/api/analytics", { credentials: "include" });
       const json = await res.json();
       if (json.success && json.data) {
         setData(json.data);
@@ -36,7 +36,7 @@ export default function AdminAnalyticsPage() {
     ) {
       try {
         setIsRefreshing(true);
-        await fetch("/api/analytics", { method: "DELETE" });
+        await fetch("/api/analytics", { method: "DELETE", credentials: "include" });
         await fetchAnalytics();
       } catch (err) {
         console.error("Failed to reset:", err);

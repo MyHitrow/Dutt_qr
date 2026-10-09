@@ -2,17 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { listBackups, createManualBackup, restoreBackup } from "@/lib/backup";
+import { readDatabase, writeDatabase, invalidateCache } from "@/lib/db";
 import fs from "fs";
 import path from "path";
-
-// Path to write database
-const PERSISTENT_STORAGE_PATH = path.join(process.cwd(), "storage", "db.json");
-const PRIMARY_DB_PATH = process.env.DB_PATH
-  ? path.resolve(process.env.DB_PATH)
-  : fs.existsSync(path.dirname(PERSISTENT_STORAGE_PATH))
-  ? PERSISTENT_STORAGE_PATH
-  : path.join(process.cwd(), "src", "data", "db.json");
-
 import { verifyAdminRequest } from "@/lib/auth";
 
 export async function GET(req: Request) {
@@ -46,8 +38,9 @@ export async function GET(req: Request) {
 
     const backups = await listBackups();
     return NextResponse.json({ success: true, backups });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Yedekler listelenirken hata oluştu";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
 
@@ -60,12 +53,7 @@ export async function POST(req: Request) {
     const action = body?.action;
 
     if (action === "create") {
-      // Read current DB and create backup
-      if (!fs.existsSync(PRIMARY_DB_PATH)) {
-        return NextResponse.json({ success: false, error: "Aktif veritabanı bulunamadı." }, { status: 400 });
-      }
-      const raw = await fs.promises.readFile(PRIMARY_DB_PATH, "utf8");
-      const data = JSON.parse(raw);
+      const data = await readDatabase();
       const filename = await createManualBackup(data);
       const backups = await listBackups();
 
@@ -84,22 +72,20 @@ export async function POST(req: Request) {
       }
 
       const restoredData = await restoreBackup(filename);
-      // Write to PRIMARY_DB_PATH
-      const dir = path.dirname(PRIMARY_DB_PATH);
-      if (!fs.existsSync(dir)) {
-        await fs.promises.mkdir(dir, { recursive: true });
-      }
-      await fs.promises.writeFile(PRIMARY_DB_PATH, JSON.stringify(restoredData, null, 2), "utf8");
+      // DAT-004: Atomic write through writeDatabase queue & lock
+      await writeDatabase(restoredData);
+      invalidateCache();
 
       return NextResponse.json({
         success: true,
-        message: "Yedek başarıyla geri yüklendi. Sayfa yenilendiğinde verileriniz güncellenecektir.",
+        message: "Yedek başarıyla geri yüklendi. Verileriniz güncellendi.",
         data: restoredData,
       });
     }
 
     return NextResponse.json({ success: false, error: "Geçersiz işlem." }, { status: 400 });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Yedekleme işlemi başarısız";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }

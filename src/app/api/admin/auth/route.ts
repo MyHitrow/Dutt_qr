@@ -1,29 +1,20 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { checkAdminCredentials, signAdminToken } from "@/lib/auth";
-
-// In-memory brute-force protection tracking failed attempts per IP
-const failedAttempts = new Map<string, { count: number; lockedUntil: number }>();
+import { checkAdminCredentials, signAdminToken, revokeAdminToken } from "@/lib/auth";
+import { getTrustedIp, checkAuthLock, recordAuthFailure, resetAuthLock } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
-    // Basic IP detection from headers
-    const clientIp =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown-client";
+    const clientIp = getTrustedIp(req);
 
-    const now = Date.now();
-    const record = failedAttempts.get(clientIp);
-
-    // Check if client is currently locked out
-    if (record && record.lockedUntil > now) {
-      const waitSeconds = Math.ceil((record.lockedUntil - now) / 1000);
+    // 1. Persistent Brute-force protection check
+    const lockStatus = await checkAuthLock(clientIp);
+    if (lockStatus.isLocked) {
       return NextResponse.json(
         {
           success: false,
-          message: `Güvenlik Koruması: Çok fazla hatalı deneme yapıldı. Lütfen ${waitSeconds} saniye bekleyin.`,
+          message: `Güvenlik Koruması: Çok fazla hatalı deneme yapıldı. Lütfen ${lockStatus.waitSeconds} saniye bekleyin.`,
         },
         { status: 429 }
       );
@@ -35,31 +26,31 @@ export async function POST(req: Request) {
 
     if (isAuthorized) {
       // Reset failed attempts on success
-      failedAttempts.delete(clientIp);
+      await resetAuthLock(clientIp);
 
-      const token = signAdminToken(username || "admin");
+      // Issue 8-hour token
+      const token = signAdminToken(username || "admin", 0.33);
+
       const res = NextResponse.json({
         success: true,
         message: "Giriş başarılı",
-        token,
       });
 
+      // Set hardened httpOnly cookie (SameSite=strict, 8h expiry)
       res.cookies.set("dut_admin_token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "strict",
         path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 60 * 60 * 8, // 8 hours
       });
 
       return res;
     }
 
-    // Track failed attempt
-    const currentCount = (record?.count || 0) + 1;
-    if (currentCount >= 5) {
-      // Lock for 60 seconds
-      failedAttempts.set(clientIp, { count: currentCount, lockedUntil: now + 60 * 1000 });
+    // 2. Track failed attempt persistently
+    const failStatus = await recordAuthFailure(clientIp);
+    if (failStatus.isLocked) {
       return NextResponse.json(
         {
           success: false,
@@ -67,26 +58,41 @@ export async function POST(req: Request) {
         },
         { status: 429 }
       );
-    } else {
-      failedAttempts.set(clientIp, { count: currentCount, lockedUntil: 0 });
     }
 
     return NextResponse.json(
       {
         success: false,
-        message: `Kullanıcı adı veya şifre hatalı! (Kalan deneme hakkı: ${5 - currentCount})`,
+        message: `Kullanıcı adı veya şifre hatalı! (Kalan deneme hakkı: ${failStatus.attemptsLeft})`,
       },
       { status: 401 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Giriş sırasında hata oluştu";
     return NextResponse.json(
-      { success: false, message: err.message || "Giriş sırasında hata oluştu" },
+      { success: false, message: errorMessage },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  // Revoke the token if present in cookies or Authorization header
+  const cookieHeader = req.headers.get("cookie") || "";
+  const match = cookieHeader.match(/dut_admin_token=([^;]+)/);
+  const tokenFromCookie = match && match[1] ? decodeURIComponent(match[1].trim()) : null;
+
+  const authHeader = req.headers.get("authorization");
+  const tokenFromHeader =
+    authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.substring(7).trim()
+      : null;
+
+  const tokenToRevoke = tokenFromCookie || tokenFromHeader;
+  if (tokenToRevoke) {
+    await revokeAdminToken(tokenToRevoke);
+  }
+
   const res = NextResponse.json({ success: true, message: "Çıkış yapıldı" });
   res.cookies.delete("dut_admin_token");
   res.cookies.delete("dut_admin_session");

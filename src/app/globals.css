@@ -203,9 +203,21 @@ html.light .dut-handle {
   padding-right: 42px !important;
 }
 
-/* ─── Safe Area Padding ─── */
+/* ─── Safe Area Padding & iOS Dynamic Viewport ─── */
 .pb-safe { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 .pt-safe { padding-top:    max(0px,  env(safe-area-inset-top)); }
+
+@supports (min-height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+  .h-screen {
+    height: 100dvh !important;
+  }
+  .max-h-screen {
+    max-height: 100dvh !important;
+  }
+}
 
 /* ─── Haute Cuisine & Editorial Serif ─── */
 .font-editorial {

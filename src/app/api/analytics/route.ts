@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { AnalyticsEvent, AnalyticsSummary } from "@/types/analytics";
+import { verifyAdminRequest } from "@/lib/auth";
+import { getTrustedIp, checkGenericRateLimit } from "@/lib/rateLimit";
 
 const PERSISTENT_ANALYTICS_PATH = path.join(process.cwd(), "storage", "analytics.json");
 const ANALYTICS_FILE_PATH = process.env.ANALYTICS_PATH
@@ -37,7 +39,9 @@ async function writeEvents(events: AnalyticsEvent[]): Promise<boolean> {
     const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
     const filtered = events.filter((e) => new Date(e.timestamp).getTime() > cutoff);
 
-    await fs.promises.writeFile(ANALYTICS_FILE_PATH, JSON.stringify(filtered), "utf8");
+    const tempFile = `${ANALYTICS_FILE_PATH}.tmp.${Date.now()}`;
+    await fs.promises.writeFile(tempFile, JSON.stringify(filtered), "utf8");
+    await fs.promises.rename(tempFile, ANALYTICS_FILE_PATH);
     return true;
   } catch (err) {
     console.error("Failed to write analytics file:", err);
@@ -45,8 +49,29 @@ async function writeEvents(events: AnalyticsEvent[]): Promise<boolean> {
   }
 }
 
-export async function GET() {
+// Sequential queue to prevent race conditions on concurrent analytics writes
+let analyticsWriteQueue = Promise.resolve<any>(null);
+
+async function appendEventAtomically(event: AnalyticsEvent): Promise<void> {
+  const task = async () => {
+    const currentEvents = await readEvents();
+    currentEvents.push(event);
+    await writeEvents(currentEvents);
+  };
+  analyticsWriteQueue = analyticsWriteQueue.then(task, task);
+  return analyticsWriteQueue;
+}
+
+export async function GET(req: Request) {
   try {
+    // 🔒 Security: Only authenticated admin can view analytics
+    if (!verifyAdminRequest(req)) {
+      return NextResponse.json(
+        { success: false, error: "Yetkisiz Erişim: Analitik verilerini görüntülemek için admin girişi gereklidir." },
+        { status: 401 }
+      );
+    }
+
     const events = await readEvents();
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -144,45 +169,78 @@ export async function GET() {
     };
 
     return NextResponse.json({ success: true, data: summary });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Bilinmeyen sunucu hatası";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
+    // 🛡️ Rate limit: max 30 events per minute per IP
+    const clientIp = getTrustedIp(req);
+    const rateCheck = checkGenericRateLimit(`analytics:${clientIp}`, 30, 60_000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "İstek limiti aşıldı. Lütfen biraz bekleyin." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     if (!body || typeof body !== "object") {
       return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 });
     }
 
+    // 🛡️ Sanitize and length-limit inputs
+    const type = body.type === "product_view" ? "product_view" : "visit";
+    const pathStr = typeof body.path === "string" ? body.path.slice(0, 100) : "/";
+    const tableStr = typeof body.table === "string" ? body.table.slice(0, 20).replace(/[^a-zA-Z0-9-]/g, "") : undefined;
+    const productIdStr = typeof body.productId === "string" ? body.productId.slice(0, 64) : undefined;
+    const productNameStr = typeof body.productName === "string" ? body.productName.slice(0, 200) : undefined;
+    const categoryIdStr = typeof body.categoryId === "string" ? body.categoryId.slice(0, 64) : undefined;
+    const langStr = body.lang === "en" ? "en" : "tr";
+
     const event: AnalyticsEvent = {
       id: `ev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      type: body.type === "product_view" ? "product_view" : "visit",
+      type,
       timestamp: new Date().toISOString(),
-      path: body.path || "/",
-      table: body.table,
-      productId: body.productId,
-      productName: body.productName,
-      categoryId: body.categoryId,
-      lang: body.lang === "en" ? "en" : "tr",
+      path: pathStr,
+      table: tableStr,
+      productId: productIdStr,
+      productName: productNameStr,
+      categoryId: categoryIdStr,
+      lang: langStr,
     };
 
-    const currentEvents = await readEvents();
-    currentEvents.push(event);
-    await writeEvents(currentEvents);
+    await appendEventAtomically(event);
 
     return NextResponse.json({ success: true, eventId: event.id });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Hata oluştu";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
   try {
-    await writeEvents([]);
+    // 🔒 Security: Only authenticated admin can wipe analytics
+    if (!verifyAdminRequest(req)) {
+      return NextResponse.json(
+        { success: false, error: "Yetkisiz Erişim: Analitik verilerini sıfırlamak için admin yetkisi gereklidir." },
+        { status: 401 }
+      );
+    }
+
+    const task = async () => {
+      await writeEvents([]);
+    };
+    analyticsWriteQueue = analyticsWriteQueue.then(task, task);
+    await analyticsWriteQueue;
+
     return NextResponse.json({ success: true, message: "Tüm analiz verileri sıfırlandı." });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Hata oluştu";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }

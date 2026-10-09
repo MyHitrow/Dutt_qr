@@ -79,22 +79,34 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const lastLocalSaveTimeRef = useRef<number>(0);
 
   /* ── Server Sync Helper (HTTP POST to DB) ── */
-  const syncToServer = async (v = venue, c = categories, p = products, fm = dailyFixMenus) => {
+  const syncToServer = async (
+    v = venue,
+    c = categories,
+    p = products,
+    fm = dailyFixMenus
+  ): Promise<boolean> => {
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("dut_admin_token") : null;
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      await fetch("/api/sync", {
+      const res = await fetch("/api/sync", {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ venue: v, categories: c, products: p, dailyFixMenus: fm }),
       });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        console.error("[MenuContext] Sunucu senkronizasyonu başarısız (HTTP", res.status, "):", errJson);
+        return false;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (json?.version) {
+        serverVersionRef.current = json.version;
+      }
+      return true;
     } catch (err) {
-      console.error("Database sync server error:", err);
+      console.error("[MenuContext] Senkronizasyon ağ hatası:", err);
+      return false;
     }
   };
 
@@ -189,11 +201,23 @@ const safeLocalStorageSet = (key: string, value: string) => {
         const url = serverVersionRef.current
           ? `/api/sync?v=${encodeURIComponent(serverVersionRef.current)}`
           : "/api/sync";
-        const res = await fetch(url);
+        const headers: Record<string, string> = {};
+        if (serverVersionRef.current) {
+          headers["If-None-Match"] = `"${serverVersionRef.current}"`;
+        }
+
+        const res = await fetch(url, { headers });
+
+        // PERF-001: True HTTP 304 Not Modified — instant return with zero body & zero re-render
+        if (res.status === 304) {
+          currentDelay = 45000;
+          return;
+        }
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
 
-        // 304 / unchanged optimization: zero re-render, zero localStorage writes
+        // Fallback unchanged check
         if (json?.unchanged) {
           currentDelay = 45000;
           return;
@@ -290,25 +314,25 @@ const safeLocalStorageSet = (key: string, value: string) => {
     lastLocalSaveTimeRef.current = Date.now();
     setVenue(v);
     safeLocalStorageSet(LS.VENUE, JSON.stringify(v));
-    syncToServer(v, categories, products, dailyFixMenus);
+    void syncToServer(v, categories, products, dailyFixMenus);
   };
   const persistCategories = (c: Category[]) => {
     lastLocalSaveTimeRef.current = Date.now();
     setCategories(c);
     safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(c));
-    syncToServer(venue, c, products, dailyFixMenus);
+    void syncToServer(venue, c, products, dailyFixMenus);
   };
   const persistProducts = (p: Product[]) => {
     lastLocalSaveTimeRef.current = Date.now();
     setProducts(p);
     safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(p));
-    syncToServer(venue, categories, p, dailyFixMenus);
+    void syncToServer(venue, categories, p, dailyFixMenus);
   };
   const persistFixMenus = (fm: DailyFixMenu[]) => {
     lastLocalSaveTimeRef.current = Date.now();
     setDailyFixMenus(fm);
     safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(fm));
-    syncToServer(venue, categories, products, fm);
+    void syncToServer(venue, categories, products, fm);
   };
 
   const setLang = (l: Language) => { setLangState(l); safeLocalStorageSet(LS.LANG, l); };
@@ -332,7 +356,16 @@ const safeLocalStorageSet = (key: string, value: string) => {
   };
   const addCategory = (c: Omit<Category, "id">) => persistCategories([...categories, { ...c, id: `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, sortOrder: categories.length + 1 }]);
   const updateCategory = (id: string, c: Partial<Category>) => persistCategories(categories.map(x => x.id === id ? { ...x, ...c } : x));
-  const deleteCategory = (id: string) => { persistCategories(categories.filter(x => x.id !== id)); persistProducts(products.filter(x => x.categoryId !== id)); };
+  const deleteCategory = (id: string) => {
+    lastLocalSaveTimeRef.current = Date.now();
+    const newCategories = categories.filter((x) => x.id !== id);
+    const newProducts = products.filter((x) => x.categoryId !== id);
+    setCategories(newCategories);
+    setProducts(newProducts);
+    safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(newCategories));
+    safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(newProducts));
+    void syncToServer(venue, newCategories, newProducts, dailyFixMenus);
+  };
   const reorderCategories = (newCategories: Category[]) => {
     const updated = newCategories.map((c, index) => ({
       ...c,

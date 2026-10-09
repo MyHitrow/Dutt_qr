@@ -11,8 +11,6 @@ import {
 import { useMenu } from "@/context/MenuContext";
 import { QRCodeModal } from "@/components/admin/QRCodeModal";
 
-const TOKEN_KEY = "dut_admin_token";
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { venue, updateVenue, theme, toggleTheme } = useMenu();
@@ -28,19 +26,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
-    // 🔒 Server-side session verification on mount
+    // 🔒 Server-side session verification on mount (via httpOnly cookie)
     const verifySession = async () => {
       try {
-        const storedToken = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
-        const headers: Record<string, string> = {};
-        if (storedToken) {
-          headers["Authorization"] = `Bearer ${storedToken}`;
-        }
-
         const res = await fetch("/api/admin/auth/verify", {
           method: "GET",
-          headers,
-          credentials: "include", // send cookies
+          credentials: "include", // send httpOnly cookies
         });
 
         if (res.ok) {
@@ -76,12 +67,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       const data = await res.json().catch(() => ({}));
 
-      if (res.ok && data.success && data.token) {
+      if (res.ok && data.success) {
         setIsAuthenticated(true);
-        try {
-          localStorage.setItem(TOKEN_KEY, data.token);
-          sessionStorage.setItem(TOKEN_KEY, data.token);
-        } catch {}
       } else {
         setErrorMsg(data.message || "Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
       }
@@ -96,10 +83,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsAuthenticated(false);
     setUsername("");
     setPassword("");
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(TOKEN_KEY);
-    } catch {}
     await fetch("/api/admin/auth", { method: "DELETE", credentials: "include" }).catch(() => {});
   };
 
