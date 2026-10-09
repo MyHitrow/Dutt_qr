@@ -52,10 +52,12 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
       {/* Bottom Sheet Container */}
       <div
-        className={`relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[85vh] flex flex-col animate-slide-up pb-5 overflow-hidden ${
+        className={`relative w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-bottom-sheet max-h-[82vh] flex flex-col animate-slide-up pb-5 ${
           isFloatingWithImage
-            ? "mt-44 sm:mt-52 pt-14"
-            : "mt-auto pt-0"
+            ? "mt-36 sm:mt-44 pt-16 sm:pt-20 overflow-visible"
+            : isCoverOrListWithImage
+            ? "mt-auto pt-0 overflow-hidden"
+            : "mt-auto pt-0 overflow-hidden"
         }`}
         style={{
           background: "var(--dut-bg2)",
