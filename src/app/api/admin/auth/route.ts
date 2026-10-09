@@ -34,6 +34,7 @@ export async function POST(req: Request) {
       const res = NextResponse.json({
         success: true,
         message: "Giriş başarılı",
+        token,
       });
 
       // Set hardened httpOnly cookie (SameSite=strict, 8h expiry)

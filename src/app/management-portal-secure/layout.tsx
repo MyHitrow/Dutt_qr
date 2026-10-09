@@ -26,11 +26,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
-    // 🔒 Server-side session verification on mount (via httpOnly cookie)
+    // 🔒 Server-side session verification on mount (via httpOnly cookie + Authorization header fallback)
     const verifySession = async () => {
       try {
+        const storedToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("dut_admin_token") || sessionStorage.getItem("dut_admin_token")
+            : null;
+        const headers: Record<string, string> = {};
+        if (storedToken) {
+          headers["Authorization"] = `Bearer ${storedToken}`;
+        }
+
         const res = await fetch("/api/admin/auth/verify", {
           method: "GET",
+          headers,
           credentials: "include", // send httpOnly cookies
         });
 
@@ -69,6 +79,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       if (res.ok && data.success) {
         setIsAuthenticated(true);
+        setErrorMsg("");
+        try {
+          if (data.token) {
+            localStorage.setItem("dut_admin_token", data.token);
+            sessionStorage.setItem("dut_admin_token", data.token);
+          }
+        } catch {}
       } else {
         setErrorMsg(data.message || "Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
       }
@@ -83,6 +100,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsAuthenticated(false);
     setUsername("");
     setPassword("");
+    try {
+      localStorage.removeItem("dut_admin_token");
+      sessionStorage.removeItem("dut_admin_token");
+    } catch {}
     await fetch("/api/admin/auth", { method: "DELETE", credentials: "include" }).catch(() => {});
   };
 
