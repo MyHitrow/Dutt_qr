@@ -104,15 +104,87 @@ export async function resetAuthLock(ip: string): Promise<void> {
   }
 }
 
-/* ── Generic Sliding Window In-Memory Rate Limiter (for API flood protection) ── */
+/* ── Generic Sliding Window Rate Limiter with Persistence & Auto-Pruning ── */
+const GENERIC_RATE_FILE = path.join(LOCK_FILE_DIR, "rate_generic.json");
 const genericRateLimitCache = new Map<string, { count: number; resetAt: number }>();
+let isPersistenceScheduled = false;
 
-export function checkGenericRateLimit(key: string, maxRequests: number, windowMs: number): { allowed: boolean; remaining: number } {
+// Load persisted rate limit counters on startup
+try {
+  if (fs.existsSync(GENERIC_RATE_FILE)) {
+    const raw = fs.readFileSync(GENERIC_RATE_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    const now = Date.now();
+    if (parsed && typeof parsed === "object") {
+      for (const [k, v] of Object.entries(parsed as Record<string, { count: number; resetAt: number }>)) {
+        if (v && typeof v.resetAt === "number" && v.resetAt > now) {
+          genericRateLimitCache.set(k, v);
+        }
+      }
+    }
+  }
+} catch {
+  // Ignore startup read errors
+}
+
+function scheduleRateLimitSave(): void {
+  if (isPersistenceScheduled) return;
+  isPersistenceScheduled = true;
+
+  setTimeout(async () => {
+    isPersistenceScheduled = false;
+    try {
+      if (!fs.existsSync(LOCK_FILE_DIR)) {
+        await fs.promises.mkdir(LOCK_FILE_DIR, { recursive: true });
+      }
+      const now = Date.now();
+      const exportObj: Record<string, { count: number; resetAt: number }> = {};
+      for (const [k, v] of genericRateLimitCache.entries()) {
+        if (v.resetAt > now) {
+          exportObj[k] = v;
+        }
+      }
+      const tempFile = `${GENERIC_RATE_FILE}.tmp.${Date.now()}`;
+      await fs.promises.writeFile(tempFile, JSON.stringify(exportObj), "utf8");
+      await fs.promises.rename(tempFile, GENERIC_RATE_FILE);
+    } catch (err) {
+      console.warn("[rateLimit] Could not persist generic rate limits:", err);
+    }
+  }, 3000).unref?.();
+}
+
+function pruneExpiredRateLimits(now: number): void {
+  for (const [k, v] of genericRateLimitCache.entries()) {
+    if (now > v.resetAt) {
+      genericRateLimitCache.delete(k);
+    }
+  }
+  // Hard memory cap to prevent memory exhaustion attacks
+  if (genericRateLimitCache.size > 2000) {
+    const keysToDelete = Array.from(genericRateLimitCache.keys()).slice(0, 500);
+    for (const k of keysToDelete) {
+      genericRateLimitCache.delete(k);
+    }
+  }
+}
+
+export function checkGenericRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): { allowed: boolean; remaining: number } {
   const now = Date.now();
+
+  // Auto-prune periodically when map size grows
+  if (genericRateLimitCache.size > 100) {
+    pruneExpiredRateLimits(now);
+  }
+
   const entry = genericRateLimitCache.get(key);
 
   if (!entry || now > entry.resetAt) {
     genericRateLimitCache.set(key, { count: 1, resetAt: now + windowMs });
+    scheduleRateLimitSave();
     return { allowed: true, remaining: maxRequests - 1 };
   }
 
@@ -121,5 +193,6 @@ export function checkGenericRateLimit(key: string, maxRequests: number, windowMs
   }
 
   entry.count += 1;
+  scheduleRateLimitSave();
   return { allowed: true, remaining: maxRequests - entry.count };
 }

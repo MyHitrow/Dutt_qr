@@ -3,9 +3,19 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { readDatabase, writeDatabase, getInitialDatabaseData } from "@/lib/db";
 import { verifyAdminRequest } from "@/lib/auth";
+import { getTrustedIp, checkGenericRateLimit } from "@/lib/rateLimit";
 
 export async function GET(req: Request) {
   try {
+    const clientIp = getTrustedIp(req);
+    const rateCheck = checkGenericRateLimit(`sync-get:${clientIp}`, 180, 60_000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "İstek limiti aşıldı. Lütfen biraz bekleyin." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const clientVersion =
       searchParams.get("v") || req.headers.get("if-none-match")?.replace(/"/g, "");
@@ -24,8 +34,25 @@ export async function GET(req: Request) {
       });
     }
 
+    // 🔒 SEC-007: Sanitize internal licenseKey for non-admin callers
+    const isAdmin = verifyAdminRequest(req);
+    const responseData = isAdmin
+      ? data
+      : {
+          ...data,
+          venue: {
+            ...data.venue,
+            license: data.venue.license
+              ? {
+                  ...data.venue.license,
+                  licenseKey: undefined,
+                }
+              : undefined,
+          },
+        };
+
     return NextResponse.json(
-      { success: true, data, version: currentVersion, source: "atomic-queued-db" },
+      { success: true, data: responseData, version: currentVersion, source: "atomic-queued-db" },
       {
         headers: {
           ETag: `"${currentVersion}"`,

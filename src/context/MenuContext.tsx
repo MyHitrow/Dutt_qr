@@ -77,20 +77,36 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [theme, setThemeState] = useState<"dark" | "light">("dark");
 
   const lastLocalSaveTimeRef = useRef<number>(0);
+  const serverVersionRef = useRef<string>("");
+
+  const venueRef = useRef(venue);
+  venueRef.current = venue;
+  const categoriesRef = useRef(categories);
+  categoriesRef.current = categories;
+  const productsRef = useRef(products);
+  productsRef.current = products;
+  const dailyFixMenusRef = useRef(dailyFixMenus);
+  dailyFixMenusRef.current = dailyFixMenus;
 
   /* ── Server Sync Helper (HTTP POST to DB) ── */
   const syncToServer = async (
-    v = venue,
-    c = categories,
-    p = products,
-    fm = dailyFixMenus
+    v = venueRef.current,
+    c = categoriesRef.current,
+    p = productsRef.current,
+    fm = dailyFixMenusRef.current
   ): Promise<boolean> => {
     try {
       const res = await fetch("/api/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ venue: v, categories: c, products: p, dailyFixMenus: fm }),
+        body: JSON.stringify({
+          baseVersion: serverVersionRef.current,
+          venue: v,
+          categories: c,
+          products: p,
+          dailyFixMenus: fm,
+        }),
       });
 
       if (!res.ok) {
@@ -117,8 +133,6 @@ const safeLocalStorageSet = (key: string, value: string) => {
     console.warn(`[MenuContext] LocalStorage setItem failed for key "${key}" (possibly quota limit):`, e);
   }
 };
-
-  const serverVersionRef = useRef<string>("");
 
   /* ── Load from localStorage + Live Real-Time Server Sync with Adaptive Backoff ── */
   useEffect(() => {
@@ -312,27 +326,31 @@ const safeLocalStorageSet = (key: string, value: string) => {
   /* ── Persist helpers ── */
   const persistVenue = (v: VenueSettings) => {
     lastLocalSaveTimeRef.current = Date.now();
+    venueRef.current = v;
     setVenue(v);
     safeLocalStorageSet(LS.VENUE, JSON.stringify(v));
-    void syncToServer(v, categories, products, dailyFixMenus);
+    void syncToServer(v, categoriesRef.current, productsRef.current, dailyFixMenusRef.current);
   };
   const persistCategories = (c: Category[]) => {
     lastLocalSaveTimeRef.current = Date.now();
+    categoriesRef.current = c;
     setCategories(c);
     safeLocalStorageSet(LS.CATEGORIES, JSON.stringify(c));
-    void syncToServer(venue, c, products, dailyFixMenus);
+    void syncToServer(venueRef.current, c, productsRef.current, dailyFixMenusRef.current);
   };
   const persistProducts = (p: Product[]) => {
     lastLocalSaveTimeRef.current = Date.now();
+    productsRef.current = p;
     setProducts(p);
     safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(p));
-    void syncToServer(venue, categories, p, dailyFixMenus);
+    void syncToServer(venueRef.current, categoriesRef.current, p, dailyFixMenusRef.current);
   };
   const persistFixMenus = (fm: DailyFixMenu[]) => {
     lastLocalSaveTimeRef.current = Date.now();
+    dailyFixMenusRef.current = fm;
     setDailyFixMenus(fm);
     safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(fm));
-    void syncToServer(venue, categories, products, fm);
+    void syncToServer(venueRef.current, categoriesRef.current, productsRef.current, fm);
   };
 
   const setLang = (l: Language) => { setLangState(l); safeLocalStorageSet(LS.LANG, l); };

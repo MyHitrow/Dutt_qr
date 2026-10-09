@@ -6,6 +6,7 @@ import path from "path";
 import sharp from "sharp";
 
 import { verifyAdminRequest } from "@/lib/auth";
+import { getTrustedIp, checkGenericRateLimit } from "@/lib/rateLimit";
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB limit
 
@@ -66,6 +67,16 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "Yetkisiz Erişim: Görsel yüklemek için admin girişi gereklidir." },
         { status: 401 }
+      );
+    }
+
+    // 🛡️ FLOOD PROTECTION: Rate limit uploads (Max 30 uploads / min per IP)
+    const clientIp = getTrustedIp(req);
+    const rateCheck = checkGenericRateLimit(`upload:${clientIp}`, 30, 60_000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Çok fazla görsel yükleme denemesi yapıldı. Lütfen 1 dakika bekleyin." },
+        { status: 429 }
       );
     }
 

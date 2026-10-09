@@ -125,7 +125,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen pb-10 transition-colors relative overflow-hidden" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
+      <div className="min-h-screen min-h-[100dvh] pb-10 transition-colors relative overflow-hidden" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
         {/* ── Loş Meyhane Atmosfer Işıkları (Silky Smooth Ambient Aura - GPU Optimized) ── */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           {/* Top-right subtle purple aura */}

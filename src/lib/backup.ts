@@ -46,6 +46,15 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+async function atomicBackupWrite(targetPath: string, payload: string): Promise<void> {
+  const tempPath = `${targetPath}.tmp.${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  await fs.promises.writeFile(tempPath, payload, "utf8");
+  try {
+    await fs.promises.chmod(tempPath, 0o777);
+  } catch {}
+  await fs.promises.rename(tempPath, targetPath);
+}
+
 /**
  * Creates an automatic daily backup if one doesn't exist for today.
  * Rotates and removes backups older than 30 days.
@@ -62,10 +71,7 @@ export async function createDailyBackupIfNeeded(data: DatabaseSchema): Promise<b
     }
 
     const payload = JSON.stringify(data, null, 2);
-    await fs.promises.writeFile(targetPath, payload, "utf8");
-    try {
-      await fs.promises.chmod(targetPath, 0o777);
-    } catch {}
+    await atomicBackupWrite(targetPath, payload);
 
     // Cleanup backups older than 30 days
     await pruneOldBackups(backupDir, 30);
@@ -87,10 +93,7 @@ export async function createManualBackup(data: DatabaseSchema): Promise<string> 
   const targetPath = path.join(backupDir, filename);
 
   const payload = JSON.stringify(data, null, 2);
-  await fs.promises.writeFile(targetPath, payload, "utf8");
-  try {
-    await fs.promises.chmod(targetPath, 0o777);
-  } catch {}
+  await atomicBackupWrite(targetPath, payload);
 
   return filename;
 }
@@ -152,8 +155,13 @@ export async function restoreBackup(filename: string): Promise<DatabaseSchema> {
   const raw = await fs.promises.readFile(sourcePath, "utf8");
   const parsed = JSON.parse(raw);
 
-  if (!parsed || typeof parsed !== "object" || !parsed.products || !parsed.categories) {
-    throw new Error("Geçersiz yedek dosyası yapısı.");
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    !Array.isArray(parsed.products) ||
+    !Array.isArray(parsed.categories)
+  ) {
+    throw new Error("Geçersiz yedek dosyası yapısı: Kategoriler veya ürünler eksik ya da geçersiz.");
   }
 
   return parsed;

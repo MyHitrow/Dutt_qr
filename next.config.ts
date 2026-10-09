@@ -4,13 +4,12 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   output: "standalone",
   images: {
-    dangerouslyAllowSVG: true,
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "*.unsplash.com" },
-      { protocol: "https", hostname: "lh3.googleusercontent.com" },
-      { protocol: "https", hostname: "*.googleusercontent.com" },
       { protocol: "https", hostname: "api.qrserver.com" },
     ],
   },

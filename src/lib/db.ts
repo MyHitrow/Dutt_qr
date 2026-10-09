@@ -47,15 +47,36 @@ export async function withFileLock<T>(fn: () => Promise<T>): Promise<T> {
       fs.closeSync(fd);
       break;
     } catch {
-      if (Date.now() - start > LOCK_TIMEOUT_MS) {
-        // Stale lock recovery: If lock is older than timeout, remove it
-        try {
-          const stat = fs.statSync(LOCK_FILE);
-          if (Date.now() - stat.mtimeMs > LOCK_TIMEOUT_MS) {
-            fs.unlinkSync(LOCK_FILE);
-            continue;
+      try {
+        if (fs.existsSync(LOCK_FILE)) {
+          const content = fs.readFileSync(LOCK_FILE, "utf8");
+          const [pidStr, timeStr] = content.split(":");
+          const lockPid = parseInt(pidStr, 10);
+          const lockTime = parseInt(timeStr, 10);
+          const isOlderThanTimeout = !isNaN(lockTime) && Date.now() - lockTime > LOCK_TIMEOUT_MS;
+
+          let isProcessDead = false;
+          if (!isNaN(lockPid) && lockPid > 0) {
+            try {
+              process.kill(lockPid, 0);
+            } catch (err: unknown) {
+              const code = (err as { code?: string })?.code;
+              if (code === "ESRCH") {
+                isProcessDead = true;
+              }
+            }
           }
-        } catch {}
+
+          if (isProcessDead || isOlderThanTimeout) {
+            try {
+              fs.unlinkSync(LOCK_FILE);
+              continue;
+            } catch {}
+          }
+        }
+      } catch {}
+
+      if (Date.now() - start > LOCK_TIMEOUT_MS) {
         console.warn("[db] Lock timeout reached, continuing after clearing stale lock.");
         try {
           fs.unlinkSync(LOCK_FILE);

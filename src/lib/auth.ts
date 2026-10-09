@@ -2,10 +2,26 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-const JWT_SECRET =
-  process.env.ADMIN_JWT_SECRET ||
-  process.env.ADMIN_SECRET_KEY ||
-  "dutt-meyhane-secure-salt-2026-x99238-moka-works";
+function getJwtSecret(): string {
+  const secret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SECRET_KEY;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[auth] FATAL: ADMIN_JWT_SECRET is missing! Set ADMIN_JWT_SECRET in your production environment variables."
+      );
+    }
+    console.warn(
+      "[auth] WARNING: ADMIN_JWT_SECRET is not configured. Using temporary dev secret."
+    );
+    return "dutt-dev-only-secret-key-replace-in-production-123456";
+  }
+  if (secret.length < 16) {
+    console.warn("[auth] WARNING: ADMIN_JWT_SECRET is too short (< 16 chars). Consider using a stronger secret.");
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJwtSecret();
 
 interface TokenPayload {
   role: "admin";
@@ -37,11 +53,13 @@ async function persistRevokedJtis(): Promise<void> {
     if (!fs.existsSync(dir)) {
       await fs.promises.mkdir(dir, { recursive: true });
     }
+    const tempFile = `${REVOKED_TOKENS_FILE}.tmp.${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     await fs.promises.writeFile(
-      REVOKED_TOKENS_FILE,
+      tempFile,
       JSON.stringify(Array.from(revokedJtis)),
       "utf8"
     );
+    await fs.promises.rename(tempFile, REVOKED_TOKENS_FILE);
   } catch (err) {
     console.warn("[auth] Failed to persist revoked tokens:", err);
   }
@@ -149,31 +167,65 @@ function safeStringCompare(a: string, b: string): boolean {
 export function checkAdminCredentials(username?: string, password?: string): boolean {
   if (!username || !password) return false;
 
+  const u = username.trim().toLowerCase();
+  const p = password.trim();
+
+  // 1. Support ADMIN_CREDENTIALS format: "user1:pass1,user2:pass2"
+  const rawCredentials = process.env.ADMIN_CREDENTIALS;
+  if (rawCredentials && rawCredentials.trim()) {
+    const pairs = rawCredentials.split(",").map((s) => s.trim()).filter(Boolean);
+    let matched = false;
+    for (const pair of pairs) {
+      const idx = pair.indexOf(":");
+      if (idx !== -1) {
+        const expectedUser = pair.substring(0, idx).trim().toLowerCase();
+        const expectedPass = pair.substring(idx + 1).trim();
+        if (safeStringCompare(u, expectedUser) && safeStringCompare(p, expectedPass)) {
+          matched = true;
+        }
+      }
+    }
+    if (matched) return true;
+  }
+
+  // 2. Positional pairing for ADMIN_USERNAMES and ADMIN_PASSWORDS
   const rawUsernames = process.env.ADMIN_USERNAMES;
   const rawPasswords = process.env.ADMIN_PASSWORDS;
 
   if (!rawUsernames || !rawPasswords) {
-    console.error("[auth] ADMIN_USERNAMES veya ADMIN_PASSWORDS tanımlı değil! Erişim reddedildi.");
+    if (!rawCredentials) {
+      console.error("[auth] ADMIN_USERNAMES veya ADMIN_PASSWORDS tanımlı değil! Erişim reddedildi.");
+    }
     return false;
   }
 
   const validUsernames = rawUsernames
     .split(",")
-    .map((u) => u.trim().toLowerCase())
+    .map((un) => un.trim().toLowerCase())
     .filter(Boolean);
 
   const validPasswords = rawPasswords
     .split(",")
-    .map((p) => p.trim())
+    .map((pw) => pw.trim())
     .filter(Boolean);
 
-  const u = username.trim().toLowerCase();
-  const p = password.trim();
+  if (validUsernames.length === 0 || validPasswords.length === 0) {
+    return false;
+  }
 
-  const isUserValid = validUsernames.some((vu) => safeStringCompare(u, vu));
-  const isPassValid = validPasswords.some((vp) => safeStringCompare(p, vp));
+  // Positional pairing: username at index i strictly matches password at index i.
+  // If passwords array is shorter, excess usernames map to the last password.
+  for (let i = 0; i < validUsernames.length; i++) {
+    const expectedUser = validUsernames[i];
+    const passIndex = i < validPasswords.length ? i : validPasswords.length - 1;
+    const expectedPass = validPasswords[passIndex];
 
-  return isUserValid && isPassValid;
+    if (safeStringCompare(u, expectedUser) && safeStringCompare(p, expectedPass)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
