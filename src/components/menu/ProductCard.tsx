@@ -44,7 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
                   isSoldOut ? "grayscale" : ""
                 }`}
-                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
+                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:") || product.imageUrl!.endsWith(".webp") || product.imageUrl!.startsWith("/images/")}
                 onError={() => setImgErr(true)}
               />
               {isSoldOut && (
@@ -138,7 +138,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className={`object-cover group-hover:scale-105 transition-transform duration-500 ${
                 isSoldOut ? "grayscale" : ""
               }`}
-              unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
+              unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:") || product.imageUrl!.endsWith(".webp") || product.imageUrl!.startsWith("/images/")}
               onError={() => setImgErr(true)}
             />
             {isSoldOut && (
@@ -256,7 +256,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 className={`object-contain transition-all duration-300 drop-shadow-[0_12px_16px_rgba(0,0,0,0.4)] ${
                   isSoldOut ? "grayscale opacity-50" : ""
                 }`}
-                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
+                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:") || product.imageUrl!.endsWith(".webp") || product.imageUrl!.startsWith("/images/")}
                 onError={() => setImgErr(true)}
               />
             </div>

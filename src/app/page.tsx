@@ -22,17 +22,11 @@ type ActiveSheet = null | "language" | "filter" | "search";
 export default function Home() {
   const { venue, categories, dailyFixMenus, filteredProducts, activeFilterCount, lang, setLang, theme, toggleTheme } = useMenu();
 
-  const [isLoading, setIsLoading]       = useState(true);
+  const [isLoading, setIsLoading]       = useState(false);
   const [activeSheet, setActiveSheet]   = useState<ActiveSheet>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   // null = tüm kategoriler, string = sadece o kategori
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
-
-
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 700);
-    return () => clearTimeout(t);
-  }, []);
 
   // Track page visit on mount
   useEffect(() => {
@@ -45,6 +39,7 @@ export default function Home() {
         body: JSON.stringify({ type: "visit", table, lang }),
       }).catch(() => {});
     } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleProductOpen = useCallback((product: Product) => {
@@ -131,17 +126,17 @@ export default function Home() {
   return (
     <>
       <div className="min-h-screen pb-10 transition-colors relative overflow-hidden" style={{ background: "var(--dut-bg)", color: "var(--dut-text)" }}>
-        {/* ── Loş Meyhane Atmosfer Işıkları (Silky Smooth Ambient Aura) ── */}
+        {/* ── Loş Meyhane Atmosfer Işıkları (Silky Smooth Ambient Aura - GPU Optimized) ── */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           {/* Top-right subtle purple aura */}
           <div
-            className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-[120px] opacity-25 pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(166,108,255,0.22) 0%, transparent 70%)" }}
+            className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-40 pointer-events-none"
+            style={{ background: "radial-gradient(circle at center, rgba(166,108,255,0.18) 0%, rgba(166,108,255,0.05) 50%, transparent 70%)" }}
           />
           {/* Mid-left warm candlelight amber aura */}
           <div
-            className="absolute top-1/3 -left-36 w-80 h-80 rounded-full blur-[120px] opacity-20 pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(240,180,90,0.18) 0%, transparent 70%)" }}
+            className="absolute top-1/3 -left-36 w-80 h-80 rounded-full opacity-35 pointer-events-none"
+            style={{ background: "radial-gradient(circle at center, rgba(240,180,90,0.14) 0%, rgba(240,180,90,0.04) 50%, transparent 70%)" }}
           />
         </div>
 

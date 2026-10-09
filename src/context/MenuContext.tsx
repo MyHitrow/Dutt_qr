@@ -119,6 +119,8 @@ const safeLocalStorageSet = (key: string, value: string) => {
   }
 };
 
+  const serverVersionRef = useRef<string>("");
+
   /* ── Load from localStorage + Live Real-Time Server Sync with Adaptive Backoff ── */
   useEffect(() => {
     try {
@@ -139,8 +141,26 @@ const safeLocalStorageSet = (key: string, value: string) => {
         setVenue(parsedV);
       }
       if (sc)    setCategories(JSON.parse(sc));
-      if (sp)    setProducts(JSON.parse(sp));
-      if (sfm)   setDailyFixMenus(JSON.parse(sfm));
+      if (sp) {
+        const parsedP: Product[] = JSON.parse(sp);
+        // Automatically purge any old megabyte-sized base64 images from localStorage
+        const sanitizedP = parsedP.map(p => {
+          if (p.id === "p-bira-1" && p.imageUrl?.startsWith("data:")) return { ...p, imageUrl: "/images/products/tuborg-gold.webp" };
+          if (p.id === "p-bira-2" && p.imageUrl?.startsWith("data:")) return { ...p, imageUrl: "/images/products/carlsberg.webp" };
+          if (p.imageUrl?.includes("googleusercontent")) return { ...p, imageUrl: "/images/products/dutt-plate.webp" };
+          return p;
+        });
+        setProducts(sanitizedP);
+        safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(sanitizedP));
+      }
+      if (sfm) {
+        const parsedFm: DailyFixMenu[] = JSON.parse(sfm);
+        const sanitizedFm = parsedFm.map(m => {
+          if (m.imageUrl?.includes("googleusercontent")) return { ...m, imageUrl: "/images/products/dutt-plate.webp" };
+          return m;
+        });
+        setDailyFixMenus(sanitizedFm);
+      }
       if (sCart) setCartItems(JSON.parse(sCart));
       if (sLang) setLangState(sLang as Language);
       const t = (sTheme as "dark" | "light") || "dark";
@@ -151,7 +171,7 @@ const safeLocalStorageSet = (key: string, value: string) => {
     // Instant & adaptive periodic live sync from Server Database
     let isSubscribed = true;
     let pollTimer: NodeJS.Timeout | null = null;
-    let currentDelay = 15000;
+    let currentDelay = 45000; // Efficient 45s customer interval (saves mobile battery and data)
 
     const syncFromDatabase = async () => {
       if (!isSubscribed) return;
@@ -167,11 +187,23 @@ const safeLocalStorageSet = (key: string, value: string) => {
       }
 
       try {
-        const res = await fetch("/api/sync");
+        const url = serverVersionRef.current
+          ? `/api/sync?v=${encodeURIComponent(serverVersionRef.current)}`
+          : "/api/sync";
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
+
+        // 304 / unchanged optimization: zero re-render, zero localStorage writes
+        if (json?.unchanged) {
+          currentDelay = 45000;
+          return;
+        }
+
         if (json?.data && isSubscribed) {
           const d = json.data;
+          if (json.version) serverVersionRef.current = json.version;
+
           if (d.venue) {
             setVenue(prev => {
               if (JSON.stringify(prev) === JSON.stringify(d.venue)) return prev;
@@ -187,24 +219,17 @@ const safeLocalStorageSet = (key: string, value: string) => {
             });
           }
           if (d.products) {
-            setProducts(prev => {
-              if (JSON.stringify(prev) === JSON.stringify(d.products)) return prev;
-              safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(d.products));
-              return d.products;
-            });
+            setProducts(d.products);
+            safeLocalStorageSet(LS.PRODUCTS, JSON.stringify(d.products));
           }
           if (d.dailyFixMenus) {
-            setDailyFixMenus(prev => {
-              if (JSON.stringify(prev) === JSON.stringify(d.dailyFixMenus)) return prev;
-              safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus));
-              return d.dailyFixMenus;
-            });
+            setDailyFixMenus(d.dailyFixMenus);
+            safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(d.dailyFixMenus));
           }
-          currentDelay = 15000; // Reset to standard interval upon success
+          currentDelay = 45000;
         }
       } catch {
-        // Back off up to 30 seconds when offline or server unreachable
-        currentDelay = Math.min(currentDelay * 1.5, 30000);
+        currentDelay = Math.min(currentDelay * 1.5, 60000);
       } finally {
         if (isSubscribed) {
           pollTimer = setTimeout(syncFromDatabase, currentDelay);

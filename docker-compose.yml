@@ -14,6 +14,7 @@ services:
     volumes:
       - ./storage:/app/storage
       - ./src/data:/app/src/data
+      - ./public/uploads:/app/public/uploads
     networks:
       - coolify
     labels:

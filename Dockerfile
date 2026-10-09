@@ -33,9 +33,10 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Set up data & persistent storage directory with full write permissions
-RUN mkdir -p /app/src/data /app/storage && chmod -R 777 /app/src/data /app/storage && chown -R nextjs:nodejs /app/src/data /app/storage
+RUN mkdir -p /app/src/data /app/storage /app/public/uploads /app/public/images && chmod -R 777 /app/src/data /app/storage /app/public && chown -R nextjs:nodejs /app/src/data /app/storage /app/public
 
 COPY --from=builder /app/public ./public
+RUN chmod -R 777 /app/public && chown -R nextjs:nodejs /app/public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/src/data ./src/data

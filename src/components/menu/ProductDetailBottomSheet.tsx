@@ -103,7 +103,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
                 sizes="250px"
                 priority
                 className="object-contain drop-shadow-[0_24px_35px_rgba(0,0,0,0.65)] drop-shadow-[0_4px_12px_rgba(166,108,255,0.25)]"
-                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
+                unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:") || product.imageUrl!.endsWith(".webp") || product.imageUrl!.startsWith("/images/")}
               />
             </div>
           </div>
@@ -119,7 +119,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               priority
               sizes="(max-width: 640px) 100vw, 520px"
               className="object-cover"
-              unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:")}
+              unoptimized={product.imageUrl!.startsWith("data:") || product.imageUrl!.startsWith("blob:") || product.imageUrl!.endsWith(".webp") || product.imageUrl!.startsWith("/images/")}
             />
             {/* Smooth gradient blend into sheet background */}
             <div

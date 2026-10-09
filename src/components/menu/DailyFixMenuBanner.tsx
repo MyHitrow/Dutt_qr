@@ -50,7 +50,7 @@ export const DailyFixMenuBanner: React.FC<DailyFixMenuBannerProps> = ({
           sizes="(max-width: 640px) 100vw, 512px"
           priority
           className="object-cover group-hover:scale-[1.01] transition-transform duration-500"
-          unoptimized={currentMenu.imageUrl.startsWith("data:") || currentMenu.imageUrl.startsWith("blob:")}
+          unoptimized={currentMenu.imageUrl.startsWith("data:") || currentMenu.imageUrl.startsWith("blob:") || currentMenu.imageUrl.endsWith(".webp") || currentMenu.imageUrl.startsWith("/images/")}
         />
       </div>
     </div>

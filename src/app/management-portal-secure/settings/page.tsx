@@ -187,6 +187,17 @@ export default function AdminSettingsPage() {
     setIsUploadingDark(true);
     isDirtyRef.current = true;
     try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json?.success && json?.url) {
+        setFormData(f => ({ ...f, logoDarkUrl: json.url }));
+      } else {
+        const optimized = await optimizeLogoImage(file);
+        setFormData(f => ({ ...f, logoDarkUrl: optimized }));
+      }
+    } catch {
       const optimized = await optimizeLogoImage(file);
       setFormData(f => ({ ...f, logoDarkUrl: optimized }));
     } finally {
@@ -200,6 +211,17 @@ export default function AdminSettingsPage() {
     setIsUploadingLight(true);
     isDirtyRef.current = true;
     try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json?.success && json?.url) {
+        setFormData(f => ({ ...f, logoLightUrl: json.url }));
+      } else {
+        const optimized = await optimizeLogoImage(file);
+        setFormData(f => ({ ...f, logoLightUrl: optimized }));
+      }
+    } catch {
       const optimized = await optimizeLogoImage(file);
       setFormData(f => ({ ...f, logoLightUrl: optimized }));
     } finally {

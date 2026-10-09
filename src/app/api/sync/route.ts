@@ -118,10 +118,32 @@ async function writeDatabase(data: any): Promise<boolean> {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const clientVersion = searchParams.get("v") || req.headers.get("if-none-match")?.replace(/"/g, "");
+
     const data = await readDatabase();
-    return NextResponse.json({ success: true, data, source: "local-file-db" });
+    const currentVersion = data.version || "v1";
+
+    if (clientVersion && clientVersion === currentVersion) {
+      return NextResponse.json({ success: true, unchanged: true, version: currentVersion }, {
+        headers: {
+          ETag: `"${currentVersion}"`,
+          "Cache-Control": "public, max-age=10, stale-while-revalidate=60",
+        },
+      });
+    }
+
+    return NextResponse.json(
+      { success: true, data, version: currentVersion, source: "local-file-db" },
+      {
+        headers: {
+          ETag: `"${currentVersion}"`,
+          "Cache-Control": "public, max-age=10, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (err: any) {
     return NextResponse.json(
       { success: false, data: getInitialData(), error: err.message },
@@ -142,7 +164,9 @@ export async function POST(req: Request) {
     }
 
     const currentData = await readDatabase();
+    const newVersion = Date.now().toString(36);
     const mergedData = {
+      version: newVersion,
       venue: body.venue ? { ...currentData.venue, ...body.venue } : currentData.venue,
       categories: body.categories !== undefined ? body.categories : currentData.categories,
       products: body.products !== undefined ? body.products : currentData.products,
@@ -150,7 +174,7 @@ export async function POST(req: Request) {
     };
 
     const saved = await writeDatabase(mergedData);
-    return NextResponse.json({ success: true, data: mergedData, saved });
+    return NextResponse.json({ success: true, data: mergedData, version: newVersion, saved });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err.message },

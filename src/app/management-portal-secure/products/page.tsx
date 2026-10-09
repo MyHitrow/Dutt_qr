@@ -112,6 +112,19 @@ export default function AdminProductsPage() {
     if (!file) return;
     setIsUploading(true);
     try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json?.success && json?.url) {
+        setUploadPreview(json.url);
+        setFormData(f => ({ ...f, imageUrl: json.url, hasImage: true }));
+      } else {
+        const optimized = await optimizeImage(file);
+        setUploadPreview(optimized);
+        setFormData(f => ({ ...f, imageUrl: optimized, hasImage: true }));
+      }
+    } catch {
       const optimized = await optimizeImage(file);
       setUploadPreview(optimized);
       setFormData(f => ({ ...f, imageUrl: optimized, hasImage: true }));
