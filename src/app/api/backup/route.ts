@@ -13,8 +13,37 @@ const PRIMARY_DB_PATH = process.env.DB_PATH
   ? PERSISTENT_STORAGE_PATH
   : path.join(process.cwd(), "src", "data", "db.json");
 
-export async function GET() {
+import { verifyAdminRequest } from "@/lib/auth";
+
+export async function GET(req: Request) {
   try {
+    if (!verifyAdminRequest(req)) {
+      return NextResponse.json({ success: false, error: "Yetkisiz Erişim: Admin girişi gereklidir." }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const downloadFilename = searchParams.get("download");
+
+    if (downloadFilename) {
+      // Security: prevent directory traversal
+      const safeName = path.basename(downloadFilename);
+      const backupDir = path.join(process.cwd(), "storage", "backups");
+      const filePath = path.join(backupDir, safeName);
+
+      if (!fs.existsSync(filePath)) {
+        return NextResponse.json({ success: false, error: "Yedek dosyası bulunamadı." }, { status: 404 });
+      }
+
+      const fileContent = await fs.promises.readFile(filePath, "utf8");
+      return new NextResponse(fileContent, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Disposition": `attachment; filename="${safeName}"`,
+        },
+      });
+    }
+
     const backups = await listBackups();
     return NextResponse.json({ success: true, backups });
   } catch (err: any) {
@@ -24,6 +53,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    if (!verifyAdminRequest(req)) {
+      return NextResponse.json({ success: false, error: "Yetkisiz Erişim: Admin girişi gereklidir." }, { status: 401 });
+    }
     const body = await req.json();
     const action = body?.action;
 

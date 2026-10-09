@@ -5,8 +5,19 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 
+import { verifyAdminRequest } from "@/lib/auth";
+
 export async function POST(req: Request) {
   try {
+    // 🔒 SECURITY CHECK: Ensure caller is authenticated admin
+    const isAuthorized = verifyAdminRequest(req);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { success: false, error: "Yetkisiz Erişim: Görsel yüklemek için admin girişi gereklidir." },
+        { status: 401 }
+      );
+    }
+
     const contentType = req.headers.get("content-type") || "";
     let buffer: Buffer | null = null;
 

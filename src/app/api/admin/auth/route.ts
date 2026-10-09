@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { checkAdminCredentials, signAdminToken } from "@/lib/auth";
 
 // In-memory brute-force protection tracking failed attempts per IP
 const failedAttempts = new Map<string, { count: number; lockedUntil: number }>();
@@ -30,33 +31,27 @@ export async function POST(req: Request) {
 
     const { username, password } = await req.json();
 
-    const validUsernames = (
-      process.env.ADMIN_USERNAMES || "admin,dutt,duttmeyhane"
-    )
-      .split(",")
-      .map((u) => u.trim().toLowerCase());
+    const isAuthorized = checkAdminCredentials(username, password);
 
-    const validPasswords = (
-      process.env.ADMIN_PASSWORDS || "dutt123,DuttMersin.2026!"
-    )
-      .split(",")
-      .map((p) => p.trim());
-
-    const isUserValid = validUsernames.includes((username || "").trim().toLowerCase());
-    const isPassValid = validPasswords.includes((password || "").trim());
-
-    if (isUserValid && isPassValid) {
+    if (isAuthorized) {
       // Reset failed attempts on success
       failedAttempts.delete(clientIp);
 
-      const res = NextResponse.json({ success: true, message: "Giriş başarılı" });
-      res.cookies.set("dut_admin_session", "authenticated", {
+      const token = signAdminToken(username || "admin");
+      const res = NextResponse.json({
+        success: true,
+        message: "Giriş başarılı",
+        token,
+      });
+
+      res.cookies.set("dut_admin_token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
+
       return res;
     }
 
@@ -93,6 +88,7 @@ export async function POST(req: Request) {
 
 export async function DELETE() {
   const res = NextResponse.json({ success: true, message: "Çıkış yapıldı" });
+  res.cookies.delete("dut_admin_token");
   res.cookies.delete("dut_admin_session");
   return res;
 }

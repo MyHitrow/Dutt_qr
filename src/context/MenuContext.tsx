@@ -78,16 +78,23 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const lastLocalSaveTimeRef = useRef<number>(0);
 
-  /* ── Server Sync Helper (HTTP POST to Supabase Cloud DB) ── */
+  /* ── Server Sync Helper (HTTP POST to DB) ── */
   const syncToServer = async (v = venue, c = categories, p = products, fm = dailyFixMenus) => {
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("dut_admin_token") : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       await fetch("/api/sync", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
+        credentials: "include",
         body: JSON.stringify({ venue: v, categories: c, products: p, dailyFixMenus: fm }),
       });
     } catch (err) {
-      console.error("Supabase sync server error:", err);
+      console.error("Database sync server error:", err);
     }
   };
 

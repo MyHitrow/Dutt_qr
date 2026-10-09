@@ -1,0 +1,18 @@
+{
+  "name": "Dutt Meyhane QR Menü",
+  "short_name": "Dutt Menü",
+  "description": "Dutt Meyhane Dijital Menü & Lezzet Kataloğu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#120D18",
+  "theme_color": "#A66CFF",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

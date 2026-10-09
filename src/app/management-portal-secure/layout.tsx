@@ -11,7 +11,7 @@ import {
 import { useMenu } from "@/context/MenuContext";
 import { QRCodeModal } from "@/components/admin/QRCodeModal";
 
-const AUTH_KEY = "dut_admin_session_auth";
+const TOKEN_KEY = "dut_admin_token";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,16 +28,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
-      if (stored === "true") {
-        setIsAuthenticated(true);
-      } else {
+    // 🔒 Server-side session verification on mount
+    const verifySession = async () => {
+      try {
+        const storedToken = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+        const headers: Record<string, string> = {};
+        if (storedToken) {
+          headers["Authorization"] = `Bearer ${storedToken}`;
+        }
+
+        const res = await fetch("/api/admin/auth/verify", {
+          method: "GET",
+          headers,
+          credentials: "include", // send cookies
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            setIsAuthenticated(true);
+            return;
+          }
+        }
+        setIsAuthenticated(false);
+      } catch {
         setIsAuthenticated(false);
       }
-    } catch {
-      setIsAuthenticated(false);
-    }
+    };
+
+    verifySession();
   }, []);
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -52,35 +71,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        credentials: "include",
       });
 
       const data = await res.json().catch(() => ({}));
 
-      if (res.ok && data.success) {
+      if (res.ok && data.success && data.token) {
         setIsAuthenticated(true);
         try {
-          sessionStorage.setItem(AUTH_KEY, "true");
-          localStorage.setItem(AUTH_KEY, "true");
+          localStorage.setItem(TOKEN_KEY, data.token);
+          sessionStorage.setItem(TOKEN_KEY, data.token);
         } catch {}
       } else {
         setErrorMsg(data.message || "Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
       }
     } catch {
-      // Fallback check if server endpoint unreachable
-      const validUsernames = ["admin", "dutt", "duttmeyhane"];
-      const validPasswords = ["dutt123", "DuttMersin.2026!"];
-      if (
-        validUsernames.includes(username.trim().toLowerCase()) &&
-        validPasswords.includes(password.trim())
-      ) {
-        setIsAuthenticated(true);
-        try {
-          sessionStorage.setItem(AUTH_KEY, "true");
-          localStorage.setItem(AUTH_KEY, "true");
-        } catch {}
-      } else {
-        setErrorMsg("Kullanıcı adı veya şifre hatalı! Lütfen tekrar deneyin.");
-      }
+      setErrorMsg("Sunucuya bağlanırken bir sorun oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsLoggingIn(false);
     }
@@ -90,11 +96,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsAuthenticated(false);
     setUsername("");
     setPassword("");
-    fetch("/api/admin/auth", { method: "DELETE" }).catch(() => {});
     try {
-      sessionStorage.removeItem(AUTH_KEY);
-      localStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
     } catch {}
+    await fetch("/api/admin/auth", { method: "DELETE", credentials: "include" }).catch(() => {});
   };
 
   // Loading state check

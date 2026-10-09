@@ -1049,6 +1049,20 @@ export default function AdminSettingsPage() {
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+                      <a
+                        href={`/api/backup?download=${encodeURIComponent(b.filename)}`}
+                        download={b.filename}
+                        className="px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-95 active:scale-90"
+                        style={{
+                          background: "rgba(166,108,255,0.1)",
+                          borderColor: "rgba(166,108,255,0.3)",
+                          color: "var(--dut-purple-lt)",
+                        }}
+                        title="İndir ve Google Drive'a kaydet"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>İndir (Drive)</span>
+                      </a>
                       <button
                         type="button"
                         onClick={() => handleRestoreBackup(b.filename)}
