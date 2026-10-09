@@ -1,6 +1,5 @@
 export type ThemeMode = "dark" | "light";
 export type Language = "tr" | "en";
-export type OrderStatus = "received" | "preparing" | "ready";
 
 /* ─── Allergen ─── */
 export interface Allergen {
@@ -66,37 +65,6 @@ export interface Product {
   chefNote?: { tr?: string; en?: string };
   servingSuggestion?: { tr?: string; en?: string };
   portion?: { tr?: string; en?: string };
-}
-
-/* ─── Cart ─── */
-export interface CartCustomization {
-  groupId: string;
-  groupLabel: string;
-  choiceId: string;
-  choiceLabel: string;
-  priceDelta: number;
-}
-
-export interface CartItem {
-  cartId: string; // unique per line item
-  product: Product;
-  quantity: number;
-  customizations: CartCustomization[];
-  specialNote?: string;
-  lineTotal: number;
-}
-
-/* ─── Order ─── */
-export interface Order {
-  id: string;
-  tableNumber: string;
-  items: CartItem[];
-  status: OrderStatus;
-  subtotal: number;
-  serviceFee: number;
-  total: number;
-  estimatedTime: string;
-  createdAt: Date;
 }
 
 /* ─── Category ─── */

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import {
   Product, Category, Allergen, DailyFixMenu, ActiveFilters,
-  CartItem, CartCustomization, Order, OrderStatus, Language, VenueSettings
+  Language, VenueSettings
 } from "@/types/menu";
 import {
   mockVenueSettings, mockCategories, mockProducts,
@@ -42,23 +42,6 @@ interface MenuContextType {
   filteredProducts: Product[];
   activeFilterCount: number;
 
-  /* ── Cart ── */
-  cartItems: CartItem[];
-  cartCount: number;
-  cartSubtotal: number;
-  cartTotal: number;
-  serviceFee: number;
-  addToCart: (product: Product, qty: number, customizations: CartCustomization[], note?: string) => void;
-  updateCartItemQty: (cartId: string, qty: number) => void;
-  removeFromCart: (cartId: string) => void;
-  clearCart: () => void;
-
-  /* ── Order ── */
-  currentOrder: Order | null;
-  submitOrder: () => void;
-  updateOrderStatus: (status: OrderStatus) => void;
-  clearOrder: () => void;
-
   /* ── Reset Cache ── */
   resetAllData: () => void;
 }
@@ -68,7 +51,6 @@ const LS = {
   CATEGORIES: "dut_v5_categories",
   PRODUCTS: "dut_v5_products",
   FIX_MENUS: "dut_v5_fix_menus",
-  CART: "dut_v5_cart",
   LANG: "dut_v5_lang",
   THEME: "dut_v5_theme",
 };
@@ -91,8 +73,6 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [dailyFixMenus, setDailyFixMenus] = useState<DailyFixMenu[]>(mockDailyFixMenus);
   const [filters, setFilters] = useState<ActiveFilters>(defaultFilters);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [lang, setLangState] = useState<Language>("tr");
   const [theme, setThemeState] = useState<"dark" | "light">("dark");
 
@@ -128,7 +108,6 @@ const safeLocalStorageSet = (key: string, value: string) => {
       const sc = localStorage.getItem(LS.CATEGORIES);
       const sp = localStorage.getItem(LS.PRODUCTS);
       const sfm = localStorage.getItem(LS.FIX_MENUS);
-      const sCart = localStorage.getItem(LS.CART);
       const sLang = localStorage.getItem(LS.LANG);
       const sTheme = localStorage.getItem(LS.THEME);
       if (sv) {
@@ -175,7 +154,6 @@ const safeLocalStorageSet = (key: string, value: string) => {
         });
         setDailyFixMenus(sanitizedFm);
       }
-      if (sCart) setCartItems(JSON.parse(sCart));
       if (sLang) setLangState(sLang as Language);
       const t = (sTheme as "dark" | "light") || "dark";
       setThemeState(t);
@@ -325,7 +303,6 @@ const safeLocalStorageSet = (key: string, value: string) => {
     safeLocalStorageSet(LS.FIX_MENUS, JSON.stringify(fm));
     syncToServer(venue, categories, products, fm);
   };
-  const persistCart = (items: CartItem[]) => { setCartItems(items); safeLocalStorageSet(LS.CART, JSON.stringify(items)); };
 
   const setLang = (l: Language) => { setLangState(l); safeLocalStorageSet(LS.LANG, l); };
 
@@ -378,74 +355,15 @@ const safeLocalStorageSet = (key: string, value: string) => {
     return acc + (v ? 1 : 0);
   }, 0);
 
-  /* ── Cart ── */
-  const calcLineTotal = (product: Product, qty: number, customizations: CartCustomization[]) => {
-    const extras = customizations.reduce((s, c) => s + c.priceDelta, 0);
-    return (product.price + extras) * qty;
-  };
-
-  const addToCart = (product: Product, qty: number, customizations: CartCustomization[], note?: string) => {
-    const lineTotal = calcLineTotal(product, qty, customizations);
-    const newItem: CartItem = {
-      cartId: `cart-${Date.now()}`,
-      product,
-      quantity: qty,
-      customizations,
-      specialNote: note,
-      lineTotal,
-    };
-    persistCart([...cartItems, newItem]);
-  };
-
-  const updateCartItemQty = (cartId: string, qty: number) => {
-    if (qty <= 0) { removeFromCart(cartId); return; }
-    persistCart(cartItems.map(i => i.cartId === cartId
-      ? { ...i, quantity: qty, lineTotal: calcLineTotal(i.product, qty, i.customizations) }
-      : i
-    ));
-  };
-
-  const removeFromCart = (cartId: string) => persistCart(cartItems.filter(i => i.cartId !== cartId));
-  const clearCart = () => persistCart([]);
-
-  const cartCount    = cartItems.reduce((s, i) => s + i.quantity, 0);
-  const cartSubtotal = cartItems.reduce((s, i) => s + i.lineTotal, 0);
-  const serviceFee   = Math.round(cartSubtotal * ((venue.serviceFeePercent ?? 0) / 100));
-  const cartTotal    = cartSubtotal + serviceFee;
-
-  /* ── Order ── */
-  const submitOrder = () => {
-    const order: Order = {
-      id: `A${String(Math.floor(Math.random() * 900) + 100)}`,
-      tableNumber: venue.tableNumber ?? "1",
-      items: [...cartItems],
-      status: "received",
-      subtotal: cartSubtotal,
-      serviceFee,
-      total: cartTotal,
-      estimatedTime: "20–25 dak",
-      createdAt: new Date(),
-    };
-    setCurrentOrder(order);
-    clearCart();
-  };
-
-  const updateOrderStatus = (status: OrderStatus) => {
-    if (currentOrder) setCurrentOrder({ ...currentOrder, status });
-  };
-
-  const clearOrder = () => setCurrentOrder(null);
-
   const resetAllData = () => {
     try {
       Object.values(LS).forEach(k => localStorage.removeItem(k));
-      ["dut_venue", "dut_categories", "dut_products", "dut_fix_menus", "dut_cart"].forEach(k => localStorage.removeItem(k));
+      ["dut_venue", "dut_categories", "dut_products", "dut_fix_menus"].forEach(k => localStorage.removeItem(k));
     } catch {}
     setVenue(mockVenueSettings);
     setCategories(mockCategories);
     setProducts(mockProducts);
     setDailyFixMenus(mockDailyFixMenus);
-    setCartItems([]);
     window.location.reload();
   };
 
@@ -457,9 +375,6 @@ const safeLocalStorageSet = (key: string, value: string) => {
       addProduct, updateProduct, deleteProduct, toggleProductAvailability,
       addCategory, updateCategory, deleteCategory, reorderCategories,
       filters, setFilters, filteredProducts, activeFilterCount,
-      cartItems, cartCount, cartSubtotal, cartTotal, serviceFee,
-      addToCart, updateCartItemQty, removeFromCart, clearCart,
-      currentOrder, submitOrder, updateOrderStatus, clearOrder,
       resetAllData,
     }}>
       {children}
