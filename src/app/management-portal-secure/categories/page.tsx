@@ -174,7 +174,7 @@ export default function AdminCategoriesPage() {
 
         <button
           onClick={handleOpenAddModal}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg flex-shrink-0"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-2xl text-xs font-bold text-white transition-all active:scale-95 shadow-lg flex-shrink-0"
           style={{ background: "var(--dut-purple)", boxShadow: "0 8px 24px rgba(166,108,255,0.3)" }}
         >
           <Plus className="w-4 h-4" />
@@ -215,7 +215,7 @@ export default function AdminCategoriesPage() {
               onDragOver={(e) => handleDragOver(e, index)}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              className={`p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 transition-all cursor-move select-none ${
+              className={`p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition-all select-none ${
                 isDragging ? "opacity-35 scale-[0.98]" : ""
               } ${isDragOver ? "border-purple-400 bg-purple-500/10 shadow-lg" : ""}`}
               style={{
@@ -223,49 +223,55 @@ export default function AdminCategoriesPage() {
                 border: isDragOver ? "1px solid #A66CFF" : "1px solid var(--dut-divider)",
               }}
             >
-              {/* Left: Grip Handle + Rank + Emoji + Title */}
-              <div className="flex items-center gap-3 min-w-0">
-                {/* Drag Grip Handle & Index */}
-                <div className="flex items-center gap-1.5 text-white/40 hover:text-purple-300 transition-colors flex-shrink-0">
-                  <GripVertical className="w-5 h-5 cursor-grab active:cursor-grabbing" />
-                  <span className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-mono font-bold bg-white/5 border border-white/10 text-white/60">
-                    {index + 1}
-                  </span>
+              {/* Left / Top: Drag Grip + Rank + Emoji + Title */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {/* Drag Grip Handle (visible on desktop) */}
+                <div className="hidden sm:flex items-center text-white/40 hover:text-purple-300 transition-colors flex-shrink-0 cursor-grab active:cursor-grabbing">
+                  <GripVertical className="w-5 h-5" />
                 </div>
+
+                {/* Index / Rank Badge */}
+                <span className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-mono font-bold bg-white/5 border border-white/10 text-white/70 flex-shrink-0">
+                  {index + 1}
+                </span>
 
                 {/* Emoji Icon */}
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                   style={{ background: "rgba(166,108,255,0.12)", border: "1px solid rgba(166,108,255,0.2)" }}
                 >
                   {cat.emoji || "🍽️"}
                 </div>
 
                 {/* Name & Count */}
-                <div className="min-w-0">
-                  <h3 className="font-bold text-sm sm:text-base flex items-center gap-2 truncate" style={{ color: "var(--dut-text)" }}>
-                    {cat.name.tr}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-sm sm:text-base leading-snug break-words" style={{ color: "var(--dut-text)" }}>
+                      {cat.name.tr}
+                    </h3>
                     {!cat.isActive && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md flex-shrink-0" style={{ background: "rgba(255,107,107,0.12)", color: "var(--dut-danger)" }}>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md font-semibold flex-shrink-0" style={{ background: "rgba(255,107,107,0.12)", color: "var(--dut-danger)", border: "1px solid rgba(255,107,107,0.25)" }}>
                         Gizli
                       </span>
                     )}
-                  </h3>
-                  <span className="text-xs block font-light mt-0.5" style={{ color: "var(--dut-text3)" }}>
-                    {cat.name.en} • <strong className="font-semibold text-purple-300">{productCount} Ürün</strong>
-                  </span>
+                  </div>
+                  <div className="text-xs font-light mt-0.5 flex items-center gap-1.5 flex-wrap" style={{ color: "var(--dut-text3)" }}>
+                    {cat.name.en && <span>{cat.name.en}</span>}
+                    {cat.name.en && <span>•</span>}
+                    <span className="font-semibold text-purple-300 font-mono">{productCount} Ürün</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Right: Up/Down Buttons + Actions */}
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                {/* Reorder Buttons (Especially convenient on mobile/touch) */}
-                <div className="flex items-center gap-1 mr-1">
+              {/* Right / Bottom on Mobile: Action Buttons */}
+              <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-white/5 sm:border-transparent flex-shrink-0">
+                {/* Reorder Buttons (Clean thumb-friendly buttons on mobile) */}
+                <div className="flex items-center gap-1 bg-black/25 p-1 rounded-xl border border-white/5">
                   <button
                     type="button"
                     onClick={() => handleMove(index, "up")}
                     disabled={index === 0}
-                    className="p-1.5 rounded-lg border transition-all text-white/50 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                    className="p-1.5 sm:p-2 rounded-lg border transition-all text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
                     style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)" }}
                     title="Yukarı Taşı"
                   >
@@ -275,7 +281,7 @@ export default function AdminCategoriesPage() {
                     type="button"
                     onClick={() => handleMove(index, "down")}
                     disabled={index === sortedCategories.length - 1}
-                    className="p-1.5 rounded-lg border transition-all text-white/50 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                    className="p-1.5 sm:p-2 rounded-lg border transition-all text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
                     style={{ background: "var(--dut-elevated)", borderColor: "var(--dut-divider)" }}
                     title="Aşağı Taşı"
                   >
@@ -283,46 +289,48 @@ export default function AdminCategoriesPage() {
                   </button>
                 </div>
 
-                {/* Toggle Visibility */}
-                <button
-                  type="button"
-                  onClick={() => updateCategory(cat.id, { isActive: !cat.isActive })}
-                  className="p-2 rounded-xl transition-all text-xs font-semibold"
-                  style={
-                    cat.isActive
-                      ? { background: "rgba(99,211,145,0.12)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.25)" }
-                      : { background: "rgba(255,107,107,0.12)", color: "var(--dut-danger)", border: "1px solid rgba(255,107,107,0.25)" }
-                  }
-                  title={cat.isActive ? "Gizle" : "Göster"}
-                >
-                  {cat.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
-
-                {/* Edit */}
-                <button
-                  type="button"
-                  onClick={() => handleOpenEditModal(cat)}
-                  className="p-2 rounded-xl transition-all"
-                  style={{ background: "var(--dut-elevated)", border: "1px solid var(--dut-divider)", color: "var(--dut-text3)" }}
-                  title="Düzenle"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-
-                {/* Delete */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`"${cat.name.tr}" kategorisini ve altındaki ${productCount} ürünü silmek istediğinize emin misiniz?`)) {
-                      deleteCategory(cat.id);
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Toggle Visibility */}
+                  <button
+                    type="button"
+                    onClick={() => updateCategory(cat.id, { isActive: !cat.isActive })}
+                    className="p-2 sm:p-2.5 rounded-xl transition-all text-xs font-semibold active:scale-95"
+                    style={
+                      cat.isActive
+                        ? { background: "rgba(99,211,145,0.12)", color: "var(--dut-success)", border: "1px solid rgba(99,211,145,0.25)" }
+                        : { background: "rgba(255,107,107,0.12)", color: "var(--dut-danger)", border: "1px solid rgba(255,107,107,0.25)" }
                     }
-                  }}
-                  className="p-2 rounded-xl transition-all text-rose-400 hover:text-rose-300"
-                  style={{ background: "var(--dut-elevated)", border: "1px solid var(--dut-divider)" }}
-                  title="Sil"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                    title={cat.isActive ? "Gizle" : "Göster"}
+                  >
+                    {cat.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </button>
+
+                  {/* Edit */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(cat)}
+                    className="p-2 sm:p-2.5 rounded-xl transition-all active:scale-95 hover:text-purple-300"
+                    style={{ background: "var(--dut-elevated)", border: "1px solid var(--dut-divider)", color: "var(--dut-text2)" }}
+                    title="Düzenle"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  {/* Delete */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(`"${cat.name.tr}" kategorisini ve altındaki ${productCount} ürünü silmek istediğinize emin misiniz?`)) {
+                        deleteCategory(cat.id);
+                      }
+                    }}
+                    className="p-2 sm:p-2.5 rounded-xl transition-all text-rose-400 hover:text-rose-300 active:scale-95"
+                    style={{ background: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.2)" }}
+                    title="Sil"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -331,12 +339,12 @@ export default function AdminCategoriesPage() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 dut-backdrop animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 dut-backdrop animate-fade-in overflow-y-auto">
           <div
-            className="w-full max-w-md rounded-3xl shadow-2xl animate-scale-in"
+            className="w-full max-w-md rounded-3xl shadow-2xl animate-scale-in my-auto max-h-[90vh] flex flex-col"
             style={{ background: "var(--dut-card)", border: "1px solid var(--dut-divider)" }}
           >
-            <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: "var(--dut-divider)" }}>
+            <div className="px-5 sm:px-6 py-4 flex items-center justify-between border-b flex-shrink-0" style={{ borderColor: "var(--dut-divider)" }}>
               <h3 className="font-bold text-base" style={{ color: "var(--dut-text)" }}>
                 {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori"}
               </h3>
@@ -350,7 +358,7 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveForm} className="p-6 space-y-4">
+            <form onSubmit={handleSaveForm} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-4 gap-3">
                 {field(
                   "Emoji",
