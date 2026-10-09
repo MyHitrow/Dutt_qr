@@ -1,22 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Cormorant_Garamond } from "next/font/google";
 import { MenuProvider } from "@/context/MenuContext";
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import Script from "next/script";
 import "./globals.css";
-
-const manrope = Manrope({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-manrope",
-  display: "swap",
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Dutt Meyhane — Dijital QR Menü",
@@ -58,7 +44,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-icon.svg" />
       </head>
       <body
-        className={`${manrope.variable} ${cormorant.variable} antialiased min-h-screen bg-background text-content-primary selection:bg-brand-purple/30 selection:text-brand-purple`}
+        className="antialiased min-h-screen bg-background text-content-primary selection:bg-brand-purple/30 selection:text-brand-purple"
       >
         <GlobalErrorBoundary>
           <MenuProvider>{children}</MenuProvider>
