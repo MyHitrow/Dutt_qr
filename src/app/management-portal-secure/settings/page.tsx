@@ -191,17 +191,29 @@ export default function AdminSettingsPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("dut_admin_token") || sessionStorage.getItem("dut_admin_token")
+          : null;
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: fd,
+      });
       const json = await res.json();
       if (json?.success && json?.url) {
         setFormData(f => ({ ...f, logoDarkUrl: json.url }));
       } else {
-        const optimized = await optimizeLogoImage(file);
-        setFormData(f => ({ ...f, logoDarkUrl: optimized }));
+        alert(json?.error || "Logo yüklenirken bir hata oluştu.");
       }
-    } catch {
-      const optimized = await optimizeLogoImage(file);
-      setFormData(f => ({ ...f, logoDarkUrl: optimized }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Logo yüklenemedi.";
+      alert(msg);
     } finally {
       setIsUploadingDark(false);
     }
@@ -215,17 +227,29 @@ export default function AdminSettingsPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("dut_admin_token") || sessionStorage.getItem("dut_admin_token")
+          : null;
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: fd,
+      });
       const json = await res.json();
       if (json?.success && json?.url) {
         setFormData(f => ({ ...f, logoLightUrl: json.url }));
       } else {
-        const optimized = await optimizeLogoImage(file);
-        setFormData(f => ({ ...f, logoLightUrl: optimized }));
+        alert(json?.error || "Logo yüklenirken bir hata oluştu.");
       }
-    } catch {
-      const optimized = await optimizeLogoImage(file);
-      setFormData(f => ({ ...f, logoLightUrl: optimized }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Logo yüklenemedi.";
+      alert(msg);
     } finally {
       setIsUploadingLight(false);
     }

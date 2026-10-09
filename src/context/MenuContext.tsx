@@ -96,9 +96,18 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fm = dailyFixMenusRef.current
   ): Promise<boolean> => {
     try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("dut_admin_token") || sessionStorage.getItem("dut_admin_token")
+          : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch("/api/sync", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({
           baseVersion: serverVersionRef.current,

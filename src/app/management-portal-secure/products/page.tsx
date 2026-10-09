@@ -114,20 +114,30 @@ export default function AdminProductsPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("dut_admin_token") || sessionStorage.getItem("dut_admin_token")
+          : null;
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: fd,
+      });
       const json = await res.json();
       if (json?.success && json?.url) {
         setUploadPreview(json.url);
         setFormData(f => ({ ...f, imageUrl: json.url, hasImage: true }));
       } else {
-        const optimized = await optimizeImage(file);
-        setUploadPreview(optimized);
-        setFormData(f => ({ ...f, imageUrl: optimized, hasImage: true }));
+        alert(json?.error || "Görsel yüklenirken bir hata oluştu.");
       }
-    } catch {
-      const optimized = await optimizeImage(file);
-      setUploadPreview(optimized);
-      setFormData(f => ({ ...f, imageUrl: optimized, hasImage: true }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Görsel sunucuya yüklenemedi.";
+      alert(msg);
     } finally {
       setIsUploading(false);
     }

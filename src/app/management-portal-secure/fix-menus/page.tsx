@@ -90,17 +90,29 @@ export default function AdminFixMenusPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("dut_admin_token") || sessionStorage.getItem("dut_admin_token")
+          : null;
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: fd,
+      });
       const json = await res.json();
       if (json?.success && json?.url) {
         setFormData(f => ({ ...f, imageUrl: json.url }));
       } else {
-        const optimized = await optimizeBannerImage(file);
-        setFormData(f => ({ ...f, imageUrl: optimized }));
+        alert(json?.error || "Görsel yüklenirken bir hata oluştu.");
       }
-    } catch {
-      const optimized = await optimizeBannerImage(file);
-      setFormData(f => ({ ...f, imageUrl: optimized }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Görsel yüklenemedi.";
+      alert(msg);
     } finally {
       setIsUploading(false);
     }
