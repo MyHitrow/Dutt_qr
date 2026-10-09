@@ -143,11 +143,18 @@ const safeLocalStorageSet = (key: string, value: string) => {
       if (sc)    setCategories(JSON.parse(sc));
       if (sp) {
         const parsedP: Product[] = JSON.parse(sp);
-        // Automatically purge any old megabyte-sized base64 images from localStorage
+        // Automatically purge any sample, placeholder or external images from localStorage
         const sanitizedP = parsedP.map(p => {
-          if (p.id === "p-bira-1" && p.imageUrl?.startsWith("data:")) return { ...p, imageUrl: "/images/products/tuborg-gold.webp" };
-          if (p.id === "p-bira-2" && p.imageUrl?.startsWith("data:")) return { ...p, imageUrl: "/images/products/carlsberg.webp" };
-          if (p.imageUrl?.includes("googleusercontent")) return { ...p, imageUrl: "/images/products/dutt-plate.webp" };
+          if (
+            p.imageUrl?.includes("googleusercontent") ||
+            p.imageUrl?.includes("dutt-plate") ||
+            p.imageUrl?.includes("tuborg") ||
+            p.imageUrl?.includes("carlsberg") ||
+            p.imageUrl?.startsWith("data:")
+          ) {
+            const { imageUrl, ...rest } = p;
+            return { ...rest, hasImage: false };
+          }
           return p;
         });
         setProducts(sanitizedP);
@@ -156,7 +163,14 @@ const safeLocalStorageSet = (key: string, value: string) => {
       if (sfm) {
         const parsedFm: DailyFixMenu[] = JSON.parse(sfm);
         const sanitizedFm = parsedFm.map(m => {
-          if (m.imageUrl?.includes("googleusercontent")) return { ...m, imageUrl: "/images/products/dutt-plate.webp" };
+          if (
+            m.imageUrl?.includes("googleusercontent") ||
+            m.imageUrl?.includes("dutt-plate") ||
+            m.imageUrl?.startsWith("data:")
+          ) {
+            const { imageUrl, ...rest } = m;
+            return rest as DailyFixMenu;
+          }
           return m;
         });
         setDailyFixMenus(sanitizedFm);
